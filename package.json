@@ -1,0 +1,22 @@
+{
+  "name": "didi-ecommerce",
+  "version": "1.0.0",
+  "description": "Didi Fashion E-commerce Platform - Monorepo",
+  "private": true,
+  "scripts": {
+    "frontend:install": "cd frontend && npm install",
+    "frontend:build": "cd frontend && npm run build",
+    "frontend:preview": "cd frontend && npm run preview",
+    "frontend:dev": "cd frontend && npm run dev",
+    "backend:install": "cd backend && npm install",
+    "backend:dev": "cd backend && npm run dev",
+    "backend:start": "cd backend && npm start",
+    "install:all": "npm install && npm run frontend:install && npm run backend:install",
+    "dev": "npm run frontend:dev",
+    "build": "npm run frontend:build",
+    "preview": "npm run frontend:preview"
+  },
+  "keywords": ["ecommerce", "fashion", "monorepo"],
+  "author": "",
+  "license": "ISC"
+}

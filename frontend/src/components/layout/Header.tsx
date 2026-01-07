@@ -1,0 +1,268 @@
+import { useState } from 'react';
+import { Heart, Search, User, Menu, X, ChevronDown } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { MiniCart } from '@/components/cart/MiniCart';
+import { useWishlist } from '@/context/WishlistContext';
+
+interface Category {
+  label: string;
+  href: string;
+}
+
+interface MainCategory {
+  name: string;
+  items: Category[];
+}
+
+const categories: MainCategory[] = [
+  {
+    name: 'NEW ARRIVALS',
+    items: [
+      { label: 'STUDIO PORTRAITS', href: '/collection/studio-portraits' },
+      { label: 'FESTIVE A/W 2025', href: '/collection/festive-aw-2025' },
+      { label: 'PRET A/W 2025', href: '/collection/pret-aw-2025' },
+      { label: 'BASICS A/W 2025', href: '/collection/basics-aw-2025' },
+      { label: 'HC BASICS SS\' 25', href: '/collection/hc-basics-ss-25' },
+      { label: 'WINTER UNSTITCHED 2025', href: '/collection/winter-unstitched-2025' },
+      { label: 'WEDDING UNSTITCHED 2025', href: '/collection/wedding-unstitched-2025' },
+      { label: 'HANDCRAFTED', href: '/collection/handcrafted' },
+      { label: 'BEBAK 2025', href: '/collection/bebak-2025' },
+    ],
+  },
+  {
+    name: 'UNSTITCHED',
+    items: [
+      { label: 'WINTER UNSTITCHED 2025', href: '/collection/winter-2025' },
+      { label: 'WEDDING UNSTITCHED 2025', href: '/collection/wedding-2025' },
+      { label: 'LAWN COLLECTION', href: '/collection/lawn' },
+      { label: 'COTTON COLLECTION', href: '/collection/cotton' },
+      { label: 'SILK COLLECTION', href: '/collection/silk' },
+    ],
+  },
+  {
+    name: 'READY TO WEAR',
+    items: [
+      { label: 'FESTIVE A/W 2025', href: '/collection/festive' },
+      { label: 'PRET A/W 2025', href: '/collection/pret' },
+      { label: 'BASICS A/W 2025', href: '/collection/basics' },
+      { label: 'LUXURY PRET', href: '/collection/luxury-pret' },
+    ],
+  },
+  {
+    name: 'BRIDALS',
+    items: [
+      { label: 'BRIDAL COLLECTION', href: '/collection/bridal-collection' },
+      { label: 'CUSTOM BRIDAL', href: '/collection/custom-bridal' },
+    ],
+  },
+  {
+    name: 'JEWELLERY',
+    items: [
+      { label: 'EARRINGS', href: '/collection/earrings' },
+      { label: 'NECKLACES', href: '/collection/necklaces' },
+      { label: 'BANGLES', href: '/collection/bangles' },
+    ],
+  },
+];
+
+const WardrobeIcon = () => (
+  <ChevronDown size={16} />
+);
+
+const Header = () => {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [wardrobeMenuOpen, setWardrobeMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const { wishlistCount } = useWishlist();
+  const navigate = useNavigate();
+
+  return (
+    <>
+      {/* Mobile Logo Section */}
+      <div className="lg:hidden sticky top-0 z-40 bg-background border-b border-border">
+        <div className="container mx-auto px-4 py-2 flex items-center justify-center">
+          <a href="/" className="font-serif text-lg tracking-[0.02em] leading-tight">
+            <span>HEZAL COUTURE</span>
+          </a>
+        </div>
+      </div>
+
+      {/* Main Header */}
+      <header className="sticky lg:top-0 -top-1 z-50 bg-background border-b border-border">
+      <div className="container mx-auto">
+        <div className="flex items-center justify-between gap-3 h-16 lg:h-20 px-3 lg:px-6">
+          {/* Left Section */}
+          <div className="flex items-center gap-2 lg:gap-4 flex-shrink-0">
+            {/* Mobile Menu Button */}
+            <button
+              className="lg:hidden p-2 -ml-2 flex-shrink-0"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-label="Toggle menu"
+            >
+              {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+            </button>
+
+            {/* Logo - Hidden on Mobile, Left on Desktop */}
+            <a href="/" className="hidden lg:flex font-serif text-lg lg:text-xl tracking-[0.02em] leading-tight flex-shrink-0">
+              <span>HEZAL COUTURE</span>
+            </a>
+
+            {/* Desktop Navigation - Wardrobe Icon */}
+            <nav className="hidden lg:flex items-center ml-2">
+              <div 
+                className="relative group"
+                onMouseEnter={() => setWardrobeMenuOpen(true)}
+                onMouseLeave={() => setWardrobeMenuOpen(false)}
+              >
+                <button 
+                  className="p-2 hover:opacity-70 transition-opacity flex items-center gap-1"
+                  aria-label="The Wardrobe"
+                >
+                  <span className="text-lg tracking-wider uppercase text-sale font-medium">THE WARDROBE</span>
+                  <WardrobeIcon />
+                </button>
+                
+                {/* Dropdown Menu with Animation */}
+                <div 
+                  className={`absolute top-full left-0 mt-0 bg-background border border-border shadow-xl min-w-[800px] p-8 transition-all duration-300 origin-top-left ${
+                    wardrobeMenuOpen ? 'opacity-100 scale-100 visible' : 'opacity-0 scale-95 invisible'
+                  }`}
+                >
+                  <div className="grid grid-cols-3 gap-8">
+                    {categories.map((category, idx) => (
+                      <div key={category.name} className={`transform transition-all duration-300 ${wardrobeMenuOpen ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`} style={{ transitionDelay: `${idx * 50}ms` }}>
+                        <h3 className="text-xs font-semibold tracking-[0.3em] uppercase mb-4 text-foreground">
+                          {category.name}
+                        </h3>
+                        <ul className="space-y-3">
+                          {category.items.map((item) => (
+                            <li key={item.label}>
+                              <a
+                                href={item.href}
+                                className="text-xs tracking-wider text-muted-foreground hover:text-foreground transition-all duration-200 relative inline-block group/item"
+                              >
+                                {item.label}
+                                <span className="absolute bottom-0 left-0 w-0 h-px bg-foreground group-hover/item:w-full transition-all duration-300"></span>
+                              </a>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </nav>
+          </div>
+
+          {/* Center Search Bar - Mobile and Desktop */}
+          <div className="flex-1 mx-2">
+            <div className="relative w-full">
+              <Search className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-foreground" size={18} />
+              <input
+                type="text"
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-2 sm:py-3 text-xs sm:text-sm border-2 border-foreground rounded-none bg-white text-foreground placeholder-muted-foreground focus:outline-none"
+              />
+            </div>
+          </div>
+
+          {/* Right Icons */}
+          <div className="flex items-center space-x-2 lg:space-x-4 flex-shrink-0">
+            <a href="/wishlist" className="flex p-1 hover:opacity-70 transition-opacity relative" aria-label="Wishlist">
+              <Heart size={24} strokeWidth={1.3} />
+              {wishlistCount > 0 && (
+                <span className="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-medium leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-foreground rounded-full">
+                  {wishlistCount}
+                </span>
+              )}
+            </a>
+            <a href="/account" className="hidden sm:flex p-1 hover:opacity-70 transition-opacity" aria-label="Account">
+              <User size={24} strokeWidth={1.3} />
+            </a>
+            <MiniCart />
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Menu */}
+      {mobileMenuOpen && (
+        <>
+          {/* Overlay */}
+          <div 
+            className="lg:hidden fixed inset-0 top-16 bg-black/50 z-30"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+          
+          {/* Menu Panel */}
+          <div className="lg:hidden fixed top-16 left-0 h-screen w-1/2 bg-background z-40 overflow-y-auto animate-slide-down border-r border-border">
+            <nav className="px-6 py-6">
+              {/* Close Button */}
+              <button
+                onClick={() => setMobileMenuOpen(false)}
+                className="w-full flex justify-end mb-6 p-2 -mr-2"
+                aria-label="Close menu"
+              >
+                <X size={24} />
+              </button>
+
+              {/* Collections Section */}
+              <div className="border-b border-border pb-6">
+                <h2 className="text-sm tracking-wider uppercase font-semibold mb-4">COLLECTIONS</h2>
+                {categories.map((category) => (
+                  <div key={category.name} className="mb-6">
+                    <h3 className="text-xs tracking-wider uppercase font-medium text-muted-foreground mb-3">
+                      {category.name}
+                    </h3>
+                    <div className="pl-4 space-y-2">
+                      {category.items.map((item) => (
+                        <a
+                          key={item.label}
+                          href={item.href}
+                          onClick={() => setMobileMenuOpen(false)}
+                          className="block text-xs tracking-wider uppercase text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          {item.label}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Account Section */}
+              <div className="flex flex-col gap-4 py-6">
+                <a 
+                  href="/wishlist" 
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-3 text-sm font-medium"
+                >
+                  <Heart size={18} strokeWidth={1.5} />
+                  Wishlist
+                  {wishlistCount > 0 && (
+                    <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-medium leading-none text-white bg-foreground rounded-full">
+                      {wishlistCount}
+                    </span>
+                  )}
+                </a>
+                <a 
+                  href="/account"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-3 text-sm font-medium"
+                >
+                  <User size={18} strokeWidth={1.5} />
+                  Account
+                </a>
+              </div>
+            </nav>
+          </div>
+        </>
+      )}
+    </header>
+    </>
+  );
+};
+
+export default Header;

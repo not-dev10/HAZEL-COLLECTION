@@ -1,0 +1,70 @@
+@keyframes heartBurst {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--tx), var(--ty)) scale(0);
+  }
+}
+
+@keyframes scaleUp {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.heart-burst {
+  position: relative;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.burst-particle {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  top: 0;
+  left: 0;
+  color: rgb(244, 63, 94);
+  animation: heartBurst 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  animation-delay: var(--delay, 0ms);
+}
+
+.burst-particle:nth-child(1) {
+  --tx: calc(30px * cos(0rad));
+  --ty: calc(30px * sin(0rad));
+}
+
+.burst-particle:nth-child(2) {
+  --tx: calc(30px * cos(1.047rad));
+  --ty: calc(30px * sin(1.047rad));
+}
+
+.burst-particle:nth-child(3) {
+  --tx: calc(30px * cos(2.094rad));
+  --ty: calc(30px * sin(2.094rad));
+}
+
+.burst-particle:nth-child(4) {
+  --tx: calc(30px * cos(3.142rad));
+  --ty: calc(30px * sin(3.142rad));
+}
+
+.burst-particle:nth-child(5) {
+  --tx: calc(30px * cos(4.189rad));
+  --ty: calc(30px * sin(4.189rad));
+}
+
+.burst-particle:nth-child(6) {
+  --tx: calc(30px * cos(5.236rad));
+  --ty: calc(30px * sin(5.236rad));
+}
