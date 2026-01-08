@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Heart, Search, User, Menu, X, ChevronDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { MiniCart } from '@/components/cart/MiniCart';
@@ -69,12 +69,96 @@ const WardrobeIcon = () => (
   <ChevronDown size={16} />
 );
 
+const searchProducts = [
+  {
+    id: 1,
+    name: 'Embroidered Silk Ensemble',
+    price: 485,
+    category: 'Ready to Wear',
+    image: 'https://images.unsplash.com/photo-1595777707802-78f6cf076e91?w=400',
+  },
+  {
+    id: 2,
+    name: 'Velvet Bridal Collection',
+    price: 1250,
+    category: 'Bridal',
+    image: 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=400',
+  },
+  {
+    id: 3,
+    name: 'Cotton Lawn Three Piece',
+    price: 195,
+    category: 'Pret',
+    image: 'https://images.unsplash.com/photo-1591195853828-11db59a44f6b?w=400',
+  },
+  {
+    id: 4,
+    name: 'Festive Formal Wear',
+    price: 650,
+    category: 'Ready to Wear',
+    image: 'https://images.unsplash.com/photo-1539008588435-666d1b6e504c?w=400',
+  },
+  {
+    id: 5,
+    name: 'Summer Unstitched Fabric',
+    price: 175,
+    category: 'Unstitched',
+    image: 'https://images.unsplash.com/photo-1552821206-7debf432f9a0?w=400',
+  },
+  {
+    id: 6,
+    name: 'Luxury Pret Collection',
+    price: 395,
+    category: 'Pret',
+    image: 'https://images.unsplash.com/photo-1595777707802-78f6cf076e91?w=400',
+  },
+  {
+    id: 7,
+    name: 'Chiffon Formal Dress',
+    price: 575,
+    category: 'Ready to Wear',
+    image: 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=400',
+  },
+  {
+    id: 8,
+    name: 'Classic Heritage Piece',
+    price: 425,
+    category: 'Ready to Wear',
+    image: 'https://images.unsplash.com/photo-1539008588435-666d1b6e504c?w=400',
+  },
+];
+
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [wardrobeMenuOpen, setWardrobeMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const { wishlistCount } = useWishlist();
   const navigate = useNavigate();
+
+  const handleSearchSubmit = (e: React.KeyboardEvent<HTMLInputElement> | React.FormEvent) => {
+    if ('preventDefault' in e) {
+      e.preventDefault();
+    }
+    if (searchQuery.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
+      setSearchQuery('');
+      setShowSuggestions(false);
+    }
+  };
+
+  const handleSuggestionClick = (productName: string) => {
+    const productSlug = productName.toLowerCase().replace(/\s+/g, '-');
+    navigate(`/product/${productSlug}`);
+    setSearchQuery('');
+    setShowSuggestions(false);
+  };
+
+  const suggestions = searchQuery.trim()
+    ? searchProducts.filter((product) =>
+        product.name.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : [];
 
   return (
     <>
@@ -157,16 +241,63 @@ const Header = () => {
 
           {/* Center Search Bar - Mobile and Desktop */}
           <div className="flex-1 mx-2">
-            <div className="relative w-full">
+            <form className="relative w-full" onSubmit={handleSearchSubmit}>
               <Search className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-foreground" size={18} />
               <input
                 type="text"
                 placeholder="Search..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setShowSuggestions(true);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleSearchSubmit(e);
+                  }
+                  if (e.key === 'Escape') {
+                    setShowSuggestions(false);
+                  }
+                }}
+                onFocus={() => {
+                  if (searchQuery.trim()) {
+                    setShowSuggestions(true);
+                  }
+                }}
+                onBlur={() => {
+                  setTimeout(() => setShowSuggestions(false), 200);
+                }}
                 className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-2 sm:py-3 text-xs sm:text-sm border-2 border-foreground rounded-none bg-white text-foreground placeholder-muted-foreground focus:outline-none"
               />
-            </div>
+              
+              {/* Search Suggestions Dropdown */}
+              {showSuggestions && suggestions.length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-border shadow-lg z-50 max-h-96 overflow-y-auto">
+                  <div className="p-2">
+                    {suggestions.map((product) => (
+                      <button
+                        key={product.id}
+                        onClick={() => handleSuggestionClick(product.name)}
+                        className="w-full flex items-center gap-3 p-2 hover:bg-muted rounded transition-colors text-left"
+                      >
+                        <div className="flex-shrink-0 w-12 h-16 bg-muted rounded overflow-hidden">
+                          <img
+                            src={product.image}
+                            alt={product.name}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-medium truncate">{product.name}</p>
+                          <p className="text-xs text-muted-foreground mb-1">{product.category}</p>
+                          <p className="text-xs text-foreground font-semibold">£{product.price.toLocaleString()}</p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </form>
           </div>
 
           {/* Right Icons */}

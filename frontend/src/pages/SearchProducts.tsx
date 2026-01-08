@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, ChevronDown, Star } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Header from '@/components/layout/Header';
@@ -10,67 +10,110 @@ import ProductCard from '@/components/catalog/ProductCard';
 const mockProducts = [
   {
     id: 1,
-    name: 'Luxury Bridal Dress',
-    price: 899,
+    name: 'Embroidered Silk Ensemble',
+    price: 485,
     image: 'https://images.unsplash.com/photo-1595777707802-78f6cf076e91?w=500',
+    category: 'ready-to-wear',
     isNew: true,
     rating: 4.8,
     reviews: 24,
   },
   {
     id: 2,
-    name: 'Festive Pret Collection',
-    price: 349,
+    name: 'Velvet Bridal Collection',
+    price: 1250,
     image: 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=500',
-    isSale: true,
-    originalPrice: 499,
+    category: 'bridal',
+    isSale: false,
     rating: 4.5,
     reviews: 18,
   },
   {
     id: 3,
-    name: 'Unstitched Luxury Set',
-    price: 249,
+    name: 'Cotton Lawn Three Piece',
+    price: 195,
     image: 'https://images.unsplash.com/photo-1591195853828-11db59a44f6b?w=500',
+    category: 'pret',
+    originalPrice: 285,
+    isSale: true,
     rating: 4.7,
     reviews: 32,
   },
   {
     id: 4,
-    name: 'Winter Collection Dress',
-    price: 599,
+    name: 'Festive Formal Wear',
+    price: 650,
     image: 'https://images.unsplash.com/photo-1539008588435-666d1b6e504c?w=500',
+    category: 'ready-to-wear',
     isNew: true,
     rating: 4.9,
     reviews: 15,
   },
   {
     id: 5,
-    name: 'Basics Everyday Wear',
-    price: 149,
+    name: 'Summer Unstitched Fabric',
+    price: 175,
     image: 'https://images.unsplash.com/photo-1552821206-7debf432f9a0?w=500',
+    category: 'unstitched',
     rating: 4.3,
     reviews: 42,
   },
   {
     id: 6,
-    name: 'Premium Handcrafted',
-    price: 799,
+    name: 'Luxury Pret Collection',
+    price: 395,
     image: 'https://images.unsplash.com/photo-1595777707802-78f6cf076e91?w=500',
+    category: 'pret',
+    originalPrice: 525,
+    isSale: true,
     rating: 5.0,
     reviews: 8,
   },
+  {
+    id: 7,
+    name: 'Chiffon Formal Dress',
+    price: 575,
+    image: 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=500',
+    category: 'ready-to-wear',
+    rating: 4.6,
+    reviews: 12,
+  },
+  {
+    id: 8,
+    name: 'Classic Heritage Piece',
+    price: 425,
+    image: 'https://images.unsplash.com/photo-1539008588435-666d1b6e504c?w=500',
+    category: 'ready-to-wear',
+    rating: 4.4,
+    reviews: 9,
+  },
 ];
 
-type FilterType = 'all' | 'bridal' | 'pret' | 'unstitched' | 'basics';
+type FilterType = 'all' | 'bridal' | 'pret' | 'unstitched' | 'ready-to-wear';
 
 const SearchProducts = () => {
   const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchParams] = useSearchParams();
+  const queryFromUrl = searchParams.get('q') || '';
+  
+  const [searchQuery, setSearchQuery] = useState(queryFromUrl);
   const [selectedCategory, setSelectedCategory] = useState<FilterType>('all');
   const [priceRange, setPriceRange] = useState([0, 1000]);
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState('relevance');
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    setSearchQuery(queryFromUrl);
+  }, [queryFromUrl]);
 
   const filteredProducts = mockProducts
     .filter((product) => {
@@ -78,7 +121,8 @@ const SearchProducts = () => {
         .toLowerCase()
         .includes(searchQuery.toLowerCase());
       const matchesPrice = product.price >= priceRange[0] && product.price <= priceRange[1];
-      return matchesSearch && matchesPrice;
+      const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
+      return matchesSearch && matchesPrice && matchesCategory;
     })
     .sort((a, b) => {
       switch (sortBy) {
@@ -139,7 +183,7 @@ const SearchProducts = () => {
                   </button>
                 </div>
 
-                {(showFilters || window.innerWidth >= 1024) && (
+                {(showFilters || !isMobile) && (
                   <div className="space-y-6 pb-4">
                     {/* Category Filter */}
                     <div>
@@ -150,13 +194,20 @@ const SearchProducts = () => {
                           { value: 'bridal' as FilterType, label: 'Bridal' },
                           { value: 'pret' as FilterType, label: 'Pret' },
                           { value: 'unstitched' as FilterType, label: 'Unstitched' },
-                          { value: 'basics' as FilterType, label: 'Basics' },
+                          { value: 'ready-to-wear' as FilterType, label: 'Ready to Wear' },
                         ].map((cat) => (
                           <label key={cat.value} className="flex items-center gap-2 cursor-pointer">
                             <input
-                              type="checkbox"
+                              type="radio"
+                              name="category"
+                              value={cat.value}
                               checked={selectedCategory === cat.value}
-                              onChange={() => setSelectedCategory(cat.value)}
+                              onChange={() => {
+                                setSelectedCategory(cat.value);
+                                if (isMobile) {
+                                  setShowFilters(false);
+                                }
+                              }}
                               className="rounded"
                             />
                             <span className="text-sm">{cat.label}</span>
@@ -239,15 +290,18 @@ const SearchProducts = () => {
 
               {filteredProducts.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filteredProducts.map((product) => (
-                    <div
-                      key={product.id}
-                      onClick={() => navigate(`/product/${product.id}`)}
-                      className="cursor-pointer"
-                    >
-                      <ProductCard {...product} />
-                    </div>
-                  ))}
+                  {filteredProducts.map((product) => {
+                    const productSlug = product.name.toLowerCase().replace(/\s+/g, '-');
+                    return (
+                      <div
+                        key={product.id}
+                        onClick={() => navigate(`/product/${productSlug}`)}
+                        className="cursor-pointer"
+                      >
+                        <ProductCard {...product} />
+                      </div>
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="text-center py-12">

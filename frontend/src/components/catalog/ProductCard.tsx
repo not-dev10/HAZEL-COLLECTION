@@ -11,6 +11,7 @@ interface ProductCardProps {
   isNew?: boolean;
   isSale?: boolean;
   originalPrice?: number;
+  category?: string;
 }
 
 const ProductCard = ({
@@ -21,6 +22,7 @@ const ProductCard = ({
   isNew,
   isSale,
   originalPrice,
+  category,
 }: ProductCardProps) => {
   const navigate = useNavigate();
   const productSlug = name.toLowerCase().replace(/\s+/g, '-');
@@ -82,9 +84,16 @@ const ProductCard = ({
         </div>
       </div>
       <div className="text-center space-y-1.5 flex-grow flex flex-col justify-between">
-        <h3 className="text-xs tracking-wider uppercase font-medium line-clamp-1 h-4 hover:opacity-70 transition-opacity">
-          {name}
-        </h3>
+        <div>
+          {category && (
+            <p className="text-[10px] tracking-widest uppercase text-muted-foreground font-semibold mb-1">
+              {category}
+            </p>
+          )}
+          <h3 className="text-xs tracking-wider uppercase font-medium line-clamp-1 h-4 hover:opacity-70 transition-opacity">
+            {name}
+          </h3>
+        </div>
         <div className="flex items-center justify-center gap-2 text-xs md:text-sm">
           {isSale && originalPrice && (
             <span className="text-muted-foreground line-through">
