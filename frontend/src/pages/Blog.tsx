@@ -3,6 +3,7 @@ import { Calendar, User } from 'lucide-react';
 import { useState } from 'react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import { getBlogImageUrl, CLOUDINARY_IMAGES } from '@/lib/cloudinary';
 
 interface BlogPost {
   id: number;
@@ -28,9 +29,9 @@ const blogPosts: BlogPost[] = [
     Think about the season and venue of your wedding. A heavy satin gown might be uncomfortable for a summer beach wedding, while a lighter silk would be perfect.
 
     Don't forget about the details! Embroidery, beading, and embellishments can transform a simple design into something truly spectacular. Our handcrafted bridal collection features intricate details created by master artisans.`,
-    author: 'Hezal Couture Team',
+    author: 'Hezal the Label Team',
     date: '2025-12-15',
-    image: 'https://images.unsplash.com/photo-1595777707802-78f6cf076e91?w=800',
+    image: getBlogImageUrl(CLOUDINARY_IMAGES.VELVET_BRIDAL_COLLECTION, 'featured'),
     category: 'Bridal',
   },
   {
@@ -47,7 +48,7 @@ const blogPosts: BlogPost[] = [
     The key to great styling is confidence. Choose pieces that make you feel beautiful and comfortable.`,
     author: 'Style Editor',
     date: '2025-11-28',
-    image: 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=800',
+    image: getBlogImageUrl(CLOUDINARY_IMAGES.EMBROIDERED_SILK_ENSEMBLE, 'featured'),
     category: 'Style Tips',
   },
   {
@@ -55,7 +56,7 @@ const blogPosts: BlogPost[] = [
     title: 'Fabric Care and Maintenance Guide',
     excerpt:
       'Learn how to care for your luxury pieces to ensure they last for years. Tips for cleaning, storage, and maintenance.',
-    content: `Proper care extends the life of your luxury garments. Here are essential tips for maintaining your Hezal Couture pieces.
+    content: `Proper care extends the life of your luxury garments. Here are essential tips for maintaining your Hezal the Label pieces.
 
     Always check the care label first. For delicate fabrics like silk and satin, dry cleaning is recommended.
 
@@ -66,7 +67,7 @@ const blogPosts: BlogPost[] = [
     With proper care, your pieces will remain beautiful for years to come.`,
     author: 'Care Expert',
     date: '2025-11-10',
-    image: 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=800',
+    image: getBlogImageUrl(CLOUDINARY_IMAGES.FESTIVE_FORMAL_WEAR, 'featured'),
     category: 'Care Guide',
   },
   {
@@ -83,7 +84,7 @@ const blogPosts: BlogPost[] = [
     Our unstitched collections feature the finest fabrics sourced globally, giving you endless possibilities.`,
     author: 'Design Team',
     date: '2025-10-25',
-    image: 'https://images.unsplash.com/photo-1591195853828-11db59a44f6b?w=800',
+    image: getBlogImageUrl(CLOUDINARY_IMAGES.COTTON_LAWN_THREE_PIECE, 'featured'),
     category: 'Collections',
   },
 ];

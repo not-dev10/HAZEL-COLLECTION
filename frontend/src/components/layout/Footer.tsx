@@ -146,7 +146,7 @@ const Footer = () => {
       <div className="border-t border-muted-foreground/20">
         <div className="container mx-auto px-4 lg:px-8 py-6">
           <p className="text-xs text-muted-foreground text-center">
-            © 2026 Hezal Couture Intl, Developed by Shopistan – Powered by XStak
+            © 2026 Hezal the Label Intl, Developed by Shopistan – Powered by XStak
           </p>
         </div>
       </div>

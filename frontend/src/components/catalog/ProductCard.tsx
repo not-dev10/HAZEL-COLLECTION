@@ -1,13 +1,16 @@
+import { useState } from 'react';
 import { AddToCartButton } from '@/components/ui/add-to-cart-button';
 import { AddToWishlistButton } from '@/components/ui/add-to-wishlist-button';
 import { CartItem } from '@/context/CartContext';
 import { useNavigate } from 'react-router-dom';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface ProductCardProps {
-  id: number;
+  id: string | number;
   name: string;
   price: number;
   image: string;
+  images?: string[];
   isNew?: boolean;
   isSale?: boolean;
   originalPrice?: number;
@@ -19,6 +22,7 @@ const ProductCard = ({
   name,
   price,
   image,
+  images,
   isNew,
   isSale,
   originalPrice,
@@ -26,6 +30,9 @@ const ProductCard = ({
 }: ProductCardProps) => {
   const navigate = useNavigate();
   const productSlug = name.toLowerCase().replace(/\s+/g, '-');
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const allImages = images && images.length > 0 ? images : [image];
+  const displayImage = allImages[currentImageIndex] || image;
 
   const cartItem: CartItem = {
     id: id.toString(),
@@ -42,6 +49,11 @@ const ProductCard = ({
     navigate(`/product/${productSlug}`);
   };
 
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    console.error(`Image failed to load for product: ${name}`, image);
+    e.currentTarget.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="300" height="400"%3E%3Crect fill="%23f0f0f0" width="300" height="400"/%3E%3Ctext x="50%25" y="50%25" font-size="14" fill="%23999" text-anchor="middle" dy=".3em"%3EImage not available%3C/text%3E%3C/svg%3E';
+  };
+
   return (
     <article 
       className="group flex flex-col h-full cursor-pointer"
@@ -49,11 +61,39 @@ const ProductCard = ({
     >
       <div className="product-card-image relative aspect-[3/4] bg-muted mb-4 flex-shrink-0">
         <img
-          src={image}
+          src={displayImage}
           alt={name}
+          onError={handleImageError}
           className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
           loading="lazy"
         />
+        
+        {/* Image Navigation */}
+        {allImages.length > 1 && (
+          <>
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setCurrentImageIndex((prev) => (prev === 0 ? allImages.length - 1 : prev - 1));
+              }}
+              className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
+            >
+              <ChevronLeft size={16} />
+            </button>
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setCurrentImageIndex((prev) => (prev === allImages.length - 1 ? 0 : prev + 1));
+              }}
+              className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
+            >
+              <ChevronRight size={16} />
+            </button>
+          </>
+        )}
+        
         {/* Badges */}
         {isNew && (
           <span className="absolute top-4 left-4 bg-foreground text-background text-[10px] tracking-wider px-3 py-1 uppercase">

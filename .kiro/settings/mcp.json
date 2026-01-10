@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "postman": {
+      "command": "uvx",
+      "args": ["postman-mcp-server@latest"],
+      "env": {
+        "FASTMCP_LOG_LEVEL": "ERROR"
+      },
+      "disabled": false,
+      "autoApprove": []
+    }
+  }
+}

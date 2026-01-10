@@ -14,7 +14,10 @@
     "install:all": "npm install && npm run frontend:install && npm run backend:install",
     "dev": "npm run frontend:dev",
     "build": "npm run frontend:build",
-    "preview": "npm run frontend:preview"
+    "preview": "npm run frontend:preview",
+    "test:cart-wishlist": "node test-wishlist-cart.js",
+    "test:frontend": "cd frontend && node ../test-frontend-integration.js",
+    "test": "npm run test:frontend && npm run test:cart-wishlist"
   },
   "keywords": ["ecommerce", "fashion", "monorepo"],
   "author": "",

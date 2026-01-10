@@ -1,0 +1,500 @@
+{
+  "info": {
+    "_postman_id": "hezal-admin-apis-test",
+    "name": "Hezal the Label - Admin APIs Test Collection",
+    "description": "Complete API testing for Settings, Product Attributes, and Order Management",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Settings API",
+      "item": [
+        {
+          "name": "Get Settings",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5001/api/settings",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5001",
+              "path": ["api", "settings"]
+            }
+          }
+        },
+        {
+          "name": "Update Store Info",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"storeName\": \"Hezal the Label\",\n  \"storeDescription\": \"Luxury bridal and couture fashion\",\n  \"storeEmail\": \"contact@hezalthelabel.com\",\n  \"storePhone\": \"+92-300-1234567\",\n  \"storeAddress\": \"123 Fashion Street, Karachi, Pakistan\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8000/api/settings/store-info",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["api", "settings", "store-info"]
+            }
+          }
+        },
+        {
+          "name": "Update Social Media",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"instagram\": \"https://instagram.com/hezalthelabel\",\n  \"facebook\": \"https://facebook.com/hezalthelabel\",\n  \"tiktok\": \"https://tiktok.com/@hezalthelabel\",\n  \"youtube\": \"https://youtube.com/@hezalthelabel\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8000/api/settings/social-media",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["api", "settings", "social-media"]
+            }
+          }
+        },
+        {
+          "name": "Update Payment Methods",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"methods\": [\n    {\"name\": \"Credit Card\", \"enabled\": true},\n    {\"name\": \"Bank Transfer\", \"enabled\": true},\n    {\"name\": \"Cash on Delivery\", \"enabled\": true}\n  ]\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8000/api/settings/payment-methods",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["api", "settings", "payment-methods"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Product Attributes API",
+      "item": [
+        {
+          "name": "Create Variant",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sku\": \"HTL-DRESS-001-RED-M\",\n  \"size\": \"M\",\n  \"color\": \"Red\",\n  \"price\": 2500,\n  \"originalPrice\": 3000,\n  \"stock\": 15\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8000/api/products-attributes/{{productId}}/variants",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["api", "products-attributes", "{{productId}}", "variants"]
+            }
+          }
+        },
+        {
+          "name": "Update Product Images",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"main\": \"https://res.cloudinary.com/dknwcmcki/image/upload/didi-fashion/products/{{productId}}/main.jpg\",\n  \"alt1\": \"https://res.cloudinary.com/dknwcmcki/image/upload/didi-fashion/products/{{productId}}/alt1.jpg\",\n  \"thumbnail\": \"https://res.cloudinary.com/dknwcmcki/image/upload/didi-fashion/products/{{productId}}/thumbnail.jpg\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8000/api/products-attributes/{{productId}}/images",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["api", "products-attributes", "{{productId}}", "images"]
+            }
+          }
+        },
+        {
+          "name": "Update Product Sizes",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sizes\": [\"XS\", \"S\", \"M\", \"L\", \"XL\", \"2XL\"]\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8000/api/products-attributes/{{productId}}/sizes",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["api", "products-attributes", "{{productId}}", "sizes"]
+            }
+          }
+        },
+        {
+          "name": "Update Product Colors",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"colors\": [\"Red\", \"Blue\", \"Green\", \"Black\", \"White\", \"Gold\"]\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8000/api/products-attributes/{{productId}}/colors",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["api", "products-attributes", "{{productId}}", "colors"]
+            }
+          }
+        },
+        {
+          "name": "Update Stock",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantity\": 50\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8000/api/products-attributes/{{productId}}/stock",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["api", "products-attributes", "{{productId}}", "stock"]
+            }
+          }
+        },
+        {
+          "name": "Update SEO",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"metaTitle\": \"Luxury Bridal Dress | Hezal the Label\",\n  \"metaDescription\": \"Premium handcrafted bridal collection from Hezal the Label\",\n  \"metaKeywords\": \"bridal, couture, luxury\",\n  \"slug\": \"luxury-bridal-dress-red\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8000/api/products-attributes/{{productId}}/seo",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["api", "products-attributes", "{{productId}}", "seo"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Order Management API",
+      "item": [
+        {
+          "name": "Get All Orders",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8000/api/orders-management/admin/list?status=pending&page=1&limit=20",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["api", "orders-management", "admin", "list"],
+              "query": [
+                {"key": "status", "value": "pending"},
+                {"key": "page", "value": "1"},
+                {"key": "limit", "value": "20"}
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Order Status",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"shipped\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8000/api/orders-management/admin/{{orderId}}/status",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["api", "orders-management", "admin", "{{orderId}}", "status"]
+            }
+          }
+        },
+        {
+          "name": "Update Tracking Info",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"trackingNumber\": \"PKG123456789\",\n  \"carrier\": \"DHL\",\n  \"trackingUrl\": \"https://tracking.dhl.com/PKG123456789\",\n  \"estimatedDelivery\": \"2026-01-15\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8000/api/orders-management/admin/{{orderId}}/tracking",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["api", "orders-management", "admin", "{{orderId}}", "tracking"]
+            }
+          }
+        },
+        {
+          "name": "Generate Invoice",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8000/api/orders-management/admin/{{orderId}}/invoice",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["api", "orders-management", "admin", "{{orderId}}", "invoice"]
+            }
+          }
+        },
+        {
+          "name": "Add Order Note",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"note\": \"Order is being prepared for shipment\",\n  \"noteType\": \"admin\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8000/api/orders-management/admin/{{orderId}}/notes",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["api", "orders-management", "admin", "{{orderId}}", "notes"]
+            }
+          }
+        },
+        {
+          "name": "Cancel Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Customer requested cancellation\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8000/api/orders-management/admin/{{orderId}}/cancel",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["api", "orders-management", "admin", "{{orderId}}", "cancel"]
+            }
+          }
+        },
+        {
+          "name": "Process Refund",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 5000,\n  \"reason\": \"Defective product\",\n  \"transactionId\": \"TXN-20260109-001\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8000/api/orders-management/admin/{{orderId}}/refund",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["api", "orders-management", "admin", "{{orderId}}", "refund"]
+            }
+          }
+        },
+        {
+          "name": "Get Order Stats",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8000/api/orders-management/admin/stats?startDate=2026-01-01&endDate=2026-01-31",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["api", "orders-management", "admin", "stats"],
+              "query": [
+                {"key": "startDate", "value": "2026-01-01"},
+                {"key": "endDate", "value": "2026-01-31"}
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "admin_token",
+      "value": "your_admin_jwt_token_here",
+      "type": "string"
+    },
+    {
+      "key": "productId",
+      "value": "your_product_id_here",
+      "type": "string"
+    },
+    {
+      "key": "orderId",
+      "value": "your_order_id_here",
+      "type": "string"
+    }
+  ]
+}

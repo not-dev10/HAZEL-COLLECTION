@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Heart, Search, User, Menu, X, ChevronDown } from 'lucide-react';
+import { Heart, Search, User, Menu, X, ChevronDown, LogOut, Package } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { MiniCart } from '@/components/cart/MiniCart';
 import { useWishlist } from '@/context/WishlistContext';
+import { useUser } from '@/context/UserContext';
+import { getProductImageUrl, CLOUDINARY_IMAGES } from '@/lib/cloudinary';
 
 interface Category {
   label: string;
@@ -75,56 +77,56 @@ const searchProducts = [
     name: 'Embroidered Silk Ensemble',
     price: 485,
     category: 'Ready to Wear',
-    image: 'https://images.unsplash.com/photo-1595777707802-78f6cf076e91?w=400',
+    image: getProductImageUrl(CLOUDINARY_IMAGES.EMBROIDERED_SILK_ENSEMBLE, 'thumbnail'),
   },
   {
     id: 2,
     name: 'Velvet Bridal Collection',
     price: 1250,
     category: 'Bridal',
-    image: 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=400',
+    image: getProductImageUrl(CLOUDINARY_IMAGES.VELVET_BRIDAL_COLLECTION, 'thumbnail'),
   },
   {
     id: 3,
     name: 'Cotton Lawn Three Piece',
     price: 195,
     category: 'Pret',
-    image: 'https://images.unsplash.com/photo-1591195853828-11db59a44f6b?w=400',
+    image: getProductImageUrl(CLOUDINARY_IMAGES.COTTON_LAWN_THREE_PIECE, 'thumbnail'),
   },
   {
     id: 4,
     name: 'Festive Formal Wear',
     price: 650,
     category: 'Ready to Wear',
-    image: 'https://images.unsplash.com/photo-1539008588435-666d1b6e504c?w=400',
+    image: getProductImageUrl(CLOUDINARY_IMAGES.FESTIVE_FORMAL_WEAR, 'thumbnail'),
   },
   {
     id: 5,
     name: 'Summer Unstitched Fabric',
     price: 175,
     category: 'Unstitched',
-    image: 'https://images.unsplash.com/photo-1552821206-7debf432f9a0?w=400',
+    image: getProductImageUrl(CLOUDINARY_IMAGES.TEST_PRODUCT_1, 'thumbnail'),
   },
   {
     id: 6,
     name: 'Luxury Pret Collection',
     price: 395,
     category: 'Pret',
-    image: 'https://images.unsplash.com/photo-1595777707802-78f6cf076e91?w=400',
+    image: getProductImageUrl(CLOUDINARY_IMAGES.TEST_PRODUCT_2, 'thumbnail'),
   },
   {
     id: 7,
     name: 'Chiffon Formal Dress',
     price: 575,
     category: 'Ready to Wear',
-    image: 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=400',
+    image: getProductImageUrl(CLOUDINARY_IMAGES.TEST_PRODUCT_3, 'thumbnail'),
   },
   {
     id: 8,
     name: 'Classic Heritage Piece',
     price: 425,
     category: 'Ready to Wear',
-    image: 'https://images.unsplash.com/photo-1539008588435-666d1b6e504c?w=400',
+    image: getProductImageUrl(CLOUDINARY_IMAGES.EMBROIDERED_SILK_ENSEMBLE, 'thumbnail'),
   },
 ];
 
@@ -134,7 +136,13 @@ const Header = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
   const { wishlistCount } = useWishlist();
+  const { isLoggedIn, logout } = useUser();
   const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
 
   const handleSearchSubmit = (e: React.KeyboardEvent<HTMLInputElement> | React.FormEvent) => {
     if ('preventDefault' in e) {
@@ -162,17 +170,8 @@ const Header = () => {
 
   return (
     <>
-      {/* Mobile Logo Section */}
-      <div className="lg:hidden sticky top-0 z-40 bg-background border-b border-border">
-        <div className="container mx-auto px-4 py-2 flex items-center justify-center">
-          <a href="/" className="font-serif text-lg tracking-[0.02em] leading-tight">
-            <span>HEZAL COUTURE</span>
-          </a>
-        </div>
-      </div>
-
       {/* Main Header */}
-      <header className="sticky lg:top-0 -top-1 z-50 bg-background border-b border-border">
+      <header className="sticky lg:top-0 -top-1 z-50 bg-[#ead9c5] border-b border-[#e8dfd5]">
       <div className="container mx-auto">
         <div className="flex items-center justify-between gap-3 h-16 lg:h-20 px-3 lg:px-6">
           {/* Left Section */}
@@ -186,9 +185,9 @@ const Header = () => {
               {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
             </button>
 
-            {/* Logo - Hidden on Mobile, Left on Desktop */}
-            <a href="/" className="hidden lg:flex font-serif text-lg lg:text-xl tracking-[0.02em] leading-tight flex-shrink-0">
-              <span>HEZAL COUTURE</span>
+            {/* Brand Name */}
+            <a href="/" className="hidden lg:block font-serif text-lg tracking-wider uppercase text-black font-medium">
+              Hezal the Label
             </a>
 
             {/* Desktop Navigation - Wardrobe Icon */}
@@ -202,7 +201,7 @@ const Header = () => {
                   className="p-2 hover:opacity-70 transition-opacity flex items-center gap-1"
                   aria-label="The Wardrobe"
                 >
-                  <span className="text-lg tracking-wider uppercase text-sale font-medium">THE WARDROBE</span>
+                  <span className="text-lg tracking-wider uppercase text-black font-medium">THE WARDROBE</span>
                   <WardrobeIcon />
                 </button>
                 
@@ -242,7 +241,7 @@ const Header = () => {
           {/* Center Search Bar - Mobile and Desktop */}
           <div className="flex-1 mx-2">
             <form className="relative w-full" onSubmit={handleSearchSubmit}>
-              <Search className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-foreground" size={18} />
+              <Search className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-black" size={18} />
               <input
                 type="text"
                 placeholder="Search..."
@@ -267,7 +266,7 @@ const Header = () => {
                 onBlur={() => {
                   setTimeout(() => setShowSuggestions(false), 200);
                 }}
-                className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-2 sm:py-3 text-xs sm:text-sm border-2 border-foreground rounded-none bg-white text-foreground placeholder-muted-foreground focus:outline-none"
+                className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-2 sm:py-3 text-xs sm:text-sm border-2 border-black rounded-none bg-white text-black placeholder-[#9a9a9a] focus:outline-none"
               />
               
               {/* Search Suggestions Dropdown */}
@@ -303,16 +302,53 @@ const Header = () => {
           {/* Right Icons */}
           <div className="flex items-center space-x-2 lg:space-x-4 flex-shrink-0">
             <a href="/wishlist" className="flex p-1 hover:opacity-70 transition-opacity relative" aria-label="Wishlist">
-              <Heart size={24} strokeWidth={1.3} />
+              <Heart size={24} strokeWidth={1.3} className="text-black" />
               {wishlistCount > 0 && (
-                <span className="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-medium leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-foreground rounded-full">
+                <span className="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-medium leading-none text-white bg-[#d47a52] transform translate-x-1/2 -translate-y-1/2 rounded-full">
                   {wishlistCount}
                 </span>
               )}
             </a>
-            <a href="/account" className="hidden sm:flex p-1 hover:opacity-70 transition-opacity" aria-label="Account">
-              <User size={24} strokeWidth={1.3} />
-            </a>
+            
+            {/* My Orders Icon - Desktop */}
+            {isLoggedIn && (
+              <a href="/orders" className="hidden sm:flex p-1 hover:opacity-70 transition-opacity" aria-label="My Orders" title="My Orders">
+                <Package size={24} strokeWidth={1.3} className="text-black" />
+              </a>
+            )}
+            
+            {/* Auth Buttons - Desktop */}
+            {!isLoggedIn ? (
+              <>
+                <button 
+                  onClick={() => navigate('/login')}
+                  className="hidden sm:flex px-3 lg:px-4 py-2 text-xs font-medium tracking-wider uppercase text-black hover:opacity-70 transition-opacity"
+                >
+                  Sign In
+                </button>
+                <button 
+                  onClick={() => navigate('/signup')}
+                  className="hidden sm:flex px-3 lg:px-4 py-2 text-xs font-medium tracking-wider uppercase border border-black text-black hover:bg-black hover:text-[#ead9c5] transition-all"
+                >
+                  Sign Up
+                </button>
+              </>
+            ) : (
+              <>
+                <a href="/account" className="hidden sm:flex p-1 hover:opacity-70 transition-opacity" aria-label="Account">
+                  <User size={24} strokeWidth={1.3} className="text-black" />
+                </a>
+                <button 
+                  onClick={handleLogout}
+                  className="hidden sm:flex p-1 hover:opacity-70 transition-opacity text-[#c85a54] hover:text-[#a84640]"
+                  aria-label="Logout"
+                  title="Logout"
+                >
+                  <LogOut size={24} strokeWidth={1.3} />
+                </button>
+              </>
+            )}
+            
             <MiniCart />
           </div>
         </div>
@@ -378,14 +414,57 @@ const Header = () => {
                     </span>
                   )}
                 </a>
-                <a 
-                  href="/account"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-3 text-sm font-medium"
-                >
-                  <User size={18} strokeWidth={1.5} />
-                  Account
-                </a>
+                {isLoggedIn ? (
+                  <>
+                    <a 
+                      href="/orders"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-3 text-sm font-medium"
+                    >
+                      <Package size={18} strokeWidth={1.5} />
+                      My Orders
+                    </a>
+                    <a 
+                      href="/account"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-3 text-sm font-medium"
+                    >
+                      <User size={18} strokeWidth={1.5} />
+                      Account
+                    </a>
+                    <button 
+                      onClick={() => {
+                        handleLogout();
+                        setMobileMenuOpen(false);
+                      }}
+                      className="flex items-center gap-3 text-sm font-medium text-red-600 hover:text-red-700"
+                    >
+                      Logout
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button 
+                      onClick={() => {
+                        navigate('/login');
+                        setMobileMenuOpen(false);
+                      }}
+                      className="flex items-center gap-3 text-sm font-medium"
+                    >
+                      <User size={18} strokeWidth={1.5} />
+                      Sign In
+                    </button>
+                    <button 
+                      onClick={() => {
+                        navigate('/signup');
+                        setMobileMenuOpen(false);
+                      }}
+                      className="w-full px-4 py-2 text-xs font-medium tracking-wider uppercase border border-foreground hover:bg-foreground hover:text-background transition-all"
+                    >
+                      Sign Up
+                    </button>
+                  </>
+                )}
               </div>
             </nav>
           </div>

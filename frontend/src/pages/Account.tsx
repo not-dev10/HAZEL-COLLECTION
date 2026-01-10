@@ -22,22 +22,22 @@ const Account = () => {
   const [activeTab, setActiveTab] = useState<'overview' | 'billing' | 'shipping'>('overview');
 
   const [formData, setFormData] = useState({
-    firstName: user?.firstName || '',
-    lastName: user?.lastName || '',
+    firstName: user?.firstName || user?.fullName?.split(' ')[0] || '',
+    lastName: user?.lastName || user?.fullName?.split(' ').slice(1).join(' ') || '',
     email: user?.email || '',
     phone: user?.phone || '',
     dateOfBirth: user?.dateOfBirth || '',
     gender: user?.gender || '',
-    billingStreet: user?.billingAddress.street || '',
-    billingCity: user?.billingAddress.city || '',
-    billingState: user?.billingAddress.state || '',
-    billingZip: user?.billingAddress.zip || '',
-    billingCountry: user?.billingAddress.country || '',
-    shippingStreet: user?.shippingAddress.street || '',
-    shippingCity: user?.shippingAddress.city || '',
-    shippingState: user?.shippingAddress.state || '',
-    shippingZip: user?.shippingAddress.zip || '',
-    shippingCountry: user?.shippingAddress.country || '',
+    billingStreet: user?.billingAddress?.street || '',
+    billingCity: user?.billingAddress?.city || '',
+    billingState: user?.billingAddress?.state || '',
+    billingZip: user?.billingAddress?.zip || '',
+    billingCountry: user?.billingAddress?.country || '',
+    shippingStreet: user?.shippingAddress?.street || '',
+    shippingCity: user?.shippingAddress?.city || '',
+    shippingState: user?.shippingAddress?.state || '',
+    shippingZip: user?.shippingAddress?.zip || '',
+    shippingCountry: user?.shippingAddress?.country || '',
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -132,10 +132,10 @@ const Account = () => {
                     <User size={40} className="text-primary-foreground" />
                   </div>
                   <h2 className="text-xl font-serif">
-                    {user.firstName} {user.lastName}
+                    {user.firstName || user.fullName || 'Welcome'}
                   </h2>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Customer ID: {user.id}
+                    Customer ID: {user.id?.substring(0, 8)}...
                   </p>
                 </div>
 
@@ -303,7 +303,7 @@ const Account = () => {
                               <div>
                                 <p className="text-sm text-muted-foreground">Name</p>
                                 <p className="font-medium">
-                                  {user.firstName} {user.lastName}
+                                  {user.firstName || user.fullName || 'Not provided'} {user.lastName || ''}
                                 </p>
                               </div>
                             </div>
@@ -324,7 +324,7 @@ const Account = () => {
                                 <p className="text-sm text-muted-foreground">
                                   Phone
                                 </p>
-                                <p className="font-medium">{user.phone}</p>
+                                <p className="font-medium">{user.phone || 'Not provided'}</p>
                               </div>
                             </div>
 
@@ -369,11 +369,14 @@ const Account = () => {
                             Member Since
                           </p>
                           <p className="font-medium">
-                            {new Date(user.joinDate).toLocaleDateString('en-GB', {
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric',
-                            })}
+                            {user.joinDate || user.createdAt 
+                              ? new Date(user.joinDate || user.createdAt!).toLocaleDateString('en-GB', {
+                                  year: 'numeric',
+                                  month: 'long',
+                                  day: 'numeric',
+                                })
+                              : 'Recently joined'
+                            }
                           </p>
                         </div>
                       </>
@@ -454,17 +457,23 @@ const Account = () => {
                       <div className="flex items-start gap-4">
                         <MapPin size={20} className="text-muted-foreground mt-1" />
                         <div>
-                          <p className="font-medium mb-2">
-                            {user.billingAddress.street}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {user.billingAddress.city},{' '}
-                            {user.billingAddress.state}{' '}
-                            {user.billingAddress.zip}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {user.billingAddress.country}
-                          </p>
+                          {user.billingAddress?.street ? (
+                            <>
+                              <p className="font-medium mb-2">
+                                {user.billingAddress.street}
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                {user.billingAddress.city && `${user.billingAddress.city}, `}
+                                {user.billingAddress.state && `${user.billingAddress.state} `}
+                                {user.billingAddress.zip}
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                {user.billingAddress.country}
+                              </p>
+                            </>
+                          ) : (
+                            <p className="text-muted-foreground">No billing address provided</p>
+                          )}
                         </div>
                       </div>
                     )}
@@ -544,17 +553,23 @@ const Account = () => {
                       <div className="flex items-start gap-4">
                         <MapPin size={20} className="text-muted-foreground mt-1" />
                         <div>
-                          <p className="font-medium mb-2">
-                            {user.shippingAddress.street}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {user.shippingAddress.city},{' '}
-                            {user.shippingAddress.state}{' '}
-                            {user.shippingAddress.zip}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {user.shippingAddress.country}
-                          </p>
+                          {user.shippingAddress?.street ? (
+                            <>
+                              <p className="font-medium mb-2">
+                                {user.shippingAddress.street}
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                {user.shippingAddress.city && `${user.shippingAddress.city}, `}
+                                {user.shippingAddress.state && `${user.shippingAddress.state} `}
+                                {user.shippingAddress.zip}
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                {user.shippingAddress.country}
+                              </p>
+                            </>
+                          ) : (
+                            <p className="text-muted-foreground">No shipping address provided</p>
+                          )}
                         </div>
                       </div>
                     )}

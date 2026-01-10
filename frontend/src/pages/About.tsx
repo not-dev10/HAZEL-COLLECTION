@@ -21,7 +21,7 @@ const About = () => {
           </button>
 
           <div className="max-w-4xl mx-auto text-center mb-16">
-            <h1 className="text-5xl font-serif mb-6">Hezal Couture</h1>
+            <h1 className="text-5xl font-serif mb-6">Hezal the Label</h1>
             <p className="text-xl text-muted-foreground mb-8">
               Luxury Fashion with Traditional Artistry
             </p>
@@ -32,7 +32,7 @@ const About = () => {
           <div className="max-w-4xl mx-auto mb-16">
             <h2 className="text-3xl font-serif mb-6">Our Story</h2>
             <p className="text-muted-foreground leading-relaxed mb-4">
-              Hezal Couture was founded with a vision to celebrate luxury fashion that honors
+              Hezal the Label was founded with a vision to celebrate luxury fashion that honors
               traditional craftsmanship while embracing contemporary elegance. Each piece in our
               collection is a testament to meticulous attention to detail and the finest quality
               materials sourced from around the world.

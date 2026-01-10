@@ -23,7 +23,7 @@ const LoadingAnimation = () => {
         {/* Text */}
         <div className="text-center space-y-2">
           <h3 className="font-serif text-lg tracking-[0.1em] text-foreground">
-            HEZAL COUTURE
+            HEZAL THE LABEL
           </h3>
           <div className="flex justify-center gap-1.5">
             <div className="w-1 h-1 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0s' }}></div>

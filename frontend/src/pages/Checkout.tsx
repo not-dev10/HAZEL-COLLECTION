@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { API_BASE_URL } from '@/lib/api';
 import {
   Select,
   SelectContent,
@@ -145,6 +146,14 @@ const Checkout = () => {
       }
     }
 
+    if (step === 'payment') {
+      // Payment method is pre-selected with default 'credit-card'
+      // Just ensure a payment method is selected
+      if (!formData.paymentMethod.trim()) {
+        newErrors.paymentMethod = 'Please select a payment method';
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -175,9 +184,15 @@ const Checkout = () => {
   };
 
   const handleStepChange = (step: 'shipping' | 'payment' | 'review') => {
-    if (step === 'shipping' || (currentStep === 'shipping' && validateStep('shipping'))) {
-      setCurrentStep(step);
+    // Validate current step before moving to next step
+    if (currentStep === 'shipping' && !validateStep('shipping')) {
+      return; // Don't move if shipping validation fails
     }
+    if (currentStep === 'payment' && !validateStep('payment')) {
+      return; // Don't move if payment validation fails
+    }
+    // Allow navigation if validation passes
+    setCurrentStep(step);
   };
 
   const handleSubmitOrder = async () => {
@@ -187,17 +202,71 @@ const Checkout = () => {
 
     setIsSubmitting(true);
 
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      // Get token from sessionStorage
+      const token = sessionStorage.getItem('authToken');
+      if (!token) {
+        alert('Please login first to place an order');
+        setIsSubmitting(false);
+        navigate('/login');
+        return;
+      }
+
+      // Prepare order data
+      const orderData = {
+        items,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        phone: formData.phone,
+        billingStreet: formData.billingStreet,
+        billingCity: formData.billingCity,
+        billingState: formData.billingState,
+        billingZip: formData.billingZip,
+        billingCountry: formData.billingCountry,
+        deliveryStreet: formData.sameAsDelivery ? formData.billingStreet : formData.deliveryStreet,
+        deliveryCity: formData.sameAsDelivery ? formData.billingCity : formData.deliveryCity,
+        deliveryState: formData.sameAsDelivery ? formData.billingState : formData.deliveryState,
+        deliveryZip: formData.sameAsDelivery ? formData.billingZip : formData.deliveryZip,
+        deliveryCountry: formData.sameAsDelivery ? formData.billingCountry : formData.deliveryCountry,
+        sameAsDelivery: formData.sameAsDelivery,
+        paymentMethod: formData.paymentMethod,
+        subtotal: total,
+        shipping: total > 100 ? 0 : 10,
+        tax: total * 0.1,
+        grandTotal: total + (total > 100 ? 0 : 10) + (total * 0.1),
+      };
+
+      // Call backend API
+      const response = await fetch(`${API_BASE_URL}/api/orders`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(orderData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to create order');
+      }
+
+      // Order created successfully
       setOrderPlaced(true);
       clearCart();
-      setIsSubmitting(false);
       
       // Redirect to home after 3 seconds
       setTimeout(() => {
         navigate('/');
       }, 3000);
-    }, 2000);
+    } catch (error) {
+      console.error('Order creation error:', error);
+      alert(`Error placing order: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (items.length === 0 && !orderPlaced) {

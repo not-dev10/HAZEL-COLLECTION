@@ -1,0 +1,168 @@
+// Cloudinary configuration and utilities for frontend
+
+// Your Cloudinary cloud name (this is public and safe to expose)
+const CLOUDINARY_CLOUD_NAME = 'dknwcmcki';
+
+/**
+ * Generate Cloudinary URL with transformations
+ * @param publicId - The public ID of the image in Cloudinary
+ * @param transformations - Optional transformations object
+ * @returns Optimized Cloudinary URL
+ */
+export const getCloudinaryUrl = (
+  publicId: string,
+  transformations: {
+    width?: number;
+    height?: number;
+    crop?: string;
+    quality?: string;
+    format?: string;
+    [key: string]: any;
+  } = {}
+): string => {
+  const baseUrl = `https://res.cloudinary.com/${CLOUDINARY_CLOUD_NAME}/image/upload`;
+  
+  // Default transformations for optimization
+  const defaultTransforms = {
+    quality: 'auto',
+    fetch_format: 'auto',
+    ...transformations,
+  };
+  
+  // Build transformation string
+  const transformString = Object.entries(defaultTransforms)
+    .map(([key, value]) => {
+      // Convert camelCase to snake_case for Cloudinary
+      const cloudinaryKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();
+      return `${cloudinaryKey}_${value}`;
+    })
+    .join(',');
+  
+  return `${baseUrl}/${transformString}/${publicId}`;
+};
+
+/**
+ * Get responsive image URLs for different screen sizes
+ * @param publicId - The public ID of the image in Cloudinary
+ * @returns Object with URLs for different breakpoints
+ */
+export const getResponsiveImageUrls = (publicId: string) => {
+  return {
+    mobile: getCloudinaryUrl(publicId, { width: 400, crop: 'fill' }),
+    tablet: getCloudinaryUrl(publicId, { width: 768, crop: 'fill' }),
+    desktop: getCloudinaryUrl(publicId, { width: 1200, crop: 'fill' }),
+    thumbnail: getCloudinaryUrl(publicId, { width: 150, height: 150, crop: 'fill' }),
+    original: getCloudinaryUrl(publicId),
+  };
+};
+
+/**
+ * Product image transformations
+ */
+export const getProductImageUrl = (
+  publicId: string,
+  size: 'thumbnail' | 'card' | 'detail' | 'hero' = 'card'
+) => {
+  const transformations = {
+    thumbnail: { width: 150, height: 200, crop: 'fill' },
+    card: { width: 300, height: 400, crop: 'fill' },
+    detail: { width: 600, height: 800, crop: 'fill' },
+    hero: { width: 1200, height: 800, crop: 'fill' },
+  };
+  
+  return getCloudinaryUrl(publicId, transformations[size]);
+};
+
+/**
+ * Blog image transformations
+ */
+export const getBlogImageUrl = (
+  publicId: string,
+  size: 'thumbnail' | 'featured' | 'hero' = 'featured'
+) => {
+  const transformations = {
+    thumbnail: { width: 300, height: 200, crop: 'fill' },
+    featured: { width: 800, height: 400, crop: 'fill' },
+    hero: { width: 1200, height: 600, crop: 'fill' },
+  };
+  
+  return getCloudinaryUrl(publicId, transformations[size]);
+};
+
+/**
+ * Get asset image URL with fallback support
+ * This is used for testing with Cloudinary assets folder
+ * If admin panel provides an image, it will override this
+ * @param assetKey - Key from CLOUDINARY_IMAGES.ASSET_* constants
+ * @param size - Image size preset ('thumbnail' | 'card' | 'detail' | 'hero')
+ * @param adminProvidedUrl - Optional URL from admin panel (takes precedence)
+ * @returns Cloudinary URL or admin-provided URL
+ */
+export const getAssetImageUrl = (
+  assetKey: string,
+  size: 'thumbnail' | 'card' | 'detail' | 'hero' = 'card',
+  adminProvidedUrl?: string
+): string => {
+  // If admin panel provided a URL, use it (don't override admin logic)
+  if (adminProvidedUrl) {
+    return adminProvidedUrl;
+  }
+  
+  // Otherwise use the asset from Cloudinary
+  return getProductImageUrl(assetKey, size);
+};
+
+// Cloudinary public IDs mapping (populated after migration)
+export const CLOUDINARY_IMAGES = {
+  // Products - Successfully uploaded
+  EMBROIDERED_SILK_ENSEMBLE: 'hezal-couture/products/embroidered-silk-ensemble',
+  VELVET_BRIDAL_COLLECTION: 'hezal-couture/products/velvet-bridal-collection',
+  COTTON_LAWN_THREE_PIECE: 'hezal-couture/products/cotton-lawn-three-piece',
+  FESTIVE_FORMAL_WEAR: 'hezal-couture/products/festive-formal-wear',
+  
+  // Test images (can be used for other products)
+  TEST_PRODUCT_1: 'hezal-couture/products/test-product-1',
+  TEST_PRODUCT_2: 'hezal-couture/products/test-product-2',
+  TEST_PRODUCT_3: 'hezal-couture/products/test-product-3',
+  
+  // ===== ASSETS FOLDER - Location-specific images =====
+  
+  // Hero Assets
+  HERO_BRIDAL: 'hezal-couture/assets/hero/bridal',
+  HERO_COLLECTION: 'hezal-couture/assets/hero/collection',
+  HERO_UNSTITCHED: 'hezal-couture/assets/hero/unstitched',
+  HERO_FESTIVE: 'hezal-couture/assets/hero/festive',
+  
+  // Collection Assets
+  COLLECTION_RTW: 'hezal-couture/assets/collection/ready-to-wear',
+  COLLECTION_UNSTITCHED: 'hezal-couture/assets/collection/unstitched',
+  COLLECTION_BRIDAL: 'hezal-couture/assets/collection/bridal',
+  COLLECTION_FESTIVE: 'hezal-couture/assets/collection/festive',
+  
+  // Editorial Assets
+  EDITORIAL_BRIDAL: 'hezal-couture/assets/editorial/bridal',
+  EDITORIAL_COLLECTION: 'hezal-couture/assets/editorial/collection',
+  EDITORIAL_UNSTITCHED: 'hezal-couture/assets/editorial/unstitched',
+  
+  // Product Grid Assets (for ProductGrid component)
+  PRODUCT_GRID_1: 'hezal-couture/assets/products/grid-1',
+  PRODUCT_GRID_2: 'hezal-couture/assets/products/grid-2',
+  PRODUCT_GRID_3: 'hezal-couture/assets/products/grid-3',
+  PRODUCT_GRID_4: 'hezal-couture/assets/products/grid-4',
+  PRODUCT_GRID_5: 'hezal-couture/assets/products/grid-5',
+  PRODUCT_GRID_6: 'hezal-couture/assets/products/grid-6',
+  PRODUCT_GRID_7: 'hezal-couture/assets/products/grid-7',
+  PRODUCT_GRID_8: 'hezal-couture/assets/products/grid-8',
+  
+  // Product Recommendations Assets
+  RECOMMENDATION_1: 'hezal-couture/assets/recommendations/product-1',
+  RECOMMENDATION_2: 'hezal-couture/assets/recommendations/product-2',
+  RECOMMENDATION_3: 'hezal-couture/assets/recommendations/product-3',
+  RECOMMENDATION_4: 'hezal-couture/assets/recommendations/product-4',
+  
+  // Blog Assets
+  BLOG_FEATURED_1: 'hezal-couture/assets/blog/featured-1',
+  BLOG_FEATURED_2: 'hezal-couture/assets/blog/featured-2',
+  BLOG_FEATURED_3: 'hezal-couture/assets/blog/featured-3',
+  BLOG_FEATURED_4: 'hezal-couture/assets/blog/featured-4',
+};

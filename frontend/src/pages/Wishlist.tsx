@@ -102,15 +102,18 @@ const Wishlist = () => {
                         {item.name}
                       </h3>
                       <p className="text-sm font-medium">
-                        ${item.price.toLocaleString()}
+                        £{item.price.toLocaleString()}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        Added{' '}
-                        {new Date(item.addedAt).toLocaleDateString('en-US', {
-                          year: 'numeric',
-                          month: 'short',
-                          day: 'numeric',
-                        })}
+                        {item.addedAt ? (
+                          <>Added {new Date(item.addedAt).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric',
+                          })}</>
+                        ) : (
+                          <>Saved</>
+                        )}
                       </p>
                     </div>
                   </div>

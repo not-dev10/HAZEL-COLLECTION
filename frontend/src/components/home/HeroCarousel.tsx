@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import heroBridal from '@/assets/hero-bridal.jpg';
-import heroCollection from '@/assets/hero-collection.jpg';
-import heroUnstitched from '@/assets/hero-unstitched.jpg';
+import { getProductImageUrl, CLOUDINARY_IMAGES } from '@/lib/cloudinary';
 
 interface Slide {
   id: number;
@@ -15,21 +13,21 @@ interface Slide {
 const slides: Slide[] = [
   {
     id: 1,
-    image: heroBridal,
+    image: getProductImageUrl(CLOUDINARY_IMAGES.HERO_BRIDAL, 'hero'),
     collection: 'Studio Portraits',
-    subtitle: 'Hezal Couture Bridal 2025',
+    subtitle: 'Hezal the Label Bridal 2025',
     cta: 'LIVE NOW',
   },
   {
     id: 2,
-    image: heroCollection,
+    image: getProductImageUrl(CLOUDINARY_IMAGES.HERO_FESTIVE, 'hero'),
     collection: 'Winter Luxe',
     subtitle: 'Festive Collection 2025',
     cta: 'SHOP NOW',
   },
   {
     id: 3,
-    image: heroUnstitched,
+    image: getProductImageUrl(CLOUDINARY_IMAGES.HERO_UNSTITCHED, 'hero'),
     collection: 'Ethereal Dreams',
     subtitle: 'Ready To Wear Collection',
     cta: 'EXPLORE',
@@ -38,6 +36,7 @@ const slides: Slide[] = [
 
 const HeroCarousel = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [failedImages, setFailedImages] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -58,8 +57,13 @@ const HeroCarousel = () => {
     setCurrentSlide((prev) => (prev + 1) % slides.length);
   };
 
+  const handleImageError = (slideId: number) => {
+    console.error(`Hero image failed to load for slide ${slideId}`);
+    setFailedImages(prev => new Set(prev).add(slideId));
+  };
+
   return (
-    <section className="relative h-[60vh] md:h-[80vh] lg:h-screen overflow-hidden">
+    <section className="relative h-[60vh] md:h-[80vh] lg:h-screen overflow-hidden bg-gray-300">
       {slides.map((slide, index) => (
         <div
           key={slide.id}
@@ -67,11 +71,18 @@ const HeroCarousel = () => {
             index === currentSlide ? 'opacity-100' : 'opacity-0'
           }`}
         >
-          <img
-            src={slide.image}
-            alt={slide.collection}
-            className="w-full h-full object-cover"
-          />
+          {!failedImages.has(slide.id) ? (
+            <img
+              src={slide.image}
+              alt={slide.collection}
+              onError={() => handleImageError(slide.id)}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-gray-400">
+              <span className="text-gray-600">Image not available</span>
+            </div>
+          )}
           <div className="hero-overlay" />  
           <div className="absolute inset-0 flex items-center justify-center text-center">
             <div
@@ -99,21 +110,21 @@ const HeroCarousel = () => {
       {/* Navigation Arrows */}
       <button
         onClick={goToPrev}
-        className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 p-2 text-primary-foreground/80 hover:text-primary-foreground transition-colors"
+        className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 p-2 text-primary-foreground/80 hover:text-primary-foreground transition-colors z-10"
         aria-label="Previous slide"
       >
         <ChevronLeft size={32} strokeWidth={1} />
       </button>
       <button
         onClick={goToNext}
-        className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 p-2 text-primary-foreground/80 hover:text-primary-foreground transition-colors"
+        className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 p-2 text-primary-foreground/80 hover:text-primary-foreground transition-colors z-10"
         aria-label="Next slide"
       >
         <ChevronRight size={32} strokeWidth={1} />
       </button>
 
       {/* Dots Navigation */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center space-x-3">
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center space-x-3 z-10">
         {slides.map((_, index) => (
           <button
             key={index}

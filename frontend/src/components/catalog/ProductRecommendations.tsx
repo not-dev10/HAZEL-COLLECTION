@@ -1,36 +1,17 @@
 import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import ProductCard from './ProductCard';
+import { API_BASE_URL } from '@/lib/api';
 
-const recommendedProducts = [
-  {
-    id: 2,
-    name: 'Complementary Bottoms',
-    price: 149,
-    image: 'https://images.unsplash.com/photo-1552821206-7debf432f9a0?w=500',
-    isNew: false,
-  },
-  {
-    id: 3,
-    name: 'Matching Accessories Set',
-    price: 89,
-    image: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=500',
-    isNew: true,
-  },
-  {
-    id: 4,
-    name: 'Similar Style Dress',
-    price: 199,
-    image: 'https://images.unsplash.com/photo-1595777707802-78f6cf076e91?w=500',
-    isSale: true,
-    originalPrice: 299,
-  },
-  {
-    id: 5,
-    name: 'Coordinating Shawl',
-    price: 119,
-    image: 'https://images.unsplash.com/photo-1519167758993-dfa06a37fdf3?w=500',
-  },
-];
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  image: string;
+  isNew?: boolean;
+  isSale?: boolean;
+  originalPrice?: number;
+}
 
 interface ProductRecommendationsProps {
   currentProductId?: string | number;
@@ -38,8 +19,47 @@ interface ProductRecommendationsProps {
 
 const ProductRecommendations = ({ currentProductId }: ProductRecommendationsProps) => {
   const navigate = useNavigate();
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/products`);
+        const data = await response.json();
+        if (data.success && data.products) {
+          // Get first 4 products as recommendations
+          setProducts(data.products.slice(0, 4));
+        }
+      } catch (error) {
+        console.error('Failed to fetch products:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
 
   const getProductSlug = (name: string) => name.toLowerCase().replace(/\s+/g, '-');
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-2xl font-serif mb-2">You Might Also Like</h2>
+          <p className="text-muted-foreground">
+            Discover products that complement this item perfectly
+          </p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="bg-gray-200 animate-pulse h-96 rounded" />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -51,7 +71,7 @@ const ProductRecommendations = ({ currentProductId }: ProductRecommendationsProp
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {recommendedProducts
+        {products
           .filter((p) => p.id !== currentProductId)
           .map((product) => (
             <div

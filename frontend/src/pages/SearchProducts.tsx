@@ -1,93 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Search, ChevronDown, Star } from 'lucide-react';
+import { Search, ChevronDown } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import ProductCard from '@/components/catalog/ProductCard';
-
-const mockProducts = [
-  {
-    id: 1,
-    name: 'Embroidered Silk Ensemble',
-    price: 485,
-    image: 'https://images.unsplash.com/photo-1595777707802-78f6cf076e91?w=500',
-    category: 'ready-to-wear',
-    isNew: true,
-    rating: 4.8,
-    reviews: 24,
-  },
-  {
-    id: 2,
-    name: 'Velvet Bridal Collection',
-    price: 1250,
-    image: 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=500',
-    category: 'bridal',
-    isSale: false,
-    rating: 4.5,
-    reviews: 18,
-  },
-  {
-    id: 3,
-    name: 'Cotton Lawn Three Piece',
-    price: 195,
-    image: 'https://images.unsplash.com/photo-1591195853828-11db59a44f6b?w=500',
-    category: 'pret',
-    originalPrice: 285,
-    isSale: true,
-    rating: 4.7,
-    reviews: 32,
-  },
-  {
-    id: 4,
-    name: 'Festive Formal Wear',
-    price: 650,
-    image: 'https://images.unsplash.com/photo-1539008588435-666d1b6e504c?w=500',
-    category: 'ready-to-wear',
-    isNew: true,
-    rating: 4.9,
-    reviews: 15,
-  },
-  {
-    id: 5,
-    name: 'Summer Unstitched Fabric',
-    price: 175,
-    image: 'https://images.unsplash.com/photo-1552821206-7debf432f9a0?w=500',
-    category: 'unstitched',
-    rating: 4.3,
-    reviews: 42,
-  },
-  {
-    id: 6,
-    name: 'Luxury Pret Collection',
-    price: 395,
-    image: 'https://images.unsplash.com/photo-1595777707802-78f6cf076e91?w=500',
-    category: 'pret',
-    originalPrice: 525,
-    isSale: true,
-    rating: 5.0,
-    reviews: 8,
-  },
-  {
-    id: 7,
-    name: 'Chiffon Formal Dress',
-    price: 575,
-    image: 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=500',
-    category: 'ready-to-wear',
-    rating: 4.6,
-    reviews: 12,
-  },
-  {
-    id: 8,
-    name: 'Classic Heritage Piece',
-    price: 425,
-    image: 'https://images.unsplash.com/photo-1539008588435-666d1b6e504c?w=500',
-    category: 'ready-to-wear',
-    rating: 4.4,
-    reviews: 9,
-  },
-];
+import { API_BASE_URL } from '@/lib/api';
 
 type FilterType = 'all' | 'bridal' | 'pret' | 'unstitched' | 'ready-to-wear';
 
@@ -102,6 +21,8 @@ const SearchProducts = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState('relevance');
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const handleResize = () => {
@@ -115,7 +36,26 @@ const SearchProducts = () => {
     setSearchQuery(queryFromUrl);
   }, [queryFromUrl]);
 
-  const filteredProducts = mockProducts
+  // Fetch products from API
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/products`);
+        const data = await response.json();
+        if (data.success && data.products) {
+          setProducts(data.products);
+        }
+      } catch (error) {
+        console.error('Failed to fetch products:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
+  const filteredProducts = products
     .filter((product) => {
       const matchesSearch = product.name
         .toLowerCase()
@@ -131,9 +71,7 @@ const SearchProducts = () => {
         case 'price-high':
           return b.price - a.price;
         case 'newest':
-          return b.id - a.id;
-        case 'rating':
-          return (b.rating || 0) - (a.rating || 0);
+          return (b.createdAt ? new Date(b.createdAt).getTime() : 0) - (a.createdAt ? new Date(a.createdAt).getTime() : 0);
         default:
           return 0;
       }
