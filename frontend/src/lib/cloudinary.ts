@@ -131,7 +131,7 @@ export const CLOUDINARY_IMAGES = {
   SLIDER_IMAGE_3: 'didi-monorepo/hero',
   
   // Bridal Section Image
-  BRIDAL_SECTION_IMAGE: 'didi-monorepo/detail',
+  BRIDAL_SECTION_IMAGE: 'hezal-couture/products/velvet-bridal-collection',
   
   // Collection Banner Images
   COLLECTION_BANNER_1: 'didi-monorepo/collection',
@@ -152,7 +152,7 @@ export const CLOUDINARY_IMAGES = {
   COLLECTION_FESTIVE: 'hezal-couture/assets/collection/festive',
   
   // Editorial Assets
-  EDITORIAL_BRIDAL: 'hezal-couture/assets/editorial/bridal',
+  EDITORIAL_BRIDAL: 'hezal-couture/products/velvet-bridal-collection',
   EDITORIAL_COLLECTION: 'hezal-couture/assets/editorial/collection',
   EDITORIAL_UNSTITCHED: 'hezal-couture/assets/editorial/unstitched',
   
@@ -164,7 +164,7 @@ export const CLOUDINARY_IMAGES = {
   PRODUCT_GRID_5: 'hezal-couture/assets/products/grid-5',
   PRODUCT_GRID_6: 'hezal-couture/assets/products/grid-6',
   PRODUCT_GRID_7: 'hezal-couture/assets/products/grid-7',
-  PRODUCT_GRID_8: 'hezal-couture/assets/products/grid-8',
+  PRODUCT_GRID_8: 'hezal-couture/assets/products/grid-8', 
   
   // Product Recommendations Assets
   RECOMMENDATION_1: 'hezal-couture/assets/recommendations/product-1',

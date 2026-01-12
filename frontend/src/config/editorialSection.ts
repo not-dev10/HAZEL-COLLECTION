@@ -21,7 +21,7 @@ export const editorialConfig: EditorialContent = {
     preserving centuries-old techniques while embracing contemporary 
     elegance. Our bridal collection celebrates the beauty of tradition 
     interwoven with modern sophistication.`,
-  image: getProductImageUrl(CLOUDINARY_IMAGES.EDITORIAL_BRIDAL, 'detail'),
+  image: getProductImageUrl(CLOUDINARY_IMAGES.VELVET_BRIDAL_COLLECTION, 'detail'),
   ctaText: 'Explore Collection',
   ctaLink: '/collection/bridals',
 };
