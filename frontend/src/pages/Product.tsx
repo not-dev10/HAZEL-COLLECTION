@@ -31,36 +31,56 @@ const Product = () => {
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(true);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [cartMessage, setCartMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // Fetch product from API
   useEffect(() => {
     const fetchProduct = async () => {
       try {
+        setLoading(true);
+        console.log('📥 Fetching products... (slug:', slug, ')');
+        
         const response = await fetch(`${API_BASE_URL}/api/products`);
         const data = await response.json();
+        
+        console.log('✅ Products fetched:', data);
+        
         if (data.success && data.products) {
+          console.log('📦 Total products:', data.products.length);
+          
           // Find product by name slug
           const foundProduct = data.products.find(
-            (p: any) => p.name.toLowerCase().replace(/\s+/g, '-') === slug
+            (p: any) => {
+              const productSlug = p.name.toLowerCase().replace(/\s+/g, '-');
+              console.log('Comparing:', productSlug, '===', slug);
+              return productSlug === slug;
+            }
           );
+          
           if (foundProduct) {
+            console.log('✨ Product found:', foundProduct.name);
             setProduct({
-              id: foundProduct.id,
+              id: foundProduct._id || foundProduct.id,
               name: foundProduct.name,
               price: foundProduct.price,
               originalPrice: foundProduct.originalPrice,
-              description: foundProduct.description,
+              description: foundProduct.description || '',
               details: foundProduct.details || [],
               image: foundProduct.image,
               images: foundProduct.images || [foundProduct.image],
               category: foundProduct.category,
-              inStock: foundProduct.inStock,
-              stock: foundProduct.stock,
+              inStock: foundProduct.inStock !== false && foundProduct.stock > 0,
+              stock: foundProduct.stock || 0,
             });
+          } else {
+            console.warn('❌ Product not found for slug:', slug);
+            console.log('Available slugs:', data.products.map((p: any) => p.name.toLowerCase().replace(/\s+/g, '-')));
           }
+        } else {
+          console.error('❌ Invalid response:', data);
         }
       } catch (error) {
-        console.error('Failed to fetch product:', error);
+        console.error('❌ Failed to fetch product:', error);
       } finally {
         setLoading(false);
       }
@@ -69,16 +89,32 @@ const Product = () => {
     fetchProduct();
   }, [slug]);
 
-  const handleAddToCart = () => {
-    if (!product) return;
-    const cartItem = {
-      id: product.id.toString(),
-      name: product.name,
-      price: product.price,
-      quantity,
-      image: product.image,
-    };
-    addToCart(cartItem);
+  const handleAddToCart = async () => {
+    if (!product) {
+      setCartMessage({ type: 'error', text: 'Product not loaded' });
+      return;
+    }
+    
+    try {
+      const cartItem = {
+        id: product.id.toString(),
+        name: product.name,
+        price: product.price,
+        quantity,
+        image: product.image,
+      };
+      
+      console.log('🛒 Adding to cart:', cartItem);
+      await addToCart(cartItem);
+      setCartMessage({ type: 'success', text: `Added ${quantity} item(s) to cart!` });
+      
+      // Clear message after 3 seconds
+      setTimeout(() => setCartMessage(null), 3000);
+    } catch (error) {
+      console.error('❌ Error adding to cart:', error);
+      setCartMessage({ type: 'error', text: 'Failed to add to cart' });
+      setTimeout(() => setCartMessage(null), 3000);
+    }
   };
 
   if (loading) {
@@ -123,6 +159,17 @@ const Product = () => {
       <AnnouncementBar />
       <Header />
       <main>
+        {/* Success/Error Message */}
+        {cartMessage && (
+          <div className={`py-3 px-4 text-center font-medium ${
+            cartMessage.type === 'success' 
+              ? 'bg-green-50 text-green-800 border-b border-green-200' 
+              : 'bg-red-50 text-red-800 border-b border-red-200'
+          }`}>
+            {cartMessage.text}
+          </div>
+        )}
+        
         <div className="container mx-auto px-4 py-12">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Images */}

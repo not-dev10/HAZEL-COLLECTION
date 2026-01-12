@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { fetchDashboardStats } from '../services/dashboardApi';
 
 interface DashboardStats {
   totalRevenue: number;
@@ -18,24 +19,46 @@ interface AdminContextType {
   setIsLoading: (loading: boolean) => void;
   selectedTab: string;
   setSelectedTab: (tab: string) => void;
+  refreshStats: () => Promise<void>;
 }
 
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
 
-export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [stats, setStats] = useState<DashboardStats>({
-    totalRevenue: 45250,
-    totalOrders: 342,
-    totalProducts: 1205,
-    totalCustomers: 856,
-    inventoryCount: 5420,
-    lowStockProducts: 12,
-    pendingOrders: 28,
-    completedOrders: 314,
-  });
+// Default fallback stats
+const DEFAULT_STATS: DashboardStats = {
+  totalRevenue: 0,
+  totalOrders: 0,
+  totalProducts: 0,
+  totalCustomers: 0,
+  inventoryCount: 0,
+  lowStockProducts: 0,
+  pendingOrders: 0,
+  completedOrders: 0,
+};
 
-  const [isLoading, setIsLoading] = useState(false);
+export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [stats, setStats] = useState<DashboardStats>(DEFAULT_STATS);
+  const [isLoading, setIsLoading] = useState(true);
   const [selectedTab, setSelectedTab] = useState('dashboard');
+
+  // Fetch real dashboard stats
+  const refreshStats = async () => {
+    try {
+      setIsLoading(true);
+      const realStats = await fetchDashboardStats();
+      setStats(realStats);
+    } catch (error) {
+      console.error('Failed to fetch dashboard stats:', error);
+      // Keep existing stats on error
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Load stats on mount
+  useEffect(() => {
+    refreshStats();
+  }, []);
 
   const updateStats = (newStats: Partial<DashboardStats>) => {
     setStats(prev => ({ ...prev, ...newStats }));
@@ -50,6 +73,7 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         setIsLoading,
         selectedTab,
         setSelectedTab,
+        refreshStats,
       }}
     >
       {children}

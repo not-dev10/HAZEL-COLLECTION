@@ -4,13 +4,17 @@ import {
   uploadProductImages,
   getCloudinarySignature,
   deleteProductImage,
-  reorderProductImages
+  reorderProductImages,
+  uploadHomePageImage
 } from '../controllers/imageUpload.controller.js';
 
 const router = express.Router();
 
 // Upload product images to Cloudinary
 router.post('/product-images', requireAuth, requireAdmin, uploadProductImages);
+
+// Upload home page images (carousel, bridal, collections)
+router.post('/', requireAuth, requireAdmin, uploadHomePageImage);
 
 // Get Cloudinary signature for client-side uploads
 router.post('/cloudinary-signature', requireAuth, requireAdmin, getCloudinarySignature);

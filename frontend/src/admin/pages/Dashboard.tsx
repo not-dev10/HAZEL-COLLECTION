@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
@@ -7,29 +7,60 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useAdmin } from '../context/AdminContext';
 import { TrendingUp, TrendingDown, AlertCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { fetchAnalyticsData } from '../services/dashboardApi';
+
+interface ChartData {
+  month?: string;
+  revenue?: number;
+  orders?: number;
+  day?: string;
+  name?: string;
+  value?: number;
+}
 
 const Dashboard: React.FC = () => {
-  const { stats } = useAdmin();
-
-  // Sample data for charts
-  const revenueData = [
-    { month: 'Jan', revenue: 4000, orders: 240 },
-    { month: 'Feb', revenue: 3000, orders: 221 },
-    { month: 'Mar', revenue: 2000, orders: 229 },
-    { month: 'Apr', revenue: 2780, orders: 200 },
-    { month: 'May', revenue: 1890, orders: 229 },
-    { month: 'Jun', revenue: 2390, orders: 200 },
-  ];
-
-  const categoryData = [
-    { name: 'Dresses', value: 35 },
-    { name: 'Accessories', value: 25 },
-    { name: 'Tops', value: 20 },
-    { name: 'Bottoms', value: 15 },
-    { name: 'Others', value: 5 },
-  ];
+  const { stats, isLoading } = useAdmin();
+  const [revenueData, setRevenueData] = useState<ChartData[]>([]);
+  const [categoryData, setCategoryData] = useState<ChartData[]>([]);
+  const [trendData, setTrendData] = useState<ChartData[]>([]);
+  const [loadingCharts, setLoadingCharts] = useState(true);
 
   const COLORS = ['#9333ea', '#ec4899', '#f97316', '#3b82f6', '#10b981'];
+
+  // Load analytics data on mount
+  useEffect(() => {
+    const loadAnalyticsData = async () => {
+      try {
+        setLoadingCharts(true);
+        const analyticsData = await fetchAnalyticsData();
+        setRevenueData(analyticsData.revenueData);
+        setCategoryData(analyticsData.categoryData);
+        setTrendData(analyticsData.trendData);
+      } catch (error) {
+        console.error('Error loading analytics data:', error);
+        // Use default data on error
+        setRevenueData([
+          { month: 'Jan', revenue: 4000, orders: 240 },
+          { month: 'Feb', revenue: 3000, orders: 221 },
+          { month: 'Mar', revenue: 2000, orders: 229 },
+          { month: 'Apr', revenue: 2780, orders: 200 },
+          { month: 'May', revenue: 1890, orders: 229 },
+          { month: 'Jun', revenue: 2390, orders: 200 },
+        ]);
+        setCategoryData([
+          { name: 'Dresses', value: 35 },
+          { name: 'Accessories', value: 25 },
+          { name: 'Tops', value: 20 },
+          { name: 'Bottoms', value: 15 },
+          { name: 'Others', value: 5 },
+        ]);
+      } finally {
+        setLoadingCharts(false);
+      }
+    };
+
+    loadAnalyticsData();
+  }, []);
 
   const StatCard = ({ 
     title, 
@@ -71,6 +102,11 @@ const Dashboard: React.FC = () => {
         <h2 className="text-3xl font-bold text-gray-900">Dashboard</h2>
         <p className="text-gray-600 mt-1">Welcome back! Here's your business overview.</p>
       </div>
+
+      {/* Loading indicator */}
+      {(isLoading || loadingCharts) && (
+        <div className="text-sm text-gray-500">Loading real-time data...</div>
+      )}
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -145,17 +181,21 @@ const Dashboard: React.FC = () => {
             <CardDescription>Last 6 months performance</CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={revenueData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="revenue" fill="#9333ea" name="Revenue (£)" />
-                <Bar dataKey="orders" fill="#ec4899" name="Orders" />
-              </BarChart>
-            </ResponsiveContainer>
+            {revenueData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={revenueData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="revenue" fill="#9333ea" name="Revenue (£)" />
+                  <Bar dataKey="orders" fill="#ec4899" name="Orders" />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-80 flex items-center justify-center text-gray-500">Loading chart...</div>
+            )}
           </CardContent>
         </Card>
 
@@ -166,25 +206,33 @@ const Dashboard: React.FC = () => {
             <CardDescription>Sales by category</CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={categoryData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {categoryData.map((_, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
+            {categoryData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={categoryData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, value }: any) => {
+                      const total = categoryData.reduce((sum: any, item: any) => sum + (item.value || 0), 0);
+                      const percent = total > 0 ? ((value / total) * 100).toFixed(0) : 0;
+                      return `${name} ${percent}%`;
+                    }}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {categoryData.map((_, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-80 flex items-center justify-center text-gray-500">Loading chart...</div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -196,26 +244,20 @@ const Dashboard: React.FC = () => {
           <CardDescription>Daily revenue for the current month</CardDescription>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart
-              data={[
-                { day: 'Day 1', revenue: 1200 },
-                { day: 'Day 5', revenue: 2100 },
-                { day: 'Day 10', revenue: 1800 },
-                { day: 'Day 15', revenue: 2500 },
-                { day: 'Day 20', revenue: 2200 },
-                { day: 'Day 25', revenue: 3100 },
-                { day: 'Day 30', revenue: 3500 },
-              ]}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="day" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Line type="monotone" dataKey="revenue" stroke="#9333ea" strokeWidth={2} />
-            </LineChart>
-          </ResponsiveContainer>
+          {trendData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={trendData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="day" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Line type="monotone" dataKey="revenue" stroke="#9333ea" strokeWidth={2} />
+              </LineChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="h-80 flex items-center justify-center text-gray-500">Loading chart...</div>
+          )}
         </CardContent>
       </Card>
     </div>

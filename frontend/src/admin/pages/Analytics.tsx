@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   BarChart, Bar, LineChart, Line, AreaChart, Area,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
@@ -6,33 +6,63 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Calendar } from 'lucide-react';
+import { Calendar, Loader2 } from 'lucide-react';
 
 const Analytics: React.FC = () => {
-  const salesData = [
-    { date: 'Jan 1', sales: 4000, revenue: 2400 },
-    { date: 'Jan 5', sales: 3000, revenue: 1398 },
-    { date: 'Jan 10', sales: 2000, revenue: 9800 },
-    { date: 'Jan 15', sales: 2780, revenue: 3908 },
-    { date: 'Jan 20', sales: 1890, revenue: 4800 },
-    { date: 'Jan 25', sales: 2390, revenue: 3800 },
-    { date: 'Jan 30', sales: 3490, revenue: 4300 },
-  ];
+  const [salesData, setSalesData] = useState<any[]>([]);
+  const [conversionData, setConversionData] = useState<any[]>([]);
+  const [topProducts, setTopProducts] = useState<any[]>([]);
+  const [metrics, setMetrics] = useState<any>({});
+  const [loading, setLoading] = useState(true);
+  const [dateRange, setDateRange] = useState(30);
+  const [period, setPeriod] = useState('daily');
 
-  const conversionData = [
-    { week: 'Week 1', visitors: 4000, conversion: 240 },
-    { week: 'Week 2', visitors: 3000, conversion: 221 },
-    { week: 'Week 3', visitors: 2000, conversion: 229 },
-    { week: 'Week 4', visitors: 2780, conversion: 200 },
-  ];
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
-  const topProducts = [
-    { name: 'Summer Dress', sales: 234, revenue: 11700 },
-    { name: 'Classic Blouse', sales: 189, revenue: 7551 },
-    { name: 'Denim Jeans', sales: 156, revenue: 9324 },
-    { name: 'T-Shirt', sales: 145, revenue: 4350 },
-    { name: 'Accessories', sales: 98, revenue: 2450 },
-  ];
+  useEffect(() => {
+    fetchAnalyticsData();
+  }, [dateRange, period]);
+
+  const fetchAnalyticsData = async () => {
+    try {
+      setLoading(true);
+      const adminToken = localStorage.getItem('adminToken');
+
+      if (!adminToken) {
+        console.error('No admin token');
+        setLoading(false);
+        return;
+      }
+
+      const headers = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${adminToken}`
+      };
+
+      // Fetch all data in parallel
+      const [salesRes, conversionRes, productsRes, metricsRes] = await Promise.all([
+        fetch(`${API_BASE_URL}/api/analytics/sales-revenue?days=${dateRange}`, { headers }),
+        fetch(`${API_BASE_URL}/api/analytics/conversion`, { headers }),
+        fetch(`${API_BASE_URL}/api/analytics/top-products?limit=5`, { headers }),
+        fetch(`${API_BASE_URL}/api/analytics/metrics?period=${period}`, { headers })
+      ]);
+
+      const salesData = await salesRes.json();
+      const conversionData = await conversionRes.json();
+      const productsData = await productsRes.json();
+      const metricsData = await metricsRes.json();
+
+      if (salesData.success) setSalesData(salesData.data || []);
+      if (conversionData.success) setConversionData(conversionData.data || []);
+      if (productsData.success) setTopProducts(productsData.data || []);
+      if (metricsData.success) setMetrics(metricsData.data || {});
+
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching analytics:', error);
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -46,16 +76,40 @@ const Analytics: React.FC = () => {
       <Card>
         <CardContent className="pt-6">
           <div className="flex gap-2">
-            <Button variant="outline" className="gap-2">
+            <Button 
+              variant={dateRange === 30 ? "default" : "outline"} 
+              className="gap-2"
+              onClick={() => setDateRange(30)}
+            >
               <Calendar size={18} /> Last 30 Days
             </Button>
-            <Button variant="ghost">Last 90 Days</Button>
-            <Button variant="ghost">Last Year</Button>
+            <Button 
+              variant={dateRange === 90 ? "default" : "ghost"}
+              onClick={() => setDateRange(90)}
+            >
+              Last 90 Days
+            </Button>
+            <Button 
+              variant={dateRange === 365 ? "default" : "ghost"}
+              onClick={() => setDateRange(365)}
+            >
+              Last Year
+            </Button>
           </div>
         </CardContent>
       </Card>
 
-      {/* Sales & Revenue */}
+      {loading && (
+        <Card>
+          <CardContent className="pt-6 flex items-center justify-center py-8">
+            <Loader2 className="animate-spin mr-2" size={24} />
+            <p>Loading analytics...</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {!loading && (
+      <>
       <Card>
         <CardHeader>
           <CardTitle>Sales & Revenue Trend</CardTitle>
@@ -113,7 +167,7 @@ const Analytics: React.FC = () => {
                     <p className="text-sm text-gray-600">{product.sales} sales</p>
                   </div>
                   <div className="text-right">
-                    <p className="font-semibold">${product.revenue}</p>
+                    <p className="font-semibold">£{product.revenue}</p>
                     <div className="w-20 h-2 bg-gray-200 rounded mt-1">
                       <div
                         className="h-full bg-gradient-to-r from-purple-600 to-pink-600 rounded"
@@ -129,7 +183,7 @@ const Analytics: React.FC = () => {
       </div>
 
       {/* Detailed Metrics */}
-      <Tabs defaultValue="daily" className="w-full">
+      <Tabs defaultValue="daily" className="w-full" onValueChange={(value) => setPeriod(value)}>
         <TabsList>
           <TabsTrigger value="daily">Daily</TabsTrigger>
           <TabsTrigger value="weekly">Weekly</TabsTrigger>
@@ -145,23 +199,23 @@ const Analytics: React.FC = () => {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="p-4 bg-blue-50 rounded-lg">
                   <p className="text-sm text-gray-600">Unique Visitors</p>
-                  <p className="text-2xl font-bold text-blue-600">2,458</p>
-                  <p className="text-xs text-gray-500 mt-1">+12% from yesterday</p>
+                  <p className="text-2xl font-bold text-blue-600">{(metrics.uniqueVisitors || 0).toLocaleString()}</p>
+                  <p className="text-xs text-gray-500 mt-1">Estimated daily visitors</p>
                 </div>
                 <div className="p-4 bg-green-50 rounded-lg">
                   <p className="text-sm text-gray-600">Transactions</p>
-                  <p className="text-2xl font-bold text-green-600">184</p>
-                  <p className="text-xs text-gray-500 mt-1">+8% from yesterday</p>
+                  <p className="text-2xl font-bold text-green-600">{metrics.transactions || 0}</p>
+                  <p className="text-xs text-gray-500 mt-1">Daily orders</p>
                 </div>
                 <div className="p-4 bg-purple-50 rounded-lg">
                   <p className="text-sm text-gray-600">Revenue</p>
-                  <p className="text-2xl font-bold text-purple-600">$4,250</p>
-                  <p className="text-xs text-gray-500 mt-1">+15% from yesterday</p>
+                  <p className="text-2xl font-bold text-purple-600">£{(metrics.revenue || 0).toFixed(2)}</p>
+                  <p className="text-xs text-gray-500 mt-1">Daily revenue</p>
                 </div>
                 <div className="p-4 bg-orange-50 rounded-lg">
                   <p className="text-sm text-gray-600">Avg Order Value</p>
-                  <p className="text-2xl font-bold text-orange-600">$73.26</p>
-                  <p className="text-xs text-gray-500 mt-1">+2% from yesterday</p>
+                  <p className="text-2xl font-bold text-orange-600">£{(metrics.avgOrderValue || 0).toFixed(2)}</p>
+                  <p className="text-xs text-gray-500 mt-1">Average per order</p>
                 </div>
               </div>
             </CardContent>
@@ -177,23 +231,23 @@ const Analytics: React.FC = () => {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="p-4 bg-blue-50 rounded-lg">
                   <p className="text-sm text-gray-600">Unique Visitors</p>
-                  <p className="text-2xl font-bold text-blue-600">18,452</p>
-                  <p className="text-xs text-gray-500 mt-1">+5% from last week</p>
+                  <p className="text-2xl font-bold text-blue-600">{((metrics.uniqueVisitors || 0) * 7).toLocaleString()}</p>
+                  <p className="text-xs text-gray-500 mt-1">Weekly visitors</p>
                 </div>
                 <div className="p-4 bg-green-50 rounded-lg">
                   <p className="text-sm text-gray-600">Transactions</p>
-                  <p className="text-2xl font-bold text-green-600">1,342</p>
-                  <p className="text-xs text-gray-500 mt-1">+12% from last week</p>
+                  <p className="text-2xl font-bold text-green-600">{(metrics.transactions || 0) * 7}</p>
+                  <p className="text-xs text-gray-500 mt-1">Weekly orders</p>
                 </div>
                 <div className="p-4 bg-purple-50 rounded-lg">
                   <p className="text-sm text-gray-600">Revenue</p>
-                  <p className="text-2xl font-bold text-purple-600">$31,890</p>
-                  <p className="text-xs text-gray-500 mt-1">+18% from last week</p>
+                  <p className="text-2xl font-bold text-purple-600">£{((metrics.revenue || 0) * 7).toFixed(2)}</p>
+                  <p className="text-xs text-gray-500 mt-1">Weekly revenue</p>
                 </div>
                 <div className="p-4 bg-orange-50 rounded-lg">
                   <p className="text-sm text-gray-600">Avg Order Value</p>
-                  <p className="text-2xl font-bold text-orange-600">$73.78</p>
-                  <p className="text-xs text-gray-500 mt-1">+3% from last week</p>
+                  <p className="text-2xl font-bold text-orange-600">£{(metrics.avgOrderValue || 0).toFixed(2)}</p>
+                  <p className="text-xs text-gray-500 mt-1">Average per order</p>
                 </div>
               </div>
             </CardContent>
@@ -209,29 +263,31 @@ const Analytics: React.FC = () => {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="p-4 bg-blue-50 rounded-lg">
                   <p className="text-sm text-gray-600">Unique Visitors</p>
-                  <p className="text-2xl font-bold text-blue-600">89,234</p>
-                  <p className="text-xs text-gray-500 mt-1">+22% from last month</p>
+                  <p className="text-2xl font-bold text-blue-600">{((metrics.uniqueVisitors || 0) * 30).toLocaleString()}</p>
+                  <p className="text-xs text-gray-500 mt-1">Monthly visitors</p>
                 </div>
                 <div className="p-4 bg-green-50 rounded-lg">
                   <p className="text-sm text-gray-600">Transactions</p>
-                  <p className="text-2xl font-bold text-green-600">5,892</p>
-                  <p className="text-xs text-gray-500 mt-1">+18% from last month</p>
+                  <p className="text-2xl font-bold text-green-600">{(metrics.transactions || 0) * 30}</p>
+                  <p className="text-xs text-gray-500 mt-1">Monthly orders</p>
                 </div>
                 <div className="p-4 bg-purple-50 rounded-lg">
                   <p className="text-sm text-gray-600">Revenue</p>
-                  <p className="text-2xl font-bold text-purple-600">$145,250</p>
-                  <p className="text-xs text-gray-500 mt-1">+25% from last month</p>
+                  <p className="text-2xl font-bold text-purple-600">£{((metrics.revenue || 0) * 30).toFixed(2)}</p>
+                  <p className="text-xs text-gray-500 mt-1">Monthly revenue</p>
                 </div>
                 <div className="p-4 bg-orange-50 rounded-lg">
                   <p className="text-sm text-gray-600">Avg Order Value</p>
-                  <p className="text-2xl font-bold text-orange-600">$74.32</p>
-                  <p className="text-xs text-gray-500 mt-1">+1.5% from last month</p>
+                  <p className="text-2xl font-bold text-orange-600">£{(metrics.avgOrderValue || 0).toFixed(2)}</p>
+                  <p className="text-xs text-gray-500 mt-1">Average per order</p>
                 </div>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
+      </>
+      )}
     </div>
   );
 };

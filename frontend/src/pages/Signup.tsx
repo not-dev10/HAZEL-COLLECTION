@@ -13,6 +13,8 @@ const Signup = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [dateOfBirth, setDateOfBirth] = useState('');
+  const [gender, setGender] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -45,6 +47,36 @@ const Signup = () => {
       setError('Passwords do not match');
       return false;
     }
+    if (!dateOfBirth) {
+      setError('Date of birth is required');
+      return false;
+    }
+    
+    // Validate date of birth
+    const dob = new Date(dateOfBirth);
+    const today = new Date();
+    
+    if (dob > today) {
+      setError('Date of birth cannot be in the future');
+      return false;
+    }
+    
+    // Calculate age
+    const age = today.getFullYear() - dob.getFullYear();
+    const monthDiff = today.getMonth() - dob.getMonth();
+    const dayDiff = today.getDate() - dob.getDate();
+    
+    const actualAge = monthDiff < 0 || (monthDiff === 0 && dayDiff < 0) ? age - 1 : age;
+    
+    if (actualAge < 13) {
+      setError('You must be at least 13 years old to create an account');
+      return false;
+    }
+    
+    if (!gender) {
+      setError('Gender is required');
+      return false;
+    }
     if (!agreeTerms) {
       setError('Please agree to terms and conditions');
       return false;
@@ -67,6 +99,8 @@ const Signup = () => {
         email,
         password,
         fullName: name,
+        dateOfBirth,
+        gender,
       });
 
       // Store token and user in sessionStorage
@@ -78,6 +112,8 @@ const Signup = () => {
         email: response.user.email,
         fullName: response.user.fullName,
         phone: response.user.phone,
+        dateOfBirth: response.user.dateOfBirth,
+        gender: response.user.gender,
         role: response.user.role,
         createdAt: response.user.createdAt,
         // Parse fullName into firstName/lastName for account page
@@ -221,6 +257,38 @@ const Signup = () => {
                   {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
+            </div>
+
+            {/* Date of Birth */}
+            <div>
+              <label className="block text-xs font-medium tracking-wider uppercase mb-2">
+                Date of Birth *
+              </label>
+              <input
+                type="date"
+                value={dateOfBirth}
+                onChange={(e) => setDateOfBirth(e.target.value)}
+                required
+                className="w-full px-4 py-3 border border-border rounded focus:outline-none focus:border-foreground transition-colors text-sm"
+              />
+            </div>
+
+            {/* Gender */}
+            <div>
+              <label className="block text-xs font-medium tracking-wider uppercase mb-2">
+                Gender *
+              </label>
+              <select
+                value={gender}
+                onChange={(e) => setGender(e.target.value)}
+                required
+                className="w-full px-4 py-3 border border-border rounded focus:outline-none focus:border-foreground transition-colors text-sm bg-background"
+              >
+                <option value="">Select Gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
             </div>
 
             {/* Terms & Conditions */}

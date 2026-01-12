@@ -6,17 +6,17 @@ import { User } from "../models/User.js";
  */
 export const signup = async (req, res) => {
   try {
-    const { email, password, fullName, phone } = req.body;
+    const { email, password, fullName, phone, dateOfBirth, gender } = req.body;
 
-    if (!email || !password || !fullName) {
+    if (!email || !password || !fullName || !dateOfBirth || !gender) {
       return res.status(400).json({
         success: false,
-        message: "Missing required fields: email, password, fullName"
+        message: "Missing required fields: email, password, fullName, dateOfBirth, gender"
       });
     }
 
     // Create user in MongoDB
-    const user = await User.create({ email, password, fullName, phone });
+    const user = await User.create({ email, password, fullName, phone, dateOfBirth, gender });
 
     // Issue JWT
     const token = jwt.sign(

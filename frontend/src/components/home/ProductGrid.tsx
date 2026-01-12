@@ -5,25 +5,45 @@ import { API_BASE_URL } from '@/lib/api';
 const ProductGrid = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [homePageData, setHomePageData] = useState({
+    heading: 'New Arrivals',
+    subheading: 'Discover Our Collection',
+    limit: 8,
+    visible: true
+  });
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/api/products`);
-        const data = await response.json();
-        if (data.success && data.products) {
-          // Use actual products from database, limit to 8
-          setProducts(data.products.slice(0, 8));
+        // Fetch home page content for text
+        const homePageResponse = await fetch(`${API_BASE_URL}/api/home-page`);
+        const homePageData = await homePageResponse.json();
+        
+        if (homePageData.success && homePageData.data?.newArrivals) {
+          setHomePageData(homePageData.data.newArrivals);
+        }
+
+        // Fetch products
+        const productsResponse = await fetch(`${API_BASE_URL}/api/products`);
+        const productsData = await productsResponse.json();
+        if (productsData.success && productsData.products) {
+          // Use limit from home page settings
+          const limit = homePageData.data?.newArrivals?.limit || 8;
+          setProducts(productsData.products.slice(0, limit));
         }
       } catch (error) {
-        console.error('Failed to fetch products:', error);
+        console.error('Failed to fetch data:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchProducts();
+    fetchData();
   }, []);
+
+  if (!homePageData.visible) {
+    return null;
+  }
 
   if (loading) {
     return (
@@ -31,9 +51,9 @@ const ProductGrid = () => {
         <div className="container mx-auto px-4 lg:px-8">
           <div className="text-center mb-12 md:mb-16">
             <p className="text-xs tracking-[0.3em] uppercase text-muted-foreground mb-3">
-              Discover Our Collection
+              {homePageData.subheading}
             </p>
-            <h2 className="section-title">New Arrivals</h2>
+            <h2 className="section-title">{homePageData.heading}</h2>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8">
             {[...Array(8)].map((_, i) => (
@@ -50,9 +70,9 @@ const ProductGrid = () => {
       <div className="container mx-auto px-4 lg:px-8">
         <div className="text-center mb-12 md:mb-16">
           <p className="text-xs tracking-[0.3em] uppercase text-muted-foreground mb-3">
-            Discover Our Collection
+            {homePageData.subheading}
           </p>
-          <h2 className="section-title">New Arrivals</h2>
+          <h2 className="section-title">{homePageData.heading}</h2>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8">
           {products.map((product) => (

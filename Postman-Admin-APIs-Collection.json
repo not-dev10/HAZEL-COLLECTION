@@ -39,7 +39,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"storeName\": \"Hezal the Label\",\n  \"storeDescription\": \"Luxury bridal and couture fashion\",\n  \"storeEmail\": \"contact@hezalthelabel.com\",\n  \"storePhone\": \"+92-300-1234567\",\n  \"storeAddress\": \"123 Fashion Street, Karachi, Pakistan\"\n}"
+              "raw": "{\n  \"storeName\": \"Hezal the Label\",\n  \"storeDescription\": \"Luxury bridal and couture fashion\",\n  \"storeEmail\": \"contact@hezalthelabel.com\",\n  \"storePhone\": \"+44 (0) 20 7946 0958\",\n  \"storeAddress\": \"123 Fashion Street, London, United Kingdom\"\n}"
             },
             "url": {
               "raw": "http://localhost:8000/api/settings/store-info",

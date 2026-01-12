@@ -94,7 +94,7 @@ testApiConnection();
 
 export const api = {
   auth: {
-    signup: async (data: { email: string; password: string; fullName: string; phone?: string }) => {
+    signup: async (data: { email: string; password: string; fullName: string; phone?: string; dateOfBirth: string; gender: string }) => {
       console.log('API: Attempting signup to:', `${API_BASE_URL}/api/auth/signup`);
       
       const response = await fetch(`${API_BASE_URL}/api/auth/signup`, {

@@ -6,11 +6,7 @@
   "type": "module",
   "scripts": {
     "start": "set NODE_TLS_REJECT_UNAUTHORIZED=0 && node src/server.js",
-    "dev": "set NODE_TLS_REJECT_UNAUTHORIZED=0 && nodemon src/server.js",
-    "test": "jest --detectOpenHandles",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
-    "test:products": "node scripts/test-products.mjs"
+    "dev": "set NODE_TLS_REJECT_UNAUTHORIZED=0 && nodemon src/server.js"
   },
   "keywords": [
     "api",
@@ -26,6 +22,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.6.1",
     "express": "^4.22.1",
+    "express-fileupload": "^1.5.2",
     "express-validator": "^7.0.0",
     "jsonwebtoken": "^9.0.3",
     "mongodb": "^7.0.0",
@@ -33,7 +30,7 @@
   },
   "devDependencies": {
     "jest": "^29.7.0",
-    "supertest": "^6.3.3",
-    "nodemon": "^3.1.11"
+    "nodemon": "^3.1.11",
+    "supertest": "^6.3.3"
   }
 }

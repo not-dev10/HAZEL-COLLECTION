@@ -304,6 +304,49 @@ export default function OrdersPage() {
                           </div>
                         </div>
 
+                        {/* Order Items */}
+                        <div className="mb-6">
+                          <p className="text-sm text-gray-600 font-medium mb-3">Products Ordered</p>
+                          <div className="space-y-3 bg-white border border-gray-200 rounded-lg p-4">
+                            {order.items.map((item: any, idx: number) => (
+                              <div key={idx} className="flex gap-4 pb-3 last:pb-0 border-b last:border-b-0">
+                                {/* Product Image */}
+                                {(item.image || item.images?.[0]) && (
+                                  <div className="w-16 h-20 bg-gray-100 rounded flex-shrink-0">
+                                    <img
+                                      src={item.image || item.images?.[0]}
+                                      alt={item.name}
+                                      className="w-full h-full object-cover rounded"
+                                      onError={(e) => {
+                                        e.currentTarget.src = 'https://via.placeholder.com/80?text=No+Image';
+                                      }}
+                                    />
+                                  </div>
+                                )}
+                                
+                                {/* Product Info */}
+                                <div className="flex-1 flex flex-col justify-between">
+                                  <div>
+                                    <p className="font-semibold text-gray-900">{item.name}</p>
+                                    {item.category && (
+                                      <p className="text-xs text-gray-500 mt-1">Category: {item.category}</p>
+                                    )}
+                                  </div>
+                                  <div className="flex justify-between items-center text-sm">
+                                    <div className="text-gray-600">
+                                      Qty: <span className="font-semibold">{item.quantity}</span>
+                                    </div>
+                                    <div className="text-right">
+                                      <p className="text-xs text-gray-500">£{(item.price || 0).toFixed(2)} each</p>
+                                      <p className="font-semibold">£{((item.price || 0) * (item.quantity || 1)).toFixed(2)}</p>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
                         {/* Price Breakdown */}
                         <div className="bg-gray-50 p-4 rounded-lg space-y-2">
                           <div className="flex justify-between text-sm">

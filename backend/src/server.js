@@ -45,6 +45,9 @@ async function startServer() {
       console.log(`   DELETE /api/wishlist/clear`);
       console.log(`   GET  /api/orders`);
       console.log(`   POST /api/orders`);
+      console.log(`   GET  /api/customers (admin)`);
+      console.log(`   GET  /api/customers/stats (admin)`);
+      console.log(`   POST /api/customers/seed (test data)`);
       console.log(`\n🌐 CORS: Accepts all localhost origins`);
       console.log(`\n👤 Guest Authentication:`);
       console.log(`   - Send: Authorization: Guest <sessionId>`);

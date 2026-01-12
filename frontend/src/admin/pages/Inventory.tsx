@@ -522,18 +522,18 @@ const Inventory: React.FC = () => {
       </Card>
 
       {/* Inventory Table */}
-      <Tabs defaultValue="all" className="w-full">
+      <Tabs value={filterStatus || 'all'} onValueChange={(val) => setFilterStatus(val === 'all' ? null : val)} className="w-full">
         <TabsList>
-          <TabsTrigger value="all" onClick={() => setFilterStatus(null)}>
+          <TabsTrigger value="all">
             All Items
           </TabsTrigger>
-          <TabsTrigger value="in-stock" onClick={() => setFilterStatus('in-stock')}>
+          <TabsTrigger value="in-stock">
             In Stock
           </TabsTrigger>
-          <TabsTrigger value="low-stock" onClick={() => setFilterStatus('low-stock')}>
+          <TabsTrigger value="low-stock">
             Low Stock
           </TabsTrigger>
-          <TabsTrigger value="out-of-stock" onClick={() => setFilterStatus('out-of-stock')}>
+          <TabsTrigger value="out-of-stock">
             Out of Stock
           </TabsTrigger>
         </TabsList>

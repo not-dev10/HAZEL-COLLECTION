@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, Mail, Phone, MessageSquare, MapPin, Eye } from 'lucide-react';
+import { Search, Mail, Phone, MessageSquare, MapPin, Eye, Loader2 } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -13,63 +13,106 @@ interface Customer {
   name: string;
   email: string;
   phone: string;
+  address: string;
+  city: string;
+  country: string;
   totalOrders: number;
   totalSpent: number;
   status: 'active' | 'inactive';
   joinDate: string;
   lastPurchase: string;
+  accountCreated: string;
+  lastLogin: string;
+  preferredCategory: string;
+  loyalty: 'bronze' | 'silver' | 'gold' | 'platinum';
 }
 
 const Customers: React.FC = () => {
-  const [customers] = useState<Customer[]>([
-    {
-      id: '1',
-      name: 'Sarah Johnson',
-      email: 'sarah@example.com',
-      phone: '+1-234-567-8901',
-      totalOrders: 5,
-      totalSpent: 349.95,
-      status: 'active',
-      joinDate: '2023-06-15',
-      lastPurchase: '2024-01-05',
-    },
-    {
-      id: '2',
-      name: 'Emma Davis',
-      email: 'emma@example.com',
-      phone: '+1-234-567-8902',
-      totalOrders: 3,
-      totalSpent: 189.97,
-      status: 'active',
-      joinDate: '2023-09-22',
-      lastPurchase: '2024-01-06',
-    },
-    {
-      id: '3',
-      name: 'Jessica Miller',
-      email: 'jessica@example.com',
-      phone: '+1-234-567-8903',
-      totalOrders: 8,
-      totalSpent: 599.92,
-      status: 'active',
-      joinDate: '2023-03-10',
-      lastPurchase: '2024-01-07',
-    },
-    {
-      id: '4',
-      name: 'Amanda Wilson',
-      email: 'amanda@example.com',
-      phone: '+1-234-567-8904',
-      totalOrders: 1,
-      totalSpent: 49.99,
-      status: 'inactive',
-      joinDate: '2023-12-01',
-      lastPurchase: '2023-12-10',
-    },
-  ]);
-
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+
+  // Fetch customers from API
+  useEffect(() => {
+    const fetchCustomers = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Get admin token from localStorage
+        const adminToken = localStorage.getItem('adminToken');
+        if (!adminToken) {
+          console.warn('No admin token found in localStorage');
+          setError('Admin authentication required');
+          setLoading(false);
+          return;
+        }
+
+        console.log('📥 Fetching customers with token:', adminToken.substring(0, 20) + '...');
+
+        // Build query parameters
+        const params = new URLSearchParams();
+        if (searchTerm) params.append('search', searchTerm);
+        if (filterStatus) params.append('status', filterStatus);
+        params.append('limit', '100'); // Fetch all customers for now
+
+        const url = `${API_BASE_URL}/api/customers?${params}`;
+        console.log('📍 API URL:', url);
+
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${adminToken}`
+          }
+        });
+
+        console.log('📊 Response status:', response.status);
+
+        if (!response.ok) {
+          const errorData = await response.text();
+          console.error('❌ Response error:', errorData);
+          
+          if (response.status === 401) {
+            setError('Unauthorized - please login as admin');
+          } else {
+            setError(`Failed to fetch customers (${response.status})`);
+          }
+          setLoading(false);
+          return;
+        }
+
+        const data = await response.json();
+        console.log('✅ Customers data received:', data);
+
+        if (data.success && data.data) {
+          console.log(`📦 Loaded ${data.data.length} customers`);
+          setCustomers(data.data);
+        } else if (Array.isArray(data)) {
+          console.log(`📦 Loaded ${data.length} customers (direct array)`);
+          setCustomers(data);
+        } else {
+          console.warn('⚠️ No customers found:', data);
+          setError(data.message || 'No customers found');
+        }
+      } catch (err) {
+        console.error('❌ Error fetching customers:', err);
+        setError(err instanceof Error ? err.message : 'Failed to fetch customers');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    // Debounce search
+    const timer = setTimeout(() => {
+      fetchCustomers();
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm, filterStatus]);
 
   const filteredCustomers = customers.filter(customer =>
     (customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -81,7 +124,7 @@ const Customers: React.FC = () => {
     totalCustomers: customers.length,
     activeCustomers: customers.filter(c => c.status === 'active').length,
     totalRevenue: customers.reduce((sum, c) => sum + c.totalSpent, 0),
-    averageOrderValue: customers.reduce((sum, c) => sum + c.totalSpent, 0) / customers.reduce((sum, c) => sum + c.totalOrders, 0),
+    averageOrderValue: customers.length > 0 ? customers.reduce((sum, c) => sum + c.totalSpent, 0) / customers.reduce((sum, c) => sum + c.totalOrders, 1) : 0,
   };
 
   return (
@@ -91,6 +134,15 @@ const Customers: React.FC = () => {
         <h2 className="text-3xl font-bold text-gray-900">Customers</h2>
         <p className="text-gray-600 mt-1">Manage and track customer information.</p>
       </div>
+
+      {/* Error Message */}
+      {error && (
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="pt-6">
+            <p className="text-red-800">{error}</p>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -114,7 +166,7 @@ const Customers: React.FC = () => {
           <CardContent className="pt-6">
             <div>
               <p className="text-sm text-gray-600">Total Revenue</p>
-              <div className="text-3xl font-bold mt-2">${stats.totalRevenue.toFixed(2)}</div>
+              <div className="text-3xl font-bold mt-2">£{stats.totalRevenue.toFixed(2)}</div>
             </div>
           </CardContent>
         </Card>
@@ -122,7 +174,7 @@ const Customers: React.FC = () => {
           <CardContent className="pt-6">
             <div>
               <p className="text-sm text-gray-600">Avg Order Value</p>
-              <div className="text-3xl font-bold mt-2">${stats.averageOrderValue.toFixed(2)}</div>
+              <div className="text-3xl font-bold mt-2">£{stats.averageOrderValue.toFixed(2)}</div>
             </div>
           </CardContent>
         </Card>
@@ -162,43 +214,60 @@ const Customers: React.FC = () => {
         <TabsContent value={filterStatus || 'all'}>
           <Card className="mt-4">
             <CardContent className="pt-6">
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Phone</TableHead>
-                      <TableHead>Orders</TableHead>
-                      <TableHead>Total Spent</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Join Date</TableHead>
-                      <TableHead>Last Purchase</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredCustomers.map(customer => (
-                      <TableRow key={customer.id}>
-                        <TableCell className="font-medium">{customer.name}</TableCell>
-                        <TableCell className="text-gray-600">{customer.email}</TableCell>
-                        <TableCell className="text-gray-600">{customer.phone}</TableCell>
-                        <TableCell className="font-semibold">{customer.totalOrders}</TableCell>
-                        <TableCell className="font-semibold">${customer.totalSpent.toFixed(2)}</TableCell>
-                        <TableCell>
-                          <Badge variant={customer.status === 'active' ? 'default' : 'secondary'}>
-                            {customer.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-sm">{customer.joinDate}</TableCell>
-                        <TableCell className="text-sm">{customer.lastPurchase}</TableCell>
-                        <TableCell>
-                          <Dialog>
-                            <DialogTrigger asChild>
-                              <Button variant="ghost" size="sm">
-                                <Eye size={16} />
-                              </Button>
-                            </DialogTrigger>
+              {loading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="animate-spin mr-2" size={24} />
+                  <p className="text-gray-600">Loading customers...</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Phone</TableHead>
+                        <TableHead>City</TableHead>
+                        <TableHead>Orders</TableHead>
+                        <TableHead>Total Spent</TableHead>
+                        <TableHead>Loyalty</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Last Purchase</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredCustomers.length > 0 ? (
+                        filteredCustomers.map(customer => (
+                          <TableRow key={customer.id}>
+                            <TableCell className="font-medium">{customer.name}</TableCell>
+                            <TableCell className="text-gray-600">{customer.email}</TableCell>
+                            <TableCell className="text-gray-600">{customer.phone}</TableCell>
+                            <TableCell className="text-gray-600">{customer.city}</TableCell>
+                            <TableCell className="font-semibold">{customer.totalOrders}</TableCell>
+                            <TableCell className="font-semibold">£{customer.totalSpent.toFixed(2)}</TableCell>
+                            <TableCell>
+                              <Badge variant={
+                                customer.loyalty === 'platinum' ? 'default' :
+                                customer.loyalty === 'gold' ? 'outline' :
+                                customer.loyalty === 'silver' ? 'secondary' : 'outline'
+                              }>
+                                {customer.loyalty.charAt(0).toUpperCase() + customer.loyalty.slice(1)}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant={customer.status === 'active' ? 'default' : 'secondary'}>
+                                {customer.status}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-sm">{customer.lastPurchase}</TableCell>
+                            <TableCell>
+                              <Dialog>
+                                <DialogTrigger asChild>
+                                  <Button variant="ghost" size="sm">
+                                    <Eye size={16} />
+                                  </Button>
+                                </DialogTrigger>
                             <DialogContent className="max-w-2xl">
                               <DialogHeader>
                                 <DialogTitle>Customer Details</DialogTitle>
@@ -213,9 +282,13 @@ const Customers: React.FC = () => {
                                       <p className="font-semibold">{customer.name}</p>
                                     </div>
                                     <div>
-                                      <p className="text-sm text-gray-600">Status</p>
-                                      <Badge variant={customer.status === 'active' ? 'default' : 'secondary'}>
-                                        {customer.status}
+                                      <p className="text-sm text-gray-600">Loyalty Status</p>
+                                      <Badge variant={
+                                        customer.loyalty === 'platinum' ? 'default' :
+                                        customer.loyalty === 'gold' ? 'outline' :
+                                        customer.loyalty === 'silver' ? 'secondary' : 'outline'
+                                      }>
+                                        {customer.loyalty.charAt(0).toUpperCase() + customer.loyalty.slice(1)}
                                       </Badge>
                                     </div>
                                     <div className="col-span-2">
@@ -233,6 +306,50 @@ const Customers: React.FC = () => {
                                   </div>
                                 </div>
 
+                                {/* Address Information */}
+                                <div className="border-t pt-6">
+                                  <h4 className="font-semibold mb-4">Address Information</h4>
+                                  <div className="grid grid-cols-2 gap-4">
+                                    <div className="col-span-2">
+                                      <p className="text-sm text-gray-600">Street Address</p>
+                                      <p className="font-semibold">{customer.address}</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-sm text-gray-600">City</p>
+                                      <p className="font-semibold">{customer.city}</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-sm text-gray-600">Country</p>
+                                      <p className="font-semibold">{customer.country}</p>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Account Information */}
+                                <div className="border-t pt-6">
+                                  <h4 className="font-semibold mb-4">Account Information</h4>
+                                  <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                      <p className="text-sm text-gray-600">Account Created</p>
+                                      <p className="font-semibold">{customer.accountCreated}</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-sm text-gray-600">Last Login</p>
+                                      <p className="font-semibold">{customer.lastLogin}</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-sm text-gray-600">Account Status</p>
+                                      <Badge variant={customer.status === 'active' ? 'default' : 'secondary'}>
+                                        {customer.status.charAt(0).toUpperCase() + customer.status.slice(1)}
+                                      </Badge>
+                                    </div>
+                                    <div>
+                                      <p className="text-sm text-gray-600">Preferred Category</p>
+                                      <p className="font-semibold">{customer.preferredCategory}</p>
+                                    </div>
+                                  </div>
+                                </div>
+
                                 {/* Purchase History */}
                                 <div className="border-t pt-6">
                                   <h4 className="font-semibold mb-4">Purchase History</h4>
@@ -243,7 +360,7 @@ const Customers: React.FC = () => {
                                     </div>
                                     <div>
                                       <p className="text-sm text-gray-600">Total Spent</p>
-                                      <p className="text-3xl font-bold">${customer.totalSpent.toFixed(2)}</p>
+                                      <p className="text-3xl font-bold">£{customer.totalSpent.toFixed(2)}</p>
                                     </div>
                                     <div>
                                       <p className="text-sm text-gray-600">Join Date</p>
@@ -270,10 +387,18 @@ const Customers: React.FC = () => {
                           </Dialog>
                         </TableCell>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={10} className="text-center py-8 text-gray-500">
+                            No customers found
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

@@ -1,6 +1,7 @@
 import "dotenv/config.js";
 import express from "express";
 import cors from "cors";
+import fileUpload from 'express-fileupload';
 import './config/cloudinary.js'; // Initialize Cloudinary on app startup
 import authRoutes from "./routes/auth.routes.js";
 import productRoutes from "./routes/product.routes.js";
@@ -12,9 +13,13 @@ import wishlistRoutes from "./routes/wishlist.routes.js";
 import cloudinaryRoutes from "./routes/cloudinary.routes.js";
 import syncRoutes from "./routes/sync.routes.js";
 import settingsRoutes from "./routes/settings.routes.js";
+import homePageRoutes from "./routes/homePage.routes.js";
 import imageUploadRoutes from "./routes/imageUpload.routes.js";
 import reviewRoutes from "./routes/review.routes.js";
 import healthRoutes from "./routes/health.routes.js";
+import customerRoutes from "./routes/customer.routes.js";
+import userRoutes from "./routes/user.routes.js";
+import analyticsRoutes from "./routes/analytics.routes.js";
 
 const app = express();
 
@@ -57,18 +62,29 @@ app.use(cors(corsOptions));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
+// File upload middleware
+app.use(fileUpload({
+  useTempFiles: true,
+  tempFileDir: '/tmp/',
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB
+}));
+
 app.use("/api/auth", authRoutes);
+app.use("/api/user", userRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/products-attributes", productAttributesRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/wishlist", wishlistRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/orders-management", orderManagementRoutes);
+app.use("/api/customers", customerRoutes);
 app.use("/api/cloudinary", cloudinaryRoutes);
 app.use("/api/upload", imageUploadRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/health", healthRoutes);
 app.use("/api/sync", syncRoutes);
 app.use("/api/settings", settingsRoutes);
+app.use("/api/home-page", homePageRoutes);
+app.use("/api/analytics", analyticsRoutes);
 
 export default app;

@@ -1,15 +1,61 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { getProductImageUrl, CLOUDINARY_IMAGES } from '@/lib/cloudinary';
+import { API_BASE_URL } from '@/lib/api';
 
 const EditorialSection = () => {
   const [imageError, setImageError] = useState(false);
+  const [bridalData, setBridalData] = useState({
+    visible: true,
+    heading: 'Bridal Collection 2025',
+    subheading: 'The Art of Craftsmanship',
+    description: 'Each piece is meticulously handcrafted by our master artisans, preserving centuries-old techniques while embracing contemporary elegance. Our bridal collection celebrates the beauty of tradition interwoven with modern sophistication.',
+    buttonText: 'Explore Collection',
+    buttonLink: '/collection/bridals',
+    image: 'editorial-bridal',
+    imageUrl: undefined as string | undefined
+  });
+
+  const fetchBridalData = async () => {
+    try {
+      console.log('🎨 Fetching bridal section data...');
+      const response = await fetch(`${API_BASE_URL}/api/home-page`);
+      const data = await response.json();
+      
+      console.log('🎨 Bridal section API response:', {
+        success: data.success,
+        hasImageUrl: !!data.data?.bridalSection?.imageUrl,
+        imageUrl: data.data?.bridalSection?.imageUrl?.substring(0, 50),
+        image: data.data?.bridalSection?.image,
+        heading: data.data?.bridalSection?.heading
+      });
+
+      if (data.success && data.data?.bridalSection) {
+        setBridalData(data.data.bridalSection);
+      }
+    } catch (error) {
+      console.error('Failed to fetch bridal section data:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchBridalData();
+    
+    // Set up interval to refetch every 5 seconds to catch admin updates
+    const interval = setInterval(fetchBridalData, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleImageError = () => {
     console.error('Editorial image failed to load');
     setImageError(true);
   };
 
-  const imageUrl = getProductImageUrl(CLOUDINARY_IMAGES.EDITORIAL_BRIDAL, 'detail');
+  if (!bridalData.visible) {
+    return null;
+  }
+
+  const imageUrl = bridalData.imageUrl || getProductImageUrl(CLOUDINARY_IMAGES.BRIDAL_SECTION_IMAGE, 'hero');
+  console.log('🎨 Using image URL:', { imageUrl, hasImageUrl: !!bridalData.imageUrl, fallback: !bridalData.imageUrl });
 
   return (
     <section className="py-16 md:py-24 bg-muted">
@@ -18,17 +64,14 @@ const EditorialSection = () => {
           {/* Left Content */}
           <div className="order-2 md:order-1 space-y-6 text-center md:text-left">
             <p className="text-xs tracking-[0.3em] uppercase text-muted-foreground">
-              The Art of Craftsmanship
+              {bridalData.subheading}
             </p>
-            <h2 className="section-title">Bridal Collection 2025</h2>
+            <h2 className="section-title">{bridalData.heading}</h2>
             <p className="text-muted-foreground leading-relaxed max-w-lg mx-auto md:mx-0">
-              Each piece is meticulously handcrafted by our master artisans, 
-              preserving centuries-old techniques while embracing contemporary 
-              elegance. Our bridal collection celebrates the beauty of tradition 
-              interwoven with modern sophistication.
+              {bridalData.description}
             </p>
-            <a href="/collection/bridals" className="btn-primary inline-block mt-4">
-              Explore Collection
+            <a href={bridalData.buttonLink} className="btn-primary inline-block mt-4">
+              {bridalData.buttonText}
             </a>
           </div>
 
@@ -38,7 +81,7 @@ const EditorialSection = () => {
               {!imageError ? (
                 <img
                   src={imageUrl}
-                  alt="Bridal Collection featuring exquisite embroidered ensemble"
+                  alt={bridalData.heading}
                   onError={handleImageError}
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
                 />

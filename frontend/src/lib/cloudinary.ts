@@ -125,6 +125,18 @@ export const CLOUDINARY_IMAGES = {
   TEST_PRODUCT_2: 'hezal-couture/products/test-product-2',
   TEST_PRODUCT_3: 'hezal-couture/products/test-product-3',
   
+  // ===== SLIDER/CAROUSEL IMAGES =====
+  SLIDER_IMAGE_1: 'didi-monorepo/hero',
+  SLIDER_IMAGE_2: 'didi-monorepo/hero',
+  SLIDER_IMAGE_3: 'didi-monorepo/hero',
+  
+  // Bridal Section Image
+  BRIDAL_SECTION_IMAGE: 'didi-monorepo/detail',
+  
+  // Collection Banner Images
+  COLLECTION_BANNER_1: 'didi-monorepo/collection',
+  COLLECTION_BANNER_2: 'didi-monorepo/collection',
+  
   // ===== ASSETS FOLDER - Location-specific images =====
   
   // Hero Assets

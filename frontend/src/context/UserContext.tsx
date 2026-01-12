@@ -7,11 +7,11 @@ export interface UserProfile {
   phone?: string;
   role?: string;
   createdAt?: string;
-  // Optional extended profile fields
+  // Extended profile fields (dateOfBirth and gender now mandatory)
   firstName?: string;
   lastName?: string;
-  dateOfBirth?: string;
-  gender?: string;
+  dateOfBirth: string;
+  gender: string;
   billingAddress?: {
     street?: string;
     city?: string;
@@ -71,6 +71,8 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     if (user) {
       const updatedUser = { ...user, ...profileData };
       setUserState(updatedUser);
+      // Persist updated user to sessionStorage
+      sessionStorage.setItem('user', JSON.stringify(updatedUser));
     }
   };
 

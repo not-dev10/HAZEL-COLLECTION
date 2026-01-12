@@ -964,7 +964,7 @@ Summer Dress,SD-001,49.99,45,Dresses
                       )}
                     </TableCell>
                     <TableCell className="font-medium">{product.name}</TableCell>
-                    <TableCell className="font-semibold">${product.price}</TableCell>
+                    <TableCell className="font-semibold">£{product.price}</TableCell>
                     <TableCell>
                       <span className={product.stock < 10 ? 'text-red-600 font-semibold' : ''}>
                         {product.stock}

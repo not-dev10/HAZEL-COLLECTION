@@ -78,10 +78,12 @@ export const uploadProductImages = async (req, res) => {
               folder: `didi-fashion/products/${productId}`,
               public_id: `image-${i + 1}`,
               resource_type: 'auto',
-              quality: 'auto',
+              quality: 95, // HIGH quality (95 for product images)
               fetch_format: 'auto',
               overwrite: true,
-              tags: ['product', productId, 'didi-fashion']
+              tags: ['product', productId, 'didi-fashion'],
+              dpr: 'auto', // Optimize for device pixel ratio
+              flags: ['progressive'] // Progressive loading for better UX
             });
 
             console.log(`✅ Image ${i} uploaded successfully:`, result.secure_url);
@@ -106,10 +108,12 @@ export const uploadProductImages = async (req, res) => {
             folder: `didi-fashion/products/${productId}`,
             public_id: `image-${i + 1}`,
             resource_type: 'auto',
-            quality: 'auto',
+            quality: 95, // HIGH quality
             fetch_format: 'auto',
             overwrite: true,
-            tags: ['product', productId, 'didi-fashion']
+            tags: ['product', productId, 'didi-fashion'],
+            dpr: 'auto',
+            flags: ['progressive']
           });
 
           // Delete temporary file
@@ -128,10 +132,12 @@ export const uploadProductImages = async (req, res) => {
             folder: `didi-fashion/products/${productId}`,
             public_id: `image-${i + 1}`,
             resource_type: 'auto',
-            quality: 'auto',
+            quality: 95, // HIGH quality
             fetch_format: 'auto',
             overwrite: true,
-            tags: ['product', productId, 'didi-fashion']
+            tags: ['product', productId, 'didi-fashion'],
+            dpr: 'auto',
+            flags: ['progressive']
           });
 
           uploadedImages.push({
@@ -380,6 +386,85 @@ export const reorderProductImages = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to reorder images",
+      error: error.message
+    });
+  }
+};
+/**
+ * POST /api/upload
+ * Upload home page images (carousel, bridal, collections) to Cloudinary
+ */
+export const uploadHomePageImage = async (req, res) => {
+  try {
+    console.log('📤 Home page image upload request:', {
+      hasFiles: !!req.files,
+      files: req.files ? Object.keys(req.files) : 'none',
+      folder: req.body.folder
+    });
+
+    if (!cloudinary || !cloudinary.uploader) {
+      console.error('❌ Cloudinary not initialized');
+      return res.status(500).json({
+        success: false,
+        message: "Cloudinary service is not available"
+      });
+    }
+
+    const file = req.files?.file;
+    const folder = req.body.folder || 'home-page';
+
+    if (!file) {
+      console.error('❌ No file in request:', { body: req.body, hasFiles: !!req.files });
+      return res.status(400).json({
+        success: false,
+        message: "No file provided"
+      });
+    }
+
+    console.log('📁 Uploading file to Cloudinary:', {
+      filename: file.name,
+      size: file.size,
+      folder: folder
+    });
+
+    // Upload to Cloudinary with HIGH quality settings
+    // Quality 90 preserves visual quality while still compressing
+    // Removed forced format conversion to preserve original image quality
+    const result = await cloudinary.uploader.upload(file.tempFilePath, {
+      folder: `didi-monorepo/${folder}`,
+      resource_type: "auto",
+      quality: 90, // Changed from "auto" to 90 (scale 1-100, 90+ is high quality)
+      // Removed format: "webp" - let client request format via fetch_format_auto
+      dpr: "auto", // Device pixel ratio optimization
+      flags: ["progressive"], // Progressive JPEG for better perceived loading
+      eager: [ // Pre-generate optimized versions
+        { width: 1200, height: 800, crop: "fill", quality: 90, fetch_format: "auto" },
+        { width: 600, height: 400, crop: "fill", quality: 85, fetch_format: "auto" }
+      ]
+    });
+
+    console.log('✅ Upload successful:', {
+      publicId: result.public_id,
+      url: result.secure_url
+    });
+
+    // Clean up temp file
+    fs.unlink(file.tempFilePath, (err) => {
+      if (err) console.error('Error deleting temp file:', err);
+    });
+
+    res.status(200).json({
+      success: true,
+      url: result.secure_url,
+      imageUrl: result.secure_url,
+      publicId: result.public_id,
+      message: "Image uploaded successfully"
+    });
+  } catch (error) {
+    console.error('❌ Home page image upload error:', error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to upload image",
       error: error.message
     });
   }

@@ -191,7 +191,7 @@ const sampleQueries: SupportQuery[] = [
     customerName: 'Emma Wilson',
     category: 'billing',
     subject: 'Wrong amount charged',
-    message: 'I was charged $150 but the order total was $120. Can you please refund the difference?',
+    message: 'I was charged £150 but the order total was £120. Can you please refund the difference?',
     status: 'resolved',
     priority: 'medium',
     dateCreated: '2024-01-10',
@@ -200,7 +200,7 @@ const sampleQueries: SupportQuery[] = [
       {
         id: 'R1',
         from: 'admin',
-        message: 'We have processed a refund of $30 to your original payment method. It should appear within 3-5 business days.',
+        message: 'We have processed a refund of £30 to your original payment method. It should appear within 3-5 business days.',
         date: '2024-01-18',
       },
     ],

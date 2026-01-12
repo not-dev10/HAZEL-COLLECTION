@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowLeft, Edit2, Save, X, LogOut, User, Mail, Phone, MapPin, Calendar } from 'lucide-react';
+import { ArrowLeft, Edit2, Save, X, LogOut, Trash2, User, Mail, Phone, MapPin, Calendar } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '@/context/UserContext';
 import { Button } from '@/components/ui/button';
@@ -40,6 +40,12 @@ const Account = () => {
     shippingCountry: user?.shippingAddress?.country || '',
   });
 
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -55,35 +61,123 @@ const Account = () => {
     }));
   };
 
-  const handleSaveChanges = () => {
-    updateProfile({
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-      email: formData.email,
-      phone: formData.phone,
-      dateOfBirth: formData.dateOfBirth,
-      gender: formData.gender,
-      billingAddress: {
-        street: formData.billingStreet,
+  const handleSaveChanges = async () => {
+    try {
+      setIsSaving(true);
+      setSaveMessage(null);
+
+      const token = sessionStorage.getItem('authToken');
+      if (!token) {
+        setSaveMessage({ type: 'error', text: 'Authentication token not found. Please log in again.' });
+        return;
+      }
+
+      const fullName = `${formData.firstName} ${formData.lastName}`.trim();
+
+      const updatePayload = {
+        fullName,
+        phone: formData.phone,
+        gender: formData.gender,
+        address: `${formData.billingStreet}, ${formData.billingCity}`,
         city: formData.billingCity,
-        state: formData.billingState,
-        zip: formData.billingZip,
         country: formData.billingCountry,
-      },
-      shippingAddress: {
-        street: formData.shippingStreet,
-        city: formData.shippingCity,
-        state: formData.shippingState,
-        zip: formData.shippingZip,
-        country: formData.shippingCountry,
-      },
-    });
-    setIsEditing(false);
+      };
+
+      const response = await fetch('http://localhost:5000/api/user/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(updatePayload),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to update profile');
+      }
+
+      // Map backend response to UserProfile format
+      const updatedUserData = {
+        ...data.data,
+        fullName: data.data.name || data.data.fullName, // Backend returns 'name', map it to 'fullName'
+        firstName: (data.data.name || '').split(' ')[0],
+        lastName: (data.data.name || '').split(' ').slice(1).join(' '),
+      };
+
+      // Update the user context
+      updateProfile(updatedUserData);
+
+      setSaveMessage({ type: 'success', text: 'Profile updated successfully!' });
+      setIsEditing(false);
+
+      // Clear message after 3 seconds
+      setTimeout(() => setSaveMessage(null), 3000);
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      setSaveMessage({
+        type: 'error',
+        text: error instanceof Error ? error.message : 'Failed to save profile. Please try again.',
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleLogout = () => {
     logout();
     navigate('/');
+  };
+
+  const handleDeleteAccount = async () => {
+    try {
+      if (!deletePassword) {
+        alert('Please enter your password to confirm deletion');
+        return;
+      }
+
+      setIsDeleting(true);
+      const token = sessionStorage.getItem('authToken');
+      
+      if (!token) {
+        alert('Authentication required. Please log in again.');
+        return;
+      }
+
+      const response = await fetch('http://localhost:5000/api/user/profile', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ password: deletePassword }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to delete account');
+      }
+
+      // Clear all user data
+      logout();
+      sessionStorage.clear();
+      localStorage.clear();
+      
+      // Show brief success feedback then auto-redirect
+      console.log('✅ Account deleted successfully');
+      
+      // Auto-redirect after 2 seconds
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 2000);
+    } catch (error) {
+      console.error('Error deleting account:', error);
+      alert(error instanceof Error ? error.message : 'Failed to delete account. Please try again.');
+      setIsDeleting(false);
+      setDeletePassword('');
+    }
   };
 
   if (!user) {
@@ -182,8 +276,79 @@ const Account = () => {
                   <LogOut size={16} className="mr-2" />
                   Logout
                 </Button>
+
+                {/* Delete Account Button */}
+                <Button
+                  onClick={() => setShowDeleteModal(true)}
+                  variant="outline"
+                  className="w-full text-red-600 hover:bg-red-50 border-red-200 mt-3"
+                >
+                  <Trash2 size={16} className="mr-2" />
+                  Delete Account
+                </Button>
               </div>
             </div>
+
+            {/* Delete Account Modal */}
+            {showDeleteModal && (
+              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                <div className="bg-background border border-border rounded-lg max-w-md w-full p-6">
+                  <div className="flex items-start gap-4 mb-4">
+                    <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+                      <Trash2 className="text-red-600" size={24} />
+                    </div>
+                    <div className="flex-1">
+                      <h2 className="text-lg font-semibold text-foreground">Delete Account?</h2>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        This action cannot be undone. Your account and all associated data will be permanently deleted.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded">
+                    <p className="text-sm text-red-800">
+                      ⚠️ <strong>Warning:</strong> This will permanently delete your account, profile, and all your data. This cannot be reversed.
+                    </p>
+                  </div>
+
+                  <div className="mb-6">
+                    <Label htmlFor="deletePassword" className="text-sm">
+                      Enter your password to confirm
+                    </Label>
+                    <Input
+                      id="deletePassword"
+                      type="password"
+                      value={deletePassword}
+                      onChange={(e) => setDeletePassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="mt-2"
+                      disabled={isDeleting}
+                    />
+                  </div>
+
+                  <div className="flex gap-3">
+                    <Button
+                      onClick={() => {
+                        setShowDeleteModal(false);
+                        setDeletePassword('');
+                      }}
+                      variant="outline"
+                      className="flex-1"
+                      disabled={isDeleting}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={handleDeleteAccount}
+                      className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                      disabled={isDeleting || !deletePassword}
+                    >
+                      {isDeleting ? 'Deleting...' : 'Delete Account'}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Main Content */}
             <div className="lg:col-span-3">
@@ -578,19 +743,37 @@ const Account = () => {
 
                 {/* Action Buttons */}
                 {isEditing && (
-                  <div className="flex gap-4 mt-8 pt-8 border-t border-border">
-                    <Button onClick={handleSaveChanges} className="gap-2">
-                      <Save size={16} />
-                      Save Changes
-                    </Button>
-                    <Button
-                      onClick={() => setIsEditing(false)}
-                      variant="outline"
-                      className="gap-2"
-                    >
-                      <X size={16} />
-                      Cancel
-                    </Button>
+                  <div className="space-y-4 mt-8 pt-8 border-t border-border">
+                    {saveMessage && (
+                      <div
+                        className={`p-4 rounded-lg ${
+                          saveMessage.type === 'success'
+                            ? 'bg-green-50 text-green-900 border border-green-200'
+                            : 'bg-red-50 text-red-900 border border-red-200'
+                        }`}
+                      >
+                        {saveMessage.text}
+                      </div>
+                    )}
+                    <div className="flex gap-4">
+                      <Button
+                        onClick={handleSaveChanges}
+                        className="gap-2"
+                        disabled={isSaving}
+                      >
+                        <Save size={16} />
+                        {isSaving ? 'Saving...' : 'Save Changes'}
+                      </Button>
+                      <Button
+                        onClick={() => setIsEditing(false)}
+                        variant="outline"
+                        className="gap-2"
+                        disabled={isSaving}
+                      >
+                        <X size={16} />
+                        Cancel
+                      </Button>
+                    </div>
                   </div>
                 )}
               </div>
