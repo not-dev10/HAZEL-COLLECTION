@@ -7,6 +7,8 @@ import { useUser } from '@/context/UserContext';
 import { getProductImageUrl, CLOUDINARY_IMAGES } from '@/lib/cloudinary';
 import logo from '@/assets/file.svg';
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+
 interface Category {
   label: string;
   href: string;
@@ -72,73 +74,52 @@ const WardrobeIcon = () => (
   <ChevronDown size={16} />
 );
 
-const searchProducts = [
-  {
-    id: 1,
-    name: 'Embroidered Silk Ensemble',
-    price: 485,
-    category: 'Ready to Wear',
-    image: getProductImageUrl(CLOUDINARY_IMAGES.EMBROIDERED_SILK_ENSEMBLE, 'thumbnail'),
-  },
-  {
-    id: 2,
-    name: 'Velvet Bridal Collection',
-    price: 1250,
-    category: 'Bridal',
-    image: getProductImageUrl(CLOUDINARY_IMAGES.VELVET_BRIDAL_COLLECTION, 'thumbnail'),
-  },
-  {
-    id: 3,
-    name: 'Cotton Lawn Three Piece',
-    price: 195,
-    category: 'Pret',
-    image: getProductImageUrl(CLOUDINARY_IMAGES.COTTON_LAWN_THREE_PIECE, 'thumbnail'),
-  },
-  {
-    id: 4,
-    name: 'Festive Formal Wear',
-    price: 650,
-    category: 'Ready to Wear',
-    image: getProductImageUrl(CLOUDINARY_IMAGES.FESTIVE_FORMAL_WEAR, 'thumbnail'),
-  },
-  {
-    id: 5,
-    name: 'Summer Unstitched Fabric',
-    price: 175,
-    category: 'Unstitched',
-    image: getProductImageUrl(CLOUDINARY_IMAGES.TEST_PRODUCT_1, 'thumbnail'),
-  },
-  {
-    id: 6,
-    name: 'Luxury Pret Collection',
-    price: 395,
-    category: 'Pret',
-    image: getProductImageUrl(CLOUDINARY_IMAGES.TEST_PRODUCT_2, 'thumbnail'),
-  },
-  {
-    id: 7,
-    name: 'Chiffon Formal Dress',
-    price: 575,
-    category: 'Ready to Wear',
-    image: getProductImageUrl(CLOUDINARY_IMAGES.TEST_PRODUCT_3, 'thumbnail'),
-  },
-  {
-    id: 8,
-    name: 'Classic Heritage Piece',
-    price: 425,
-    category: 'Ready to Wear',
-    image: getProductImageUrl(CLOUDINARY_IMAGES.EMBROIDERED_SILK_ENSEMBLE, 'thumbnail'),
-  },
-];
+// Search suggestions are now fetched from real product data in the Header component
+// See useEffect below for product fetching logic
 
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [wardrobeMenuOpen, setWardrobeMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [products, setProducts] = useState<any[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState(false);
   const { wishlistCount } = useWishlist();
   const { isLoggedIn, logout } = useUser();
   const navigate = useNavigate();
+
+  // Fetch products for search suggestions
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setLoadingProducts(true);
+        const response = await fetch(`${API_BASE_URL}/api/products`);
+        if (response.ok) {
+          const data = await response.json();
+          // Handle different response structures
+          let productsArray = [];
+          if (Array.isArray(data)) {
+            productsArray = data;
+          } else if (data.products && Array.isArray(data.products)) {
+            productsArray = data.products;
+          } else if (data.data && Array.isArray(data.data)) {
+            productsArray = data.data;
+          }
+          setProducts(productsArray);
+        } else {
+          console.warn('API returned non-ok status:', response.status);
+          setProducts([]);
+        }
+      } catch (error) {
+        console.error('Failed to fetch products for search:', error);
+        setProducts([]);
+      } finally {
+        setLoadingProducts(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -164,9 +145,11 @@ const Header = () => {
   };
 
   const suggestions = searchQuery.trim()
-    ? searchProducts.filter((product) =>
-        product.name.toLowerCase().includes(searchQuery.toLowerCase())
-      )
+    ? products
+        .filter((product) =>
+          product.name?.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+        .slice(0, 8) // Limit to 8 suggestions
     : [];
 
   return (
@@ -281,21 +264,26 @@ const Header = () => {
                   <div className="p-2">
                     {suggestions.map((product) => (
                       <button
-                        key={product.id}
+                        key={product.id || product._id}
                         onClick={() => handleSuggestionClick(product.name)}
                         className="w-full flex items-center gap-3 p-2 hover:bg-muted rounded transition-colors text-left"
                       >
-                        <div className="flex-shrink-0 w-12 h-16 bg-muted rounded overflow-hidden">
-                          <img
-                            src={product.image}
-                            alt={product.name}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
+                        {(product.image || product.imageUrl || product.imageUrls?.[0]) && (
+                          <div className="flex-shrink-0 w-12 h-16 bg-muted rounded overflow-hidden">
+                            <img
+                              src={product.image || product.imageUrl || product.imageUrls?.[0]}
+                              alt={product.name}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = '';
+                              }}
+                            />
+                          </div>
+                        )}
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-medium truncate">{product.name}</p>
-                          <p className="text-xs text-muted-foreground mb-1">{product.category}</p>
-                          <p className="text-xs text-foreground font-semibold">£{product.price.toLocaleString()}</p>
+                          <p className="text-xs text-muted-foreground mb-1">{product.category || 'Uncategorized'}</p>
+                          <p className="text-xs text-foreground font-semibold">£{(product.price || 0).toLocaleString()}</p>
                         </div>
                       </button>
                     ))}
