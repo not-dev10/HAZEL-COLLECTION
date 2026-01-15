@@ -1,6 +1,6 @@
 # Frontend Project
 
-This is the React + Vite + TypeScript frontend for the Didi Fashion e-commerce platform.
+This is the React + Vite + TypeScript frontend for the Hazel the Label e-commerce platform.
 
 See the [main README](../README.md) for project structure and general information.
 

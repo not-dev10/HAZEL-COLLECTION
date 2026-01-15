@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Didi Fashion Store Admin Panel is a comprehensive management system designed to help administrators efficiently manage all aspects of the e-commerce business. It provides real-time insights, powerful tools for inventory management, order tracking, and business analytics.
+The Hazel the Label Admin Panel is a comprehensive management system designed to help administrators efficiently manage all aspects of the e-commerce business. It provides real-time insights, powerful tools for inventory management, order tracking, and business analytics.
 
 ## Features
 

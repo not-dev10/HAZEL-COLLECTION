@@ -54,8 +54,17 @@ const EditorialSection = () => {
     return null;
   }
 
-  const imageUrl = bridalData.imageUrl || getProductImageUrl(CLOUDINARY_IMAGES.BRIDAL_SECTION_IMAGE, 'hero');
-  console.log('🎨 Using image URL:', { imageUrl, hasImageUrl: !!bridalData.imageUrl, fallback: !bridalData.imageUrl });
+  // Build image URL - prefer admin-provided URL, fallback to default
+  const defaultImageUrl = getProductImageUrl(CLOUDINARY_IMAGES.BRIDAL_SECTION_IMAGE, 'hero');
+  const imageUrl = bridalData.imageUrl && bridalData.imageUrl.trim() ? bridalData.imageUrl : defaultImageUrl;
+  
+  console.log('🎨 Editorial Section Image Debug:', {
+    bridalDataImageUrl: bridalData.imageUrl?.substring(0, 50) || 'empty',
+    isAdminImageEmpty: !bridalData.imageUrl || bridalData.imageUrl.trim() === '',
+    defaultImageUrl: defaultImageUrl?.substring(0, 50),
+    finalImageUrl: imageUrl?.substring(0, 50),
+    isValid: !!imageUrl && imageUrl.startsWith('https://')
+  });
 
   return (
     <section className="py-16 md:py-24 bg-muted">

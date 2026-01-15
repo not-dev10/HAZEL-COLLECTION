@@ -48,13 +48,24 @@ export const getProductReviews = async (req, res) => {
 // Create a new review
 export const createReview = async (req, res) => {
   try {
-    const { productId, customerId, customerName, rating, title, comment } = req.body;
+    const { productId, rating, title, comment } = req.body;
+
+    // 🔒 IDOR PROTECTION: Use authenticated user's ID
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({
+        success: false,
+        message: 'Authentication required to submit a review',
+      });
+    }
+
+    const customerId = req.user.id;
+    const customerName = req.user.fullName || req.user.email;
 
     // Validate required fields
-    if (!productId || !customerId || !customerName || !rating || !title || !comment) {
+    if (!productId || !rating || !title || !comment) {
       return res.status(400).json({
         success: false,
-        message: 'Please provide all required fields',
+        message: 'Please provide all required fields (productId, rating, title, comment)',
       });
     }
 

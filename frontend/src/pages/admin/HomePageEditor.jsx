@@ -6,6 +6,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertCircle, CheckCircle, Loader2, ChevronUp, ChevronDown, Trash2, Upload, Plus } from 'lucide-react';
 import { API_BASE_URL } from '@/lib/api';
+import { apiCall, apiCallJson } from '@/utils/apiInterceptor';
+import { TokenManager } from '@/utils/tokenManager';
 
 export default function HomePageEditor() {
   const [loading, setLoading] = useState(false);
@@ -34,11 +36,7 @@ export default function HomePageEditor() {
     try {
       setLoading(true);
       console.log('📖 Loading home page content...');
-      const response = await fetch(`${API_BASE_URL}/api/home-page`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-        }
-      });
+      const response = await apiCall(`${API_BASE_URL}/api/home-page`);
       const data = await response.json();
       
       console.log('📖 Fetched home page data:', {
@@ -81,10 +79,12 @@ export default function HomePageEditor() {
         folder: section === 'carousel' ? 'hero' : section === 'bridal' ? 'detail' : 'collection'
       });
 
+      // Use raw fetch for FormData - apiCall wrapper adds wrong headers
       const response = await fetch(`${API_BASE_URL}/api/upload`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+          'Authorization': `Bearer ${TokenManager.getAccessToken()}`
+          // DO NOT set Content-Type - let browser set it to multipart/form-data
         },
         body: formData
       });
@@ -200,11 +200,11 @@ export default function HomePageEditor() {
           image: s.image
         }))
       });
-      const response = await fetch(`${API_BASE_URL}/api/home-page/carousel`, {
+      const response = await apiCall(`${API_BASE_URL}/api/home-page/carousel`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+          'Authorization': `Bearer ${TokenManager.getAccessToken()}`
         },
         body: JSON.stringify({ slides: homePageData.carousel.slides })
       });
@@ -234,11 +234,11 @@ export default function HomePageEditor() {
   const saveNewArrivals = async () => {
     try {
       setSaving(true);
-      const response = await fetch(`${API_BASE_URL}/api/home-page/new-arrivals`, {
+      const response = await apiCall(`${API_BASE_URL}/api/home-page/new-arrivals`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+          'Authorization': `Bearer ${TokenManager.getAccessToken()}`
         },
         body: JSON.stringify(homePageData.newArrivals)
       });
@@ -273,11 +273,11 @@ export default function HomePageEditor() {
         imageUrl: homePageData.bridalSection.imageUrl?.substring(0, 50),
         heading: homePageData.bridalSection.heading
       });
-      const response = await fetch(`${API_BASE_URL}/api/home-page/bridal-section`, {
+      const response = await apiCall(`${API_BASE_URL}/api/home-page/bridal-section`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+          'Authorization': `Bearer ${TokenManager.getAccessToken()}`
         },
         body: JSON.stringify(homePageData.bridalSection)
       });
@@ -335,11 +335,11 @@ export default function HomePageEditor() {
   const saveCollectionBanner = async () => {
     try {
       setSaving(true);
-      const response = await fetch(`${API_BASE_URL}/api/home-page/collection-banner`, {
+      const response = await apiCall(`${API_BASE_URL}/api/home-page/collection-banner`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+          'Authorization': `Bearer ${TokenManager.getAccessToken()}`
         },
         body: JSON.stringify({
           visible: homePageData.collectionBanner.visible,

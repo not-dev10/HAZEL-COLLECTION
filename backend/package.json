@@ -5,8 +5,8 @@
   "main": "src/server.js",
   "type": "module",
   "scripts": {
-    "start": "set NODE_TLS_REJECT_UNAUTHORIZED=0 && node src/server.js",
-    "dev": "set NODE_TLS_REJECT_UNAUTHORIZED=0 && nodemon src/server.js"
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js"
   },
   "keywords": [
     "api",
@@ -23,10 +23,15 @@
     "dotenv": "^16.6.1",
     "express": "^4.22.1",
     "express-fileupload": "^1.5.2",
+    "express-mongo-sanitize": "^2.2.0",
+    "express-rate-limit": "^8.2.1",
     "express-validator": "^7.0.0",
+    "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.3",
     "mongodb": "^7.0.0",
-    "uuid": "^9.0.1"
+    "nodemailer": "^7.0.12",
+    "uuid": "^9.0.1",
+    "xss-clean": "^0.1.4"
   },
   "devDependencies": {
     "jest": "^29.7.0",

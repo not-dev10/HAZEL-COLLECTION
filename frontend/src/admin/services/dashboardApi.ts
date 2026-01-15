@@ -3,7 +3,8 @@
  * Fetches real analytics and dashboard data from the backend
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+import { API_BASE_URL } from '@/lib/api';
+import TokenManager from '@/utils/tokenManager';
 
 export interface DashboardStats {
   totalRevenue: number;
@@ -41,22 +42,66 @@ export interface AnalyticsData {
  */
 export const fetchDashboardStats = async (): Promise<DashboardStats> => {
   try {
+    const accessToken = TokenManager.getAccessToken();
+    
+    if (!accessToken) {
+      console.warn('❌ No access token found. Returning default stats.');
+      // Return default stats instead of throwing
+      return {
+        totalRevenue: 0,
+        totalOrders: 0,
+        totalProducts: 0,
+        totalCustomers: 0,
+        inventoryCount: 0,
+        lowStockProducts: 0,
+        pendingOrders: 0,
+        completedOrders: 0,
+      };
+    }
+
+    // Calculate date range (last 30 days)
+    const endDate = new Date();
+    const startDate = new Date(endDate.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const startDateStr = startDate.toISOString().split('T')[0];
+    const endDateStr = endDate.toISOString().split('T')[0];
+
+    console.log('📊 Fetching dashboard stats with token:', accessToken.substring(0, 20) + '...');
+    console.log(`   Date range: ${startDateStr} to ${endDateStr}`);
+    
     const [orderStats, customerStats, productCount] = await Promise.all([
-      fetch(`${API_BASE_URL}/orders/admin/stats`, {
+      fetch(`${API_BASE_URL}/api/orders-management/admin/stats?startDate=${startDateStr}&endDate=${endDateStr}`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+          'Authorization': `Bearer ${accessToken}`
         }
-      }).then(r => r.json()),
-      fetch(`${API_BASE_URL}/customers/stats`, {
+      }).then(async r => {
+        if (!r.ok) {
+          const text = await r.text();
+          throw new Error(`Orders stats failed: ${r.status} ${text}`);
+        }
+        return r.json();
+      }),
+      fetch(`${API_BASE_URL}/api/customers/stats`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+          'Authorization': `Bearer ${accessToken}`
         }
-      }).then(r => r.json()),
-      fetch(`${API_BASE_URL}/products?limit=1&offset=0`, {
+      }).then(async r => {
+        if (!r.ok) {
+          const text = await r.text();
+          throw new Error(`Customer stats failed: ${r.status} ${text}`);
+        }
+        return r.json();
+      }),
+      fetch(`${API_BASE_URL}/api/products?limit=1&offset=0`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+          'Authorization': `Bearer ${accessToken}`
         }
-      }).then(r => r.json())
+      }).then(async r => {
+        if (!r.ok) {
+          const text = await r.text();
+          throw new Error(`Products count failed: ${r.status} ${text}`);
+        }
+        return r.json();
+      })
     ]);
 
     // Extract revenue from orders
@@ -96,22 +141,52 @@ export const fetchDashboardStats = async (): Promise<DashboardStats> => {
  */
 export const fetchAnalyticsData = async (): Promise<AnalyticsData> => {
   try {
+    const accessToken = localStorage.getItem('accessToken');
+    
+    if (!accessToken) {
+      console.warn('No access token found. Returning default analytics data.');
+      // Return default data instead of throwing
+      return {
+        revenueData: getDefaultRevenueData(),
+        categoryData: getDefaultCategoryData(),
+        trendData: getDefaultTrendData()
+      };
+    }
+
     const [salesData, conversionData, topProducts] = await Promise.all([
-      fetch(`${API_BASE_URL}/analytics/sales-revenue?days=30`, {
+      fetch(`${API_BASE_URL}/api/analytics/sales-revenue?days=30`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+          'Authorization': `Bearer ${accessToken}`
         }
-      }).then(r => r.json()),
-      fetch(`${API_BASE_URL}/analytics/conversion`, {
+      }).then(async r => {
+        if (!r.ok) {
+          const text = await r.text();
+          throw new Error(`Analytics failed: ${r.status} ${text}`);
+        }
+        return r.json();
+      }),
+      fetch(`${API_BASE_URL}/api/analytics/conversion`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+          'Authorization': `Bearer ${accessToken}`
         }
-      }).then(r => r.json()),
-      fetch(`${API_BASE_URL}/analytics/top-products?limit=5`, {
+      }).then(async r => {
+        if (!r.ok) {
+          const text = await r.text();
+          throw new Error(`Conversion data failed: ${r.status} ${text}`);
+        }
+        return r.json();
+      }),
+      fetch(`${API_BASE_URL}/api/analytics/top-products?limit=5`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+          'Authorization': `Bearer ${accessToken}`
         }
-      }).then(r => r.json())
+      }).then(async r => {
+        if (!r.ok) {
+          const text = await r.text();
+          throw new Error(`Top products failed: ${r.status} ${text}`);
+        }
+        return r.json();
+      })
     ]);
 
     // Format revenue data (last 6 months equivalent)

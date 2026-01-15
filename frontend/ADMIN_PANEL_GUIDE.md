@@ -2,7 +2,7 @@
 
 ### Quick Start
 
-The admin panel has been successfully integrated into your Didi Fashion Store! Here's how to access and use it.
+The admin panel has been successfully integrated into your Hazel the Label Store! Here's how to access and use it.
 
 ### Accessing the Admin Panel
 

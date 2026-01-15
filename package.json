@@ -1,7 +1,7 @@
 {
-  "name": "didi-ecommerce",
+  "name": "hazel-label-ecommerce",
   "version": "1.0.0",
-  "description": "Didi Fashion E-commerce Platform - Monorepo",
+  "description": "Hazel the Label E-commerce Platform - Monorepo",
   "private": true,
   "scripts": {
     "frontend:install": "cd frontend && npm install",

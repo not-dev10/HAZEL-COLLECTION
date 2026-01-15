@@ -29,16 +29,20 @@ export const getCloudinaryUrl = (
     ...transformations,
   };
   
-  // Build transformation string
-  const transformString = Object.entries(defaultTransforms)
-    .map(([key, value]) => {
-      // Convert camelCase to snake_case for Cloudinary
-      const cloudinaryKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();
-      return `${cloudinaryKey}_${value}`;
-    })
-    .join(',');
+  // Build transformation string - handle each property explicitly
+  const transformParts = [];
   
-  return `${baseUrl}/${transformString}/${publicId}`;
+  if (defaultTransforms.quality) transformParts.push(`q_${defaultTransforms.quality}`);
+  if (defaultTransforms.fetch_format) transformParts.push(`f_${defaultTransforms.fetch_format}`);
+  if (defaultTransforms.width) transformParts.push(`w_${defaultTransforms.width}`);
+  if (defaultTransforms.height) transformParts.push(`h_${defaultTransforms.height}`);
+  if (defaultTransforms.crop) transformParts.push(`c_${defaultTransforms.crop}`);
+  
+  const transformString = transformParts.join(',');
+  
+  return transformString 
+    ? `${baseUrl}/${transformString}/${publicId}`
+    : `${baseUrl}/${publicId}`;
 };
 
 /**

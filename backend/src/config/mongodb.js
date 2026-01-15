@@ -8,10 +8,7 @@ const client = new MongoClient(process.env.MONGODB_URI, {
     strict: false,
     deprecationErrors: false,
   },
-  // Disable SSL verification for development (not recommended for production)
   tls: true,
-  tlsAllowInvalidCertificates: true,
-  tlsAllowInvalidHostnames: true,
   maxPoolSize: 10,
   minPoolSize: 2,
   monitorCommands: false,

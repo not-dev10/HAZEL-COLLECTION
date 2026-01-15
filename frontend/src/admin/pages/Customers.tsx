@@ -3,10 +3,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, Mail, Phone, MessageSquare, MapPin, Eye, Loader2 } from 'lucide-react';
+import { Search, Mail, Phone, MessageSquare, MapPin, Eye, Loader2, Trash2 } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { toast } from 'sonner';
+import TokenManager from '@/utils/tokenManager';
 
 interface Customer {
   id: string;
@@ -33,6 +35,8 @@ const Customers: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
   // Fetch customers from API
@@ -42,8 +46,8 @@ const Customers: React.FC = () => {
         setLoading(true);
         setError(null);
 
-        // Get admin token from localStorage
-        const adminToken = localStorage.getItem('adminToken');
+        // Get admin token from TokenManager
+        const adminToken = TokenManager.getAccessToken();
         if (!adminToken) {
           console.warn('No admin token found in localStorage');
           setError('Admin authentication required');
@@ -113,6 +117,50 @@ const Customers: React.FC = () => {
 
     return () => clearTimeout(timer);
   }, [searchTerm, filterStatus]);
+
+  const handleDeleteCustomer = async (customerId: string) => {
+    try {
+      setDeleting(true);
+      const adminToken = TokenManager.getAccessToken();
+      
+      if (!adminToken) {
+        setError('Admin authentication required');
+        setDeleteConfirm(null);
+        return;
+      }
+
+      const response = await fetch(`${API_BASE_URL}/api/customers/${customerId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${adminToken}`
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        const errorMessage = errorData.message || 'Failed to delete customer';
+        setError(errorMessage);
+        toast.error(errorMessage);
+        setDeleteConfirm(null);
+        setDeleting(false);
+        return;
+      }
+
+      // Remove customer from list
+      setCustomers(customers.filter(c => c.id !== customerId));
+      setDeleteConfirm(null);
+      toast.success('✅ Customer deleted successfully');
+      console.log('✅ Customer deleted successfully');
+    } catch (err) {
+      console.error('Error deleting customer:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to delete customer';
+      setError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   const filteredCustomers = customers.filter(customer =>
     (customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -262,17 +310,18 @@ const Customers: React.FC = () => {
                             </TableCell>
                             <TableCell className="text-sm">{customer.lastPurchase}</TableCell>
                             <TableCell>
-                              <Dialog>
-                                <DialogTrigger asChild>
-                                  <Button variant="ghost" size="sm">
-                                    <Eye size={16} />
-                                  </Button>
-                                </DialogTrigger>
-                            <DialogContent className="max-w-2xl">
-                              <DialogHeader>
-                                <DialogTitle>Customer Details</DialogTitle>
-                              </DialogHeader>
-                              <div className="space-y-6">
+                              <div className="flex gap-2">
+                                <Dialog>
+                                  <DialogTrigger asChild>
+                                    <Button variant="ghost" size="sm" title="View details">
+                                      <Eye size={16} />
+                                    </Button>
+                                  </DialogTrigger>
+                                  <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                                    <DialogHeader>
+                                      <DialogTitle>Customer Details</DialogTitle>
+                                    </DialogHeader>
+                                    <div className="space-y-6">
                                 {/* Personal Info */}
                                 <div>
                                   <h4 className="font-semibold mb-4">Personal Information</h4>
@@ -385,10 +434,39 @@ const Customers: React.FC = () => {
                               </div>
                             </DialogContent>
                           </Dialog>
-                        </TableCell>
-                      </TableRow>
-                        ))
-                      ) : (
+                          <Dialog open={deleteConfirm === customer.id} onOpenChange={(open) => setDeleteConfirm(open ? customer.id : null)}>
+                            <DialogTrigger asChild>
+                              <Button variant="destructive" size="sm" title="Delete customer">
+                                <Trash2 size={16} />
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Delete Customer</DialogTitle>
+                                <DialogDescription>
+                                  Are you sure you want to delete <strong>{customer.name}</strong>? This action cannot be undone.
+                                </DialogDescription>
+                              </DialogHeader>
+                              <div className="flex gap-2 justify-end">
+                                <Button variant="outline" onClick={() => setDeleteConfirm(null)} disabled={deleting}>
+                                  Cancel
+                                </Button>
+                                <Button 
+                                  variant="destructive" 
+                                  onClick={() => handleDeleteCustomer(customer.id)}
+                                  disabled={deleting}
+                                >
+                                  {deleting ? <Loader2 className="mr-2 animate-spin" size={16} /> : <Trash2 className="mr-2" size={16} />}
+                                  Delete
+                                </Button>
+                              </div>
+                            </DialogContent>
+                          </Dialog>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                      ))
+                    ) : (
                         <TableRow>
                           <TableCell colSpan={10} className="text-center py-8 text-gray-500">
                             No customers found

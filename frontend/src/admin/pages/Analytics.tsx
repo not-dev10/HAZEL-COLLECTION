@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Calendar, Loader2 } from 'lucide-react';
+import TokenManager from '@/utils/tokenManager';
 
 const Analytics: React.FC = () => {
   const [salesData, setSalesData] = useState<any[]>([]);
@@ -26,7 +27,7 @@ const Analytics: React.FC = () => {
   const fetchAnalyticsData = async () => {
     try {
       setLoading(true);
-      const adminToken = localStorage.getItem('adminToken');
+      const adminToken = TokenManager.getAccessToken();
 
       if (!adminToken) {
         console.error('No admin token');

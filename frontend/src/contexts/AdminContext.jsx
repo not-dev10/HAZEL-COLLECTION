@@ -10,7 +10,7 @@ export function AdminProvider({ children }) {
 
   // Initialize from localStorage on mount
   useEffect(() => {
-    const token = localStorage.getItem('adminToken');
+    const token = localStorage.getItem('accessToken');
     const user = localStorage.getItem('adminUser');
     
     if (token && user) {
@@ -32,7 +32,7 @@ export function AdminProvider({ children }) {
   const login = useCallback(async (email, password) => {
     try {
       setLoading(true);
-      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5001'}/api/auth/login`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -84,7 +84,7 @@ export function AdminProvider({ children }) {
     if (!adminToken) return false;
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5001'}/api/auth/verify`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/auth/verify`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${adminToken}`

@@ -104,7 +104,7 @@ export default function ProductAttributesPage() {
     
     try {
       setSaving(true);
-      const token = localStorage.getItem('adminToken');
+      const token = localStorage.getItem('accessToken');
       
       const response = await fetch(`${API_BASE_URL}/api/products-attributes/${selectedProduct._id}/variants`, {
         method: 'POST',
@@ -143,7 +143,7 @@ export default function ProductAttributesPage() {
 
     try {
       setSaving(true);
-      const token = localStorage.getItem('adminToken');
+      const token = localStorage.getItem('accessToken');
       
       const response = await fetch(`${API_BASE_URL}/api/products-attributes/${selectedProduct._id}/images`, {
         method: 'PUT',
@@ -174,7 +174,7 @@ export default function ProductAttributesPage() {
 
     try {
       setSaving(true);
-      const token = localStorage.getItem('adminToken');
+      const token = localStorage.getItem('accessToken');
       const sizes = sizesList.split(',').map(s => s.trim()).filter(s => s);
       
       const response = await fetch(`${API_BASE_URL}/api/products-attributes/${selectedProduct._id}/sizes`, {
@@ -206,7 +206,7 @@ export default function ProductAttributesPage() {
 
     try {
       setSaving(true);
-      const token = localStorage.getItem('adminToken');
+      const token = localStorage.getItem('accessToken');
       const colors = colorsList.split(',').map(c => c.trim()).filter(c => c);
       
       const response = await fetch(`${API_BASE_URL}/api/products-attributes/${selectedProduct._id}/colors`, {
@@ -238,7 +238,7 @@ export default function ProductAttributesPage() {
 
     try {
       setSaving(true);
-      const token = localStorage.getItem('adminToken');
+      const token = localStorage.getItem('accessToken');
       
       const response = await fetch(`${API_BASE_URL}/api/products-attributes/${selectedProduct._id}/seo`, {
         method: 'PUT',
@@ -271,7 +271,7 @@ export default function ProductAttributesPage() {
 
     try {
       setSaving(true);
-      const token = localStorage.getItem('adminToken');
+      const token = localStorage.getItem('accessToken');
       
       const response = await fetch(`${API_BASE_URL}/api/products-attributes/${selectedProduct._id}/variants/${variantId}`, {
         method: 'DELETE',

@@ -4,19 +4,37 @@ import { connectDB } from "./config/mongodb.js";
 import { Cart } from "./models/Cart.js";
 import { Wishlist } from "./models/Wishlist.js";
 import Review from "./models/Review.js";
+import { ResetToken } from "./models/ResetToken.js";
+import { SecurityLoggingService } from "./services/securityLoggingService.js";
 import { startGuestCleanupScheduler } from "./services/guestCleanup.service.js";
 import { initializePort, logServerStartup } from "./utils/portDetection.js";
+import { mailService } from "./utils/mailService.js";
 
 async function startServer() {
   try {
     // Connect to MongoDB
     await connectDB();
     
-    // Initialize TTL indexes for guest data auto-deletion
+    // Initialize TTL indexes for auto-deletion
     console.log('\n🔧 Initializing TTL indexes...');
     await Cart.createTTLIndex();
     await Wishlist.createTTLIndex();
     await Review.createTTLIndex();
+    await ResetToken.createTTLIndex();
+    
+    // Initialize security logging
+    console.log('🔒 Initializing security logging...');
+    await SecurityLoggingService.initialize();
+    
+    // Initialize mail service
+    console.log('📧 Initializing mail service...');
+    if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+      await mailService.initialize();
+      console.log('✅ Mail service initialized');
+    } else {
+      console.warn('⚠️ SMTP credentials not configured. Email service disabled.');
+      console.warn('   Set SMTP_USER and SMTP_PASS environment variables to enable email.');
+    }
     
     // Start guest data cleanup scheduler
     startGuestCleanupScheduler();
@@ -48,6 +66,11 @@ async function startServer() {
       console.log(`   GET  /api/customers (admin)`);
       console.log(`   GET  /api/customers/stats (admin)`);
       console.log(`   POST /api/customers/seed (test data)`);
+      console.log(`   GET  /api/logs/summary (admin)`);
+      console.log(`   GET  /api/logs/audit (admin)`);
+      console.log(`   GET  /api/logs/auth (admin)`);
+      console.log(`   GET  /api/logs/security (admin)`);
+      console.log(`   GET  /api/logs/storage (admin)`);
       console.log(`\n🌐 CORS: Accepts all localhost origins`);
       console.log(`\n👤 Guest Authentication:`);
       console.log(`   - Send: Authorization: Guest <sessionId>`);

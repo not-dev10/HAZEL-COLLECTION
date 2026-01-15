@@ -4,6 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useAdmin } from '../context/AdminContext';
 import { useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from '@/lib/api';
+import TokenManager from '@/utils/tokenManager';
+import { SessionTimeoutTimer } from '@/components/common/SessionTimeoutTimer';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -14,10 +17,29 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    localStorage.removeItem('adminToken');
-    localStorage.removeItem('adminUser');
-    navigate('/admin-login', { replace: true });
+  const handleLogout = async () => {
+    try {
+      const accessToken = TokenManager.getAccessToken();
+      const user = TokenManager.getAdminUser();
+
+      // Notify backend to terminate session
+      if (accessToken && user?.id) {
+        await fetch(`${API_BASE_URL}/api/auth/logout`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`
+          },
+          body: JSON.stringify({ userId: user.id }),
+        }).catch(() => {
+          // Silently fail if backend is unavailable
+        });
+      }
+    } finally {
+      // Clear all tokens using TokenManager
+      TokenManager.clearTokens();
+      navigate('/admin-login', { replace: true });
+    }
   };
 
   const navItems = [
@@ -39,9 +61,8 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     <div className="flex h-screen bg-gray-100">
       {/* Sidebar */}
       <aside
-        className={`${
-          sidebarOpen ? 'w-64' : 'w-20'
-        } bg-gradient-to-b from-gray-900 to-gray-800 text-white transition-all duration-300 flex flex-col hidden md:flex`}
+        className={`${sidebarOpen ? 'w-64' : 'w-20'
+          } bg-gradient-to-b from-gray-900 to-gray-800 text-white transition-all duration-300 flex flex-col hidden md:flex`}
       >
         {/* Logo */}
         <div className="p-6 border-b border-gray-700">
@@ -61,11 +82,10 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
               <button
                 key={item.id}
                 onClick={() => handleNavClick(item.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
-                  selectedTab === item.id
-                    ? 'bg-gradient-to-r from-purple-600 to-pink-600 shadow-lg'
-                    : 'hover:bg-gray-700'
-                }`}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${selectedTab === item.id
+                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 shadow-lg'
+                  : 'hover:bg-gray-700'
+                  }`}
               >
                 <Icon size={20} />
                 {sidebarOpen && <span>{item.label}</span>}
@@ -106,11 +126,10 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                       handleNavClick(item.id);
                       setSidebarOpen(false);
                     }}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
-                      selectedTab === item.id
-                        ? 'bg-gradient-to-r from-purple-600 to-pink-600'
-                        : 'hover:bg-gray-700'
-                    }`}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${selectedTab === item.id
+                      ? 'bg-gradient-to-r from-purple-600 to-pink-600'
+                      : 'hover:bg-gray-700'
+                      }`}
                   >
                     <Icon size={20} />
                     <span>{item.label}</span>
@@ -128,7 +147,10 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         <header className="bg-white shadow-sm border-b border-gray-200">
           <div className="flex items-center justify-between px-6 py-4">
             <h1 className="text-2xl font-bold text-gray-900 capitalize">{selectedTab}</h1>
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-4">
+              {/* Session Timeout Timer */}
+              <SessionTimeoutTimer />
+
               <Button variant="ghost" size="icon" className="relative">
                 <Bell size={20} />
                 <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>

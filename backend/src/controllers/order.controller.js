@@ -1,5 +1,7 @@
 import { Order } from '../models/Order.js';
+import { OTP } from '../models/OTP.js';
 import jwt from 'jsonwebtoken';
+import { mailService } from '../utils/mailService.js';
 
 const verifyToken = (token) => {
   try {
@@ -102,10 +104,31 @@ export const createOrder = async (req, res) => {
 
     const order = await Order.create(orderData);
 
+    // Send order confirmation email
+    try {
+      const { mailService } = await import('../utils/mailService.js');
+      await mailService.sendOrderConfirmationEmail(email, {
+        orderId: order._id.toString(),
+        orderNumber: order.orderNumber,
+        items: items,
+        subtotal: parseFloat(subtotal),
+        shipping: parseFloat(shipping),
+        tax: parseFloat(tax),
+        grandTotal: parseFloat(grandTotal),
+        firstName: firstName,
+        deliveryAddress: `${deliveryStreet || billingStreet}, ${deliveryCity || billingCity}, ${deliveryState || billingState} ${deliveryZip || billingZip}`
+      });
+      console.log('✅ Order confirmation email sent to:', email);
+    } catch (emailError) {
+      console.warn('⚠️ Order confirmation email failed (non-critical):', emailError.message);
+      // Don't fail order creation if email fails
+    }
+
     res.status(201).json({
       message: 'Order created successfully',
       order: {
         _id: order._id,
+        orderNumber: order.orderNumber,
         userId: order.userId,
         items: order.items,
         personalInfo: order.personalInfo,
@@ -296,5 +319,213 @@ export const deleteOrder = async (req, res) => {
   } catch (error) {
     console.error('Error deleting order:', error);
     res.status(500).json({ message: 'Failed to delete order', error: error.message });
+  }
+};
+// PUBLIC: Track order by order number (no authentication required)
+export const trackOrderByNumber = async (req, res) => {
+  try {
+    const { orderNumber } = req.params;
+
+    console.log('🔍 Tracking order with number:', orderNumber);
+
+    if (!orderNumber || orderNumber === 'undefined') {
+      return res.status(400).json({ message: 'Order number is required' });
+    }
+
+    // Extract the ID part from orderNumber (format: ORD-XXXXXXXX)
+    let searchId = orderNumber;
+    if (orderNumber.startsWith('ORD-')) {
+      searchId = orderNumber.substring(4); // Remove 'ORD-' prefix
+    }
+
+    // Try to find by ObjectId
+    let order = null;
+    
+    if (searchId.length === 8) {
+      // Search for orders where the last 8 chars of _id match (case-insensitive)
+      const { getDB } = await import('../config/mongodb.js');
+      const db = getDB();
+      const { ObjectId } = await import('mongodb');
+      
+      // Get all orders and filter by last 8 chars of ObjectId
+      const allOrders = await db.collection('orders').find({}).toArray();
+      order = allOrders.find(o => 
+        o._id.toString().slice(-8).toUpperCase() === searchId.toUpperCase()
+      );
+    } else if (searchId.length === 24) {
+      // Full ObjectId
+      order = await Order.findById(searchId);
+    }
+
+    console.log('📦 Order lookup result:', order ? 'Found' : 'Not found');
+
+    if (!order) {
+      return res.status(404).json({ 
+        message: 'Order not found. Please check the order number from your confirmation email (e.g., ORD-4BB719DD).' 
+      });
+    }
+
+    // Normalize order (adds virtual orderNumber if missing)
+    order = Order.normalizeOrder(order);
+
+    // Return public order information
+    res.status(200).json({
+      order: {
+        _id: order._id,
+        orderNumber: order.orderNumber,
+        items: order.items,
+        personalInfo: order.personalInfo,
+        totals: order.totals,
+        status: order.status,
+        trackingNumber: order.trackingNumber,
+        estimatedDelivery: order.estimatedDelivery,
+        createdAt: order.createdAt,
+        updatedAt: order.updatedAt,
+      },
+    });
+  } catch (error) {
+    console.error('Error tracking order:', error);
+    res.status(500).json({ message: 'Failed to track order', error: error.message });
+  }
+};
+
+/**
+ * Request OTP for order tracking
+ * Validates order number and email, then sends OTP
+ */
+export const requestOrderOTP = async (req, res) => {
+  try {
+    const { orderNumber, email } = req.body;
+
+    console.log('📧 OTP request for order:', orderNumber, 'email:', email);
+
+    // Validate inputs
+    if (!orderNumber || !email) {
+      return res.status(400).json({ message: 'Order number and email are required' });
+    }
+
+    // Extract ID from order number
+    let searchId = orderNumber;
+    if (orderNumber.startsWith('ORD-')) {
+      searchId = orderNumber.substring(4);
+    }
+
+    // Find the order
+    let order = null;
+    
+    if (searchId.length === 8) {
+      const { getDB } = await import('../config/mongodb.js');
+      const db = getDB();
+      const allOrders = await db.collection('orders').find({}).toArray();
+      order = allOrders.find(o => 
+        o._id.toString().slice(-8).toUpperCase() === searchId.toUpperCase()
+      );
+    } else if (searchId.length === 24) {
+      order = await Order.findById(searchId);
+    }
+
+    // Verify email matches order
+    if (!order || !order.personalInfo || order.personalInfo.email !== email) {
+      return res.status(404).json({ 
+        message: 'Order not found or email does not match. Please check your order number and email.' 
+      });
+    }
+
+    // Generate and save OTP
+    const otpRecord = await OTP.create(email, orderNumber);
+    
+    // Send OTP via email
+    const emailSent = await mailService.sendOTPEmail(email, otpRecord.code, orderNumber);
+    
+    if (!emailSent) {
+      return res.status(500).json({ 
+        message: 'Failed to send OTP email. Please try again.' 
+      });
+    }
+
+    res.status(200).json({ 
+      message: 'OTP sent to your email. Valid for 10 minutes.',
+      otpId: otpRecord._id
+    });
+  } catch (error) {
+    console.error('Error requesting OTP:', error);
+    res.status(500).json({ message: 'Failed to request OTP', error: error.message });
+  }
+};
+
+/**
+ * Verify OTP and return order details
+ */
+export const verifyOrderOTP = async (req, res) => {
+  try {
+    const { orderNumber, email, otp } = req.body;
+
+    console.log('🔐 Verifying OTP for order:', orderNumber);
+
+    // Validate inputs
+    if (!orderNumber || !email || !otp) {
+      return res.status(400).json({ message: 'Order number, email, and OTP are required' });
+    }
+
+    // Verify OTP
+    const otpRecord = await OTP.findValid(email, orderNumber, otp);
+
+    if (!otpRecord) {
+      return res.status(401).json({ 
+        message: 'Invalid or expired OTP. Please request a new code.' 
+      });
+    }
+
+    // Mark OTP as used
+    await OTP.markAsUsed(otpRecord._id);
+
+    // Extract ID from order number
+    let searchId = orderNumber;
+    if (orderNumber.startsWith('ORD-')) {
+      searchId = orderNumber.substring(4);
+    }
+
+    // Find and return order
+    let order = null;
+    
+    if (searchId.length === 8) {
+      const { getDB } = await import('../config/mongodb.js');
+      const db = getDB();
+      const allOrders = await db.collection('orders').find({}).toArray();
+      order = allOrders.find(o => 
+        o._id.toString().slice(-8).toUpperCase() === searchId.toUpperCase()
+      );
+      if (order) {
+        order = Order.normalizeOrder(order);
+      }
+    } else if (searchId.length === 24) {
+      order = await Order.findById(searchId);
+    }
+
+    if (!order) {
+      return res.status(404).json({ 
+        message: 'Order not found.' 
+      });
+    }
+
+    // Return public order information
+    res.status(200).json({
+      message: 'OTP verified successfully',
+      order: {
+        _id: order._id,
+        orderNumber: order.orderNumber,
+        items: order.items,
+        personalInfo: order.personalInfo,
+        totals: order.totals,
+        status: order.status,
+        trackingNumber: order.trackingNumber,
+        estimatedDelivery: order.estimatedDelivery,
+        createdAt: order.createdAt,
+        updatedAt: order.updatedAt,
+      },
+    });
+  } catch (error) {
+    console.error('Error verifying OTP:', error);
+    res.status(500).json({ message: 'Failed to verify OTP', error: error.message });
   }
 };

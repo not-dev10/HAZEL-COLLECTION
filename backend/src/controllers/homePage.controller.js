@@ -87,9 +87,16 @@ export const updateBridalSection = async (req, res) => {
       description: description || "Each piece is meticulously handcrafted by our master artisans, preserving centuries-old techniques while embracing contemporary elegance. Our bridal collection celebrates the beauty of tradition interwoven with modern sophistication.",
       buttonText: buttonText || "Explore Collection",
       buttonLink: buttonLink || "/collection/bridals",
-      image: image || "editorial-bridal",
-      imageUrl: imageUrl || ""
+      // 🔧 FIX: Prioritize imageUrl (from upload), fallback to image (Cloudinary ID)
+      imageUrl: imageUrl || "",
+      image: image || "editorial-bridal"
     };
+
+    console.log('💾 Updating bridal section:', {
+      hasImageUrl: !!bridalData.imageUrl,
+      imageUrl: bridalData.imageUrl?.substring(0, 60),
+      image: bridalData.image
+    });
 
     const result = await HomePage.updateBridalSection(bridalData);
     

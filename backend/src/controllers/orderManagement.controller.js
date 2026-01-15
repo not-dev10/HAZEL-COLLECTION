@@ -61,6 +61,36 @@ export const updateOrderStatus = async (req, res) => {
     }
 
     console.log('✅ Order status updated successfully');
+
+    // Send order status update email
+    try {
+      const { mailService } = await import('../utils/mailService.js');
+      const customerEmail = order.personalInfo?.email || order.userEmail || order.email;
+      
+      if (!customerEmail) {
+        console.warn('⚠️ No email found for order:', orderId);
+      } else {
+        const success = await mailService.sendOrderStatusUpdateEmail(customerEmail, {
+          orderId: order._id.toString(),
+          orderNumber: order.orderNumber,
+          status: status,
+          items: order.items,
+          totalAmount: order.totalAmount,
+          trackingNumber: order.trackingNumber,
+          estimatedDelivery: order.estimatedDelivery
+        });
+        
+        if (success) {
+          console.log('✅ Order status update email sent to:', customerEmail);
+        } else {
+          console.warn('⚠️ Order status email failed to send (non-critical)');
+        }
+      }
+    } catch (emailError) {
+      console.error('❌ Order status email error:', emailError.message);
+      // Don't fail order update if email fails
+    }
+
     res.json({
       success: true,
       message: "Order status updated successfully",

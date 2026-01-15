@@ -3,7 +3,8 @@ import {
   getAllCustomers,
   getCustomerById,
   getCustomerStats,
-  updateCustomer
+  updateCustomer,
+  deleteCustomer
 } from '../controllers/customer.controller.js';
 import { requireAuth, requireAdmin } from '../middleware/auth.middleware.js';
 
@@ -14,5 +15,6 @@ router.get('/', requireAuth, requireAdmin, getAllCustomers);
 router.get('/stats', requireAuth, requireAdmin, getCustomerStats);
 router.get('/:customerId', requireAuth, requireAdmin, getCustomerById);
 router.put('/:customerId', requireAuth, requireAdmin, updateCustomer);
+router.delete('/:customerId', requireAuth, requireAdmin, deleteCustomer);
 
 export default router;

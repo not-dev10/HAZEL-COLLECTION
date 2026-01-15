@@ -10,6 +10,7 @@ import ScrollToTop from '@/components/common/ScrollToTop';
 
 interface Order {
   _id: string;
+  orderNumber?: string;
   items: any[];
   personalInfo: {
     firstName: string;
@@ -165,10 +166,10 @@ export default function OrdersPage() {
                   <CardContent className="pt-6">
                     <div className="flex items-center justify-between">
                       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 flex-1">
-                        {/* Order ID */}
+                        {/* Order Number */}
                         <div>
-                          <p className="text-sm text-gray-600 font-medium">Order ID</p>
-                          <p className="text-lg font-semibold text-gray-900">{order._id.slice(-8)}</p>
+                          <p className="text-sm text-gray-600 font-medium">Order Number</p>
+                          <p className="text-lg font-semibold text-purple-600">{order.orderNumber || '#' + order._id.slice(-8)}</p>
                         </div>
 
                         {/* Date */}
@@ -183,7 +184,7 @@ export default function OrdersPage() {
                         <div>
                           <p className="text-sm text-gray-600 font-medium">Total Amount</p>
                           <p className="text-lg font-semibold text-gray-900">
-                            ${order.totals.grandTotal.toFixed(2)}
+                            £{order.totals.grandTotal.toFixed(2)}
                           </p>
                         </div>
 

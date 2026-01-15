@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { fetchDashboardStats } from '../services/dashboardApi';
+import TokenManager from '@/utils/tokenManager';
 
 interface DashboardStats {
   totalRevenue: number;
@@ -44,9 +45,23 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   // Fetch real dashboard stats
   const refreshStats = async () => {
     try {
+      // Check if user is authenticated before fetching
+      const isAuth = TokenManager.isAuthenticated();
+      const token = TokenManager.getAccessToken();
+      
+      console.log('🔐 Token Check:', { isAuth, hasToken: !!token });
+      
+      if (!isAuth || !token) {
+        console.warn('❌ User not authenticated. Skipping dashboard stats fetch.');
+        setIsLoading(false);
+        return;
+      }
+
+      console.log('✅ User authenticated. Fetching stats...');
       setIsLoading(true);
       const realStats = await fetchDashboardStats();
       setStats(realStats);
+      console.log('📊 Stats fetched:', realStats);
     } catch (error) {
       console.error('Failed to fetch dashboard stats:', error);
       // Keep existing stats on error

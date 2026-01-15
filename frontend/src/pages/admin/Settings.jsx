@@ -118,7 +118,7 @@ export default function SettingsPage() {
   const saveStoreInfo = async () => {
     try {
       setSaving(true);
-      const token = localStorage.getItem('adminToken');
+      const token = localStorage.getItem('accessToken');
       
       const response = await fetch(`${API_BASE_URL}/api/settings/store-info`, {
         method: 'PUT',
@@ -146,7 +146,7 @@ export default function SettingsPage() {
   const saveSocialMedia = async () => {
     try {
       setSaving(true);
-      const token = localStorage.getItem('adminToken');
+      const token = localStorage.getItem('accessToken');
       
       const response = await fetch(`${API_BASE_URL}/api/settings/social-media`, {
         method: 'PUT',
@@ -174,7 +174,7 @@ export default function SettingsPage() {
   const savePaymentMethods = async () => {
     try {
       setSaving(true);
-      const token = localStorage.getItem('adminToken');
+      const token = localStorage.getItem('accessToken');
       
       const response = await fetch(`${API_BASE_URL}/api/settings/payment-methods`, {
         method: 'PUT',
@@ -202,7 +202,7 @@ export default function SettingsPage() {
   const saveCurrency = async () => {
     try {
       setSaving(true);
-      const token = localStorage.getItem('adminToken');
+      const token = localStorage.getItem('accessToken');
       
       const response = await fetch(`${API_BASE_URL}/api/settings/currency`, {
         method: 'PUT',

@@ -15,7 +15,10 @@ import Collection from "./pages/Collection";
 import Product from "./pages/Product";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import Orders from "./pages/Orders";
+import TrackOrder from "./pages/TrackOrder";
 
 // Lazy load pages for loading animation to trigger
 const Wishlist = lazy(() => import("./pages/Wishlist"));
@@ -51,8 +54,11 @@ const App = () => (
                     <Route path="/collection/:slug" element={<Collection />} />
                     <Route path="/product/:slug" element={<Product />} />
                     <Route path="/login" element={<Login />} />
+                    <Route path="/forgot-password" element={<ForgotPassword />} />
+                    <Route path="/reset-password" element={<ResetPassword />} />
                     <Route path="/signup" element={<Signup />} />
                     <Route path="/orders" element={<Orders />} />
+                    <Route path="/track-order" element={<TrackOrder />} />
                     <Route path="/wishlist" element={<Wishlist />} />
                     <Route path="/cart" element={<Cart />} />
                     <Route path="/checkout" element={<Checkout />} />

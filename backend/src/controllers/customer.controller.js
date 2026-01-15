@@ -109,3 +109,61 @@ export const updateCustomer = async (req, res) => {
     });
   }
 };
+
+/**
+ * Delete a customer (admin only)
+ */
+export const deleteCustomer = async (req, res) => {
+  try {
+    const { customerId } = req.params;
+
+    // Validate customerId
+    if (!customerId) {
+      return res.status(400).json({
+        success: false,
+        message: "Customer ID is required"
+      });
+    }
+
+    // Check if customer exists
+    const customer = await User.findById(customerId);
+    if (!customer) {
+      return res.status(404).json({
+        success: false,
+        message: "Customer not found"
+      });
+    }
+
+    // Prevent deletion of admin users
+    if (customer.role === 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: "Cannot delete admin users"
+      });
+    }
+
+    // Delete the customer
+    const deleted = await User.deleteAccount(customerId);
+
+    if (!deleted) {
+      return res.status(500).json({
+        success: false,
+        message: "Failed to delete customer"
+      });
+    }
+
+    console.log(`✅ Customer ${customerId} deleted successfully`);
+
+    res.json({
+      success: true,
+      message: "Customer deleted successfully",
+      customerId: customerId
+    });
+  } catch (error) {
+    console.error("Delete customer error:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};

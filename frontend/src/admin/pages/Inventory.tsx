@@ -8,6 +8,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Search, Plus, Edit2, Trash2, AlertCircle, TrendingDown, Package, Loader, Upload, X } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import TokenManager from '@/utils/tokenManager';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
@@ -135,7 +136,7 @@ const Inventory: React.FC = () => {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
+          'Authorization': `Bearer ${TokenManager.getAccessToken()}`,
         },
         body: JSON.stringify({
           quantity: newStock,
@@ -181,7 +182,7 @@ const Inventory: React.FC = () => {
 
     try {
       setSavingItemId(id);
-      const token = localStorage.getItem('adminToken');
+      const token = TokenManager.getAccessToken();
       if (!token) {
         alert('Admin authentication required. Please log in again.');
         setSavingItemId(null);
@@ -239,7 +240,7 @@ const Inventory: React.FC = () => {
 
     try {
       setSavingItemId(editingId);
-      const token = localStorage.getItem('adminToken');
+      const token = TokenManager.getAccessToken();
       if (!token) {
         alert('Admin authentication required. Please log in again.');
         setSavingItemId(null);

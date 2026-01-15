@@ -8,8 +8,6 @@ const client = new MongoClient(process.env.MONGODB_URI, {
     deprecationErrors: false,
   },
   tls: true,
-  tlsAllowInvalidCertificates: true,
-  tlsAllowInvalidHostnames: true,
   maxPoolSize: 10,
   minPoolSize: 2,
   retryWrites: true,

@@ -48,6 +48,7 @@ import {
   Eye,
   Send,
 } from 'lucide-react';
+import TokenManager from '@/utils/tokenManager';
 
 // Types
 interface Review {
@@ -260,7 +261,7 @@ const SupportReviews: React.FC = () => {
   const fetchReviews = async () => {
     try {
       setLoadingReviews(true);
-      const token = localStorage.getItem('adminToken');
+      const token = TokenManager.getAccessToken();
       
       if (!token) {
         console.warn('No admin token found in localStorage');
@@ -341,7 +342,7 @@ const SupportReviews: React.FC = () => {
   const handleApproveReview = async (id: string) => {
     try {
       console.log('✅ Approving review:', id);
-      const token = localStorage.getItem('adminToken');
+      const token = TokenManager.getAccessToken();
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/reviews/${id}/status`, {
         method: 'PUT',
         headers: {
@@ -370,7 +371,7 @@ const SupportReviews: React.FC = () => {
   const handleRejectReview = async (id: string) => {
     try {
       console.log('❌ Rejecting review:', id);
-      const token = localStorage.getItem('adminToken');
+      const token = TokenManager.getAccessToken();
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/reviews/${id}/status`, {
         method: 'PUT',
         headers: {
@@ -399,7 +400,7 @@ const SupportReviews: React.FC = () => {
   const handleDeleteReview = async (id: string) => {
     try {
       console.log('🗑️ Deleting review:', id);
-      const token = localStorage.getItem('adminToken');
+      const token = TokenManager.getAccessToken();
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/reviews/${id}`, {
         method: 'DELETE',
         headers: {

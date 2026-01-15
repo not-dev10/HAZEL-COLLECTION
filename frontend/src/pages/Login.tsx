@@ -147,9 +147,13 @@ const Login = () => {
                 <input type="checkbox" className="w-4 h-4 border border-border rounded" />
                 <span>Remember me</span>
               </label>
-              <a href="#" className="hover:opacity-70 transition-opacity">
+              <button
+                type="button"
+                onClick={() => navigate('/forgot-password')}
+                className="hover:opacity-70 transition-opacity"
+              >
                 Forgot Password?
-              </a>
+              </button>
             </div>
 
             {/* Login Button */}

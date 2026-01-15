@@ -46,7 +46,7 @@ export default function OrdersManagementPage() {
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('adminToken');
+      const token = localStorage.getItem('accessToken');
       
       const query = new URLSearchParams();
       if (filters.status) query.append('status', filters.status);
@@ -81,7 +81,7 @@ export default function OrdersManagementPage() {
 
     try {
       setSaving(true);
-      const token = localStorage.getItem('adminToken');
+      const token = localStorage.getItem('accessToken');
       
       const response = await fetch(`${API_BASE_URL}/api/orders-management/admin/${selectedOrder._id}/status`, {
         method: 'PUT',
@@ -113,7 +113,7 @@ export default function OrdersManagementPage() {
 
     try {
       setSaving(true);
-      const token = localStorage.getItem('adminToken');
+      const token = localStorage.getItem('accessToken');
       
       const response = await fetch(`${API_BASE_URL}/api/orders-management/admin/${selectedOrder._id}/tracking`, {
         method: 'PUT',
@@ -149,7 +149,7 @@ export default function OrdersManagementPage() {
 
     try {
       setSaving(true);
-      const token = localStorage.getItem('adminToken');
+      const token = localStorage.getItem('accessToken');
       
       const response = await fetch(`${API_BASE_URL}/api/orders-management/admin/${selectedOrder._id}/notes`, {
         method: 'POST',
@@ -184,7 +184,7 @@ export default function OrdersManagementPage() {
 
     try {
       setSaving(true);
-      const token = localStorage.getItem('adminToken');
+      const token = localStorage.getItem('accessToken');
       
       const response = await fetch(`${API_BASE_URL}/api/orders-management/admin/${selectedOrder._id}/invoice`, {
         method: 'POST',
@@ -213,7 +213,7 @@ export default function OrdersManagementPage() {
 
     try {
       setSaving(true);
-      const token = localStorage.getItem('adminToken');
+      const token = localStorage.getItem('accessToken');
       
       const response = await fetch(`${API_BASE_URL}/api/orders-management/admin/${selectedOrder._id}/cancel`, {
         method: 'POST',
@@ -247,7 +247,7 @@ export default function OrdersManagementPage() {
 
     try {
       setSaving(true);
-      const token = localStorage.getItem('adminToken');
+      const token = localStorage.getItem('accessToken');
       
       const response = await fetch(`${API_BASE_URL}/api/orders-management/admin/${selectedOrder._id}/refund`, {
         method: 'POST',

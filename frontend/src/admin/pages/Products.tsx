@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, Edit2, Trash2, Upload, Search, Download, Filter, X, Check, AlertCircle, Loader } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import TokenManager from '@/utils/tokenManager';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
@@ -109,7 +110,7 @@ const Products: React.FC = () => {
 
     try {
       setSavingProductId('new');
-      const token = localStorage.getItem('adminToken');
+      const token = TokenManager.getAccessToken();
       if (!token) {
         alert('Admin authentication required. Please log in again.');
         setSavingProductId(null);
@@ -228,7 +229,7 @@ const Products: React.FC = () => {
 
     try {
       setSavingProductId(editingId);
-      const token = localStorage.getItem('adminToken');
+      const token = TokenManager.getAccessToken();
       console.log('🔐 Admin token:', token ? `${token.substring(0, 20)}...` : 'NOT FOUND');
       
       if (!token) {
@@ -457,7 +458,7 @@ const Products: React.FC = () => {
 
     try {
       setSavingProductId(id);
-      const token = localStorage.getItem('adminToken');
+      const token = TokenManager.getAccessToken();
       if (!token) {
         alert('Admin authentication required. Please log in again.');
         setSavingProductId(null);
@@ -497,7 +498,7 @@ const Products: React.FC = () => {
       // Delete products one by one
       for (const id of selectedProducts) {
         setSavingProductId(id);
-        const token = localStorage.getItem('adminToken');
+        const token = TokenManager.getAccessToken();
         if (!token) {
           alert('Admin authentication required. Please log in again.');
           setSavingProductId(null);
@@ -539,7 +540,7 @@ const Products: React.FC = () => {
         const product = products.find(p => p.id === id);
         if (!product) continue;
 
-        const token = localStorage.getItem('adminToken');
+        const token = TokenManager.getAccessToken();
         if (!token) {
           alert('Admin authentication required. Please log in again.');
           setSavingProductId(null);

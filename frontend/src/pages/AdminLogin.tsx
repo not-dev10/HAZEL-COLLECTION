@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { AlertCircle, CheckCircle, Loader2, Eye, EyeOff } from 'lucide-react';
 import { API_BASE_URL } from '@/lib/api';
+import TokenManager from '@/utils/tokenManager';
 
 export default function AdminLogin() {
   const navigate = useNavigate();
@@ -32,9 +33,18 @@ export default function AdminLogin() {
 
       const data = await response.json();
 
-      if (data.success && data.token) {
-        localStorage.setItem('adminToken', data.token);
-        localStorage.setItem('adminUser', JSON.stringify(data.user));
+      if (data.success && data.token && data.user) {
+        // Store admin tokens and user info using TokenManager
+        TokenManager.setTokens(data.token, data.token, data.user);
+
+        // Verify tokens were stored
+        const verifyToken = TokenManager.getAccessToken();
+        const verifyUser = TokenManager.getAdminUser();
+        
+        console.log('✅ Tokens verified after storage:', {
+          accessToken: verifyToken?.substring(0, 20) + '...',
+          adminUser: verifyUser?.email
+        });
 
         setMessage({ text: 'Login successful! Redirecting...', type: 'success' });
         setTimeout(() => {

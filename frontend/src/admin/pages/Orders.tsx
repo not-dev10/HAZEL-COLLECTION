@@ -8,14 +8,31 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Search, Package, Truck, Clock, CheckCircle2, AlertCircle, Eye, Download, Filter, Trash2, CheckCircle, Loader2 } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { API_BASE_URL } from '@/lib/api';
+import TokenManager from '@/utils/tokenManager';
 
 interface Order {
   _id: string;
+  orderNumber?: string;
   personalInfo: {
     firstName: string;
     lastName: string;
     email: string;
     phone: string;
+  };
+  deliveryAddress?: {
+    street: string;
+    city: string;
+    state: string;
+    zip: string;
+    country: string;
+    sameAsDelivery?: boolean;
+  };
+  billingAddress?: {
+    street: string;
+    city: string;
+    state: string;
+    zip: string;
+    country: string;
   };
   totals: {
     subtotal: number;
@@ -23,7 +40,14 @@ interface Order {
     tax: number;
     grandTotal: number;
   };
-  items?: any[];
+  items?: Array<{
+    productId: string;
+    name: string;
+    quantity: number;
+    price: number;
+    total: number;
+  }>;
+  paymentMethod?: string;
   status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'confirmed';
   createdAt: string;
   updatedAt?: string;
@@ -44,7 +68,7 @@ const Orders: React.FC = () => {
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('adminToken');
+      const token = TokenManager.getAccessToken();
       console.log('🔍 Fetching orders from:', `${API_BASE_URL}/api/orders-management/admin/list`);
       console.log('🔐 Using token:', token ? 'Yes' : 'No');
       
@@ -107,7 +131,7 @@ const Orders: React.FC = () => {
   const handleUpdateOrderStatus = async (orderId: string, newStatus: Order['status']) => {
     try {
       setSavingStatus(orderId);
-      const token = localStorage.getItem('adminToken');
+      const token = TokenManager.getAccessToken();
       console.log('🔄 Updating order status:', { orderId, orderId_type: typeof orderId, orderId_length: orderId.length, newStatus });
       console.log('📝 Full order ID:', orderId);
       
@@ -153,7 +177,7 @@ const Orders: React.FC = () => {
 
   const handleDeleteOrder = async (orderId: string) => {
     try {
-      const token = localStorage.getItem('adminToken');
+      const token = TokenManager.getAccessToken();
       const response = await fetch(`${API_BASE_URL}/api/orders-management/admin/${orderId}`, {
         method: 'DELETE',
         headers: {
@@ -300,7 +324,7 @@ const Orders: React.FC = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Order ID</TableHead>
+                    <TableHead>Order Number</TableHead>
                     <TableHead>Customer</TableHead>
                     <TableHead>Total</TableHead>
                     <TableHead>Status</TableHead>
@@ -314,7 +338,7 @@ const Orders: React.FC = () => {
                     const StatusIcon = statusInfo.icon;
                     return (
                       <TableRow key={order._id}>
-                        <TableCell className="font-semibold">{order._id.slice(-8)}</TableCell>
+                        <TableCell className="font-semibold text-purple-600">{order.orderNumber || `ORD-${order._id.slice(-8)}`}</TableCell>
                         <TableCell>
                           <div>
                             <p className="font-medium">{order.personalInfo.firstName} {order.personalInfo.lastName}</p>
@@ -336,36 +360,89 @@ const Orders: React.FC = () => {
                                 <Eye size={16} />
                               </Button>
                             </DialogTrigger>
-                            <DialogContent className="max-w-2xl">
+                            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
                               <DialogHeader>
-                                <DialogTitle>Order Details</DialogTitle>
+                                <DialogTitle>Order Details - {order.orderNumber || `ORD-${order._id.slice(-8)}`}</DialogTitle>
                                 <DialogDescription>
-                                  {order._id}
+                                  Order ID: {order._id}
                                 </DialogDescription>
                               </DialogHeader>
-                              <div className="space-y-4">
-                                <div className="grid grid-cols-2 gap-4">
-                                  <div>
-                                    <p className="text-sm font-medium text-gray-600">Customer</p>
-                                    <p className="font-semibold">{order.personalInfo.firstName} {order.personalInfo.lastName}</p>
-                                  </div>
-                                  <div>
-                                    <p className="text-sm font-medium text-gray-600">Email</p>
-                                    <p className="font-semibold">{order.personalInfo.email}</p>
-                                  </div>
-                                  <div>
-                                    <p className="text-sm font-medium text-gray-600">Order Date</p>
-                                    <p className="font-semibold">{new Date(order.createdAt).toLocaleDateString()}</p>
-                                  </div>
-                                  <div>
-                                    <p className="text-sm font-medium text-gray-600">Status</p>
-                                    <Badge className={statusConfig[order.status as keyof typeof statusConfig].color}>
-                                      {order.status}
-                                    </Badge>
+                              <div className="space-y-6">
+                                {/* Customer Information */}
+                                <div className="border-b pb-4">
+                                  <h3 className="font-semibold text-lg mb-3 text-gray-900">Customer Information</h3>
+                                  <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                      <p className="text-sm font-medium text-gray-600">Full Name</p>
+                                      <p className="font-semibold">{order.personalInfo.firstName} {order.personalInfo.lastName}</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-sm font-medium text-gray-600">Email</p>
+                                      <p className="font-semibold text-blue-600">{order.personalInfo.email}</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-sm font-medium text-gray-600">Phone</p>
+                                      <p className="font-semibold">{order.personalInfo.phone || 'N/A'}</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-sm font-medium text-gray-600">Payment Method</p>
+                                      <p className="font-semibold capitalize">{order.paymentMethod || 'Not specified'}</p>
+                                    </div>
                                   </div>
                                 </div>
-                                <div className="border-t pt-4">
-                                  <label className="text-sm font-semibold block mb-2">Update Status</label>
+
+                                {/* Order Status & Dates */}
+                                <div className="border-b pb-4">
+                                  <h3 className="font-semibold text-lg mb-3 text-gray-900">Order Status</h3>
+                                  <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                      <p className="text-sm font-medium text-gray-600">Current Status</p>
+                                      <Badge className={statusConfig[order.status as keyof typeof statusConfig].color}>
+                                        {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                                      </Badge>
+                                    </div>
+                                    <div>
+                                      <p className="text-sm font-medium text-gray-600">Order Date</p>
+                                      <p className="font-semibold">{new Date(order.createdAt).toLocaleDateString()}</p>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Delivery Address */}
+                                {order.deliveryAddress && (
+                                  <div className="border-b pb-4">
+                                    <h3 className="font-semibold text-lg mb-3 text-gray-900">Delivery Address</h3>
+                                    <div className="bg-gray-50 p-3 rounded-md text-sm space-y-1">
+                                      <p>{order.deliveryAddress.street}</p>
+                                      <p>{order.deliveryAddress.city}, {order.deliveryAddress.state} {order.deliveryAddress.zip}</p>
+                                      <p>{order.deliveryAddress.country}</p>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Items */}
+                                {order.items && order.items.length > 0 && (
+                                  <div className="border-b pb-4">
+                                    <h3 className="font-semibold text-lg mb-3 text-gray-900">Order Items</h3>
+                                    <div className="space-y-2">
+                                      {order.items.map((item: any, index: number) => (
+                                        <div key={index} className="flex justify-between items-center bg-gray-50 p-3 rounded-md">
+                                          <div className="flex-1">
+                                            <p className="font-medium">{item.name}</p>
+                                            <p className="text-xs text-gray-500">Qty: {item.quantity}</p>
+                                          </div>
+                                          <div className="text-right">
+                                            <p className="font-semibold">£{(item.total || item.price * item.quantity).toFixed(2)}</p>
+                                            <p className="text-xs text-gray-500">£{item.price.toFixed(2)} each</p>
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                                {/* Update Status */}
+                                <div className="border-b pb-4">
+                                  <label className="text-sm font-semibold block mb-2 text-gray-900">Update Order Status</label>
                                   <div className="flex gap-2">
                                     <select 
                                       value={pendingStatusChanges[order._id] ?? order.status}
@@ -373,7 +450,7 @@ const Orders: React.FC = () => {
                                         ...prev,
                                         [order._id]: e.target.value as Order['status']
                                       }))}
-                                      className="flex-1 px-3 py-2 border rounded-md"
+                                      className="flex-1 px-3 py-2 border rounded-md bg-white text-gray-900"
                                     >
                                       <option value="pending">Pending</option>
                                       <option value="confirmed">Confirmed</option>
@@ -385,23 +462,26 @@ const Orders: React.FC = () => {
                                     <Button 
                                       onClick={() => handleUpdateOrderStatus(order._id, pendingStatusChanges[order._id] ?? order.status)}
                                       disabled={!pendingStatusChanges[order._id] || pendingStatusChanges[order._id] === order.status || savingStatus === order._id}
-                                      className="min-w-[80px]"
+                                      className="min-w-[100px] bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600"
                                     >
                                       {savingStatus === order._id ? (
                                         <Loader2 className="w-4 h-4 animate-spin" />
                                       ) : (
-                                        'Save'
+                                        'Update Status'
                                       )}
                                     </Button>
                                   </div>
                                   {pendingStatusChanges[order._id] && pendingStatusChanges[order._id] !== order.status && (
-                                    <p className="text-xs text-orange-600 mt-1">
-                                      Unsaved changes - click Save to update
+                                    <p className="text-xs text-orange-600 mt-2">
+                                      ⚠️ Unsaved changes - click Update Status to apply
                                     </p>
                                   )}
                                 </div>
-                                <div className="border-t pt-4">
-                                  <div className="space-y-2">
+
+                                {/* Order Summary */}
+                                <div>
+                                  <h3 className="font-semibold text-lg mb-3 text-gray-900">Order Summary</h3>
+                                  <div className="space-y-2 bg-gray-50 p-4 rounded-lg">
                                     <div className="flex justify-between">
                                       <span className="text-gray-600">Subtotal</span>
                                       <span className="font-semibold">£{order.totals.subtotal.toFixed(2)}</span>
@@ -414,9 +494,9 @@ const Orders: React.FC = () => {
                                       <span className="text-gray-600">Tax</span>
                                       <span className="font-semibold">£{order.totals.tax.toFixed(2)}</span>
                                     </div>
-                                    <div className="flex justify-between border-t pt-2">
-                                      <span className="font-semibold">Total</span>
-                                      <span className="font-bold text-lg">£{order.totals.grandTotal.toFixed(2)}</span>
+                                    <div className="flex justify-between border-t pt-2 border-gray-200">
+                                      <span className="font-bold text-gray-900">Total</span>
+                                      <span className="font-bold text-lg text-purple-600">£{order.totals.grandTotal.toFixed(2)}</span>
                                     </div>
                                   </div>
                                 </div>

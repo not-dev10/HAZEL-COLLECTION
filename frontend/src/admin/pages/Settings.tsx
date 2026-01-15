@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Bell, Mail, Lock, User, CreditCard, Eye, EyeOff, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { API_BASE_URL } from '@/lib/api';
+import TokenManager from '@/utils/tokenManager';
 
 const Settings: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -20,7 +21,7 @@ const Settings: React.FC = () => {
     storePhone: '',
     storeAddress: '',
     storeDescription: '',
-    currency: 'PKR',
+    currency: 'GBP',
     taxRate: 0,
     instagram: '',
     facebook: '',
@@ -73,7 +74,7 @@ const Settings: React.FC = () => {
   const saveStoreInfo = async () => {
     try {
       setSaving(true);
-      const token = localStorage.getItem('adminToken');
+      const token = TokenManager.getAccessToken();
       
       const response = await fetch(`${API_BASE_URL}/api/settings/store-info`, {
         method: 'PUT',
@@ -107,7 +108,7 @@ const Settings: React.FC = () => {
   const saveSocialMedia = async () => {
     try {
       setSaving(true);
-      const token = localStorage.getItem('adminToken');
+      const token = TokenManager.getAccessToken();
       
       const response = await fetch(`${API_BASE_URL}/api/settings/social-media`, {
         method: 'PUT',
@@ -142,7 +143,7 @@ const Settings: React.FC = () => {
   const saveCurrency = async () => {
     try {
       setSaving(true);
-      const token = localStorage.getItem('adminToken');
+      const token = TokenManager.getAccessToken();
       
       const response = await fetch(`${API_BASE_URL}/api/settings/currency`, {
         method: 'PUT',
