@@ -26,8 +26,20 @@ import customerRoutes from "./routes/customer.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import analyticsRoutes from "./routes/analytics.routes.js";
 import logsRoutes from "./routes/logs.routes.js";
+import csrfRoutes from "./routes/csrf.routes.js";
 
 const app = express();
+
+// 🔒 HTTPS REDIRECT - Force HTTPS in production
+if (process.env.NODE_ENV === 'production') {
+  app.use((req, res, next) => {
+    // Check if request is already HTTPS
+    if (req.header('x-forwarded-proto') !== 'https') {
+      return res.redirect(301, `https://${req.header('host')}${req.url}`);
+    }
+    next();
+  });
+}
 
 // 🔒 SECURITY HEADERS - Prevents XSS, Clickjacking, and other attacks
 app.use(helmet({
@@ -68,10 +80,8 @@ const corsOptions = {
     
     // Check if origin is in allowed list
     if (allowedOrigins.includes(origin)) {
-      console.log(`🌐 CORS: Allowing origin ${origin}`);
       callback(null, true);
     } else {
-      console.log(`❌ CORS: Blocked unauthorized origin ${origin}`);
       callback(new Error('Not allowed by CORS'));
     }
   },
@@ -113,6 +123,7 @@ app.use("/api/wishlist", wishlistRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/health", healthRoutes);
+app.use("/api/csrf", csrfRoutes); // CSRF token endpoint
 
 // 🔒 Admin routes - IP Whitelist + Logging
 app.use("/api/orders-management", logAdminAccess, ipWhitelistMiddleware, orderManagementRoutes);

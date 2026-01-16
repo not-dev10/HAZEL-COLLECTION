@@ -28,10 +28,10 @@ const uploadImageFromUrl = async (imageUrl, folder = 'hezal-couture', publicId =
       uploadOptions.public_id = publicId;
     }
 
-    console.log('🔧 Upload config check:');
-    console.log('Cloud Name:', process.env.CLOUDINARY_CLOUD_NAME);
-    console.log('API Key:', process.env.CLOUDINARY_API_KEY);
-    console.log('API Secret:', process.env.CLOUDINARY_API_SECRET);
+    // ✅ SECURITY: Don't log API credentials
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔧 Upload config check: Cloudinary configured');
+    }
 
     const result = await cloudinary.uploader.upload(imageUrl, uploadOptions);
     return {

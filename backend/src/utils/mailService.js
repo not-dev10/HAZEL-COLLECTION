@@ -23,8 +23,7 @@ class MailService {
 
       console.log('📧 Initializing mail service...');
       console.log(`   Service: ${mailService}`);
-      console.log(`   User: ${smtpUser ? smtpUser.substring(0, 5) + '***' : 'NOT SET'}`);
-      console.log(`   Pass: ${smtpPass ? smtpPass.substring(0, 3) + '***' : 'NOT SET'}`);
+      console.log(`   Status: ${smtpUser && smtpPass ? 'Configured' : 'NOT SET'}`);
 
       // Gmail configuration
       if (mailService === 'gmail') {
@@ -416,11 +415,11 @@ class MailService {
     try {
       const { orderId, orderNumber, userName = 'User', status, trackingNumber = null, estimatedDelivery = null } = updateDetails;
 
-      console.log('📨 Preparing order status email...');
-      console.log(`   Order Number: ${orderNumber || 'UNDEFINED'}`);
-      console.log(`   Order ID: ${orderId}`);
-      console.log(`   Status: ${status}`);
-      console.log(`   Recipient: ${email}`);
+      // ✅ SECURITY: Don't log sensitive order information
+      if (process.env.NODE_ENV === 'development') {
+        console.log('📨 Preparing order status email...');
+        console.log(`   Status: ${status}`);
+      }
 
       // Status-specific message and color
       const statusMessages = {
@@ -531,11 +530,12 @@ class MailService {
         html: htmlContent
       };
 
-      console.log('📨 Sending order status email...');
-      console.log(`   From: ${mailOptions.from}`);
-      console.log(`   To: ${email}`);
-      console.log(`   Subject: ${mailOptions.subject}`);
-      console.log(`   Service Initialized: ${this.initialized}`);
+      // ✅ SECURITY: Don't log sensitive email information
+      if (process.env.NODE_ENV === 'development') {
+        console.log('📨 Sending order status email...');
+        console.log(`   Status: ${status}`);
+        console.log(`   Service Initialized: ${this.initialized}`);
+      }
 
       if (!this.initialized) {
         console.warn('⚠️ Mail service not initialized, attempting to reinitialize...');
@@ -548,15 +548,15 @@ class MailService {
 
       const info = await this.transporter.sendMail(mailOptions);
       console.log('✅ Order status update email sent successfully');
-      console.log(`   Message ID: ${info.messageId}`);
-      console.log(`   Response: ${info.response}`);
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`   Status: ${status}`);
+      }
       return true;
     } catch (error) {
-      console.error('❌ Error sending order status update email:');
-      console.error(`   Message: ${error.message}`);
-      console.error(`   Code: ${error.code}`);
-      console.error(`   Response: ${error.response}`);
-      console.error(`   Full Error:`, error);
+      console.error('❌ Error sending order status update email');
+      if (process.env.NODE_ENV === 'development') {
+        console.error('   Details:', error.message);
+      }
       return false;
     }
   }
@@ -627,11 +627,12 @@ class MailService {
       });
 
       console.log('✅ OTP email sent successfully');
-      console.log(`   Message ID: ${info.messageId}`);
       return true;
     } catch (error) {
-      console.error('❌ Error sending OTP email:');
-      console.error(`   Message: ${error.message}`);
+      console.error('❌ Error sending OTP email');
+      if (process.env.NODE_ENV === 'development') {
+        console.error('   Details:', error.message);
+      }
       return false;
     }
   }

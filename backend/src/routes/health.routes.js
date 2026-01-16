@@ -5,6 +5,20 @@ import { requireAuth, requireAdmin } from '../middleware/auth.middleware.js';
 const router = express.Router();
 
 /**
+ * @route   GET /api/health/ping
+ * @desc    Simple public health check (no auth required)
+ * @access  Public
+ */
+router.get('/ping', (req, res) => {
+  res.json({
+    success: true,
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
+
+/**
  * @route   GET /api/health
  * @desc    Check system health (MongoDB, Cloudinary, Server)
  * @access  Private (Admin only)
