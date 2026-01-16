@@ -1,4 +1,4 @@
-import rateLimit from 'express-rate-limit';
+import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 
 /**
  * Comprehensive Rate Limiting Configuration
@@ -89,8 +89,9 @@ export const adminLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: (req) => {
-    // Use user ID + IP for admin routes
-    return `${req.user?.id || 'anonymous'}-${req.ip}`;
+    // Use user ID + IP for admin routes (IPv6 safe)
+    const ipKey = ipKeyGenerator(req);
+    return `${req.user?.id || 'anonymous'}-${ipKey}`;
   }
 });
 

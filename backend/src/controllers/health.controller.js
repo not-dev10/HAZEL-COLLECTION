@@ -47,11 +47,21 @@ export const checkSystemHealth = async (req, res) => {
         try {
           const statsResult = await adminDb.serverStatus();
           const dbStatsResult = await database.stats();
+          
+          // MongoDB Atlas Free Tier: 512 MB total storage
+          const MONGODB_FREE_TIER_LIMIT = 512 * 1024 * 1024; // 512 MB in bytes
+          const dataSize = dbStatsResult.dataSize;
+          const usagePercent = ((dataSize / MONGODB_FREE_TIER_LIMIT) * 100).toFixed(2);
+          
           mongodbCheck.storage = {
-            dataSize: (dbStatsResult.dataSize / 1024 / 1024).toFixed(2) + ' MB',
-            storageSize: (dbStatsResult.storageSize / 1024 / 1024).toFixed(2) + ' MB',
+            dataSize: `${(dataSize / 1024 / 1024).toFixed(2)} MB`,
+            storageSize: `${(dbStatsResult.storageSize / 1024 / 1024).toFixed(2)} MB`,
+            freeLimit: '512 MB',
+            usagePercent: usagePercent + '%',
+            remaining: `${((MONGODB_FREE_TIER_LIMIT - dataSize) / 1024 / 1024).toFixed(2)} MB`,
             collections: dbStatsResult.collections,
-            indexes: dbStatsResult.indexes
+            indexes: dbStatsResult.indexes,
+            warning: usagePercent > 80 ? '⚠️ Storage usage above 80%' : null
           };
         } catch (storageError) {
           console.warn('⚠️ Could not fetch MongoDB storage stats:', storageError.message);
@@ -112,30 +122,33 @@ export const checkSystemHealth = async (req, res) => {
           
           // Extract and cache storage information from response
           if (response.data) {
-            const bytesUsed = response.data.bytes_used || 0;
-            const bytesQuota = response.data.bytes_quota || 0;
-            const creditsUsed = response.data.credits_used || 0;
-            const creditsTotal = response.data.credits || 0;
+            // Parse Cloudinary API response
+            const bytesUsed = response.data.storage?.usage || 0;
+            const creditsLimit = response.data.credits?.limit || 0;
+            const creditsUsed = response.data.credits?.usage || 0;
+            const creditsRemaining = creditsLimit - creditsUsed;
             
+            // Cloudinary free tier: 25 credits per month
             const storageData = {
               bytesUsed,
-              bytesUsedDisplay: `${(bytesUsed / 1024 / 1024 / 1024).toFixed(2)} GB`,
-              bytesQuota,
-              bytesQuotaDisplay: `${(bytesQuota / 1024 / 1024 / 1024).toFixed(2)} GB`,
-              usagePercent: bytesQuota ? 
-                ((bytesUsed / bytesQuota) * 100).toFixed(2) + '%' : 
-                'N/A',
+              bytesUsedDisplay: `${(bytesUsed / 1024 / 1024).toFixed(2)} MB`,
+              bytesQuota: 0, // Cloudinary doesn't have a storage quota for free tier
+              bytesQuotaDisplay: 'Unlimited',
+              usagePercent: 'N/A',
               credits: {
-                total: creditsTotal,
+                total: creditsLimit,
                 used: creditsUsed,
-                remaining: creditsTotal - creditsUsed,
-                usagePercent: creditsTotal ? 
-                  ((creditsUsed / creditsTotal) * 100).toFixed(2) + '%' : 
+                remaining: creditsRemaining,
+                usagePercent: creditsLimit ? 
+                  ((creditsUsed / creditsLimit) * 100).toFixed(2) + '%' : 
                   'N/A'
-              }
+              },
+              resources: response.data.resources || 0,
+              transformations: response.data.transformations?.usage || 0,
+              bandwidth: response.data.bandwidth?.usage || 0
             };
             
-            cloudinaryCheck.storage = storageData.bytesUsedDisplay + ' / ' + storageData.bytesQuotaDisplay;
+            cloudinaryCheck.storage = storageData.bytesUsedDisplay + ' (Unlimited)';
             cloudinaryCheck.storageData = storageData;
             cloudinaryRateLimiter.updateCache('healthy', 'Cloudinary verified', responseTime, storageData);
           }
@@ -313,15 +326,26 @@ export const getStorageInfo = async (req, res) => {
     try {
       const dbStats = await database.stats();
       
+      // MongoDB Atlas Free Tier: 512 MB total storage
+      const MONGODB_FREE_TIER_LIMIT = 512 * 1024 * 1024; // 512 MB in bytes
+      const dataSize = dbStats.dataSize;
+      const usagePercent = ((dataSize / MONGODB_FREE_TIER_LIMIT) * 100).toFixed(2);
+      
       storageInfo.mongodb = {
         status: 'healthy',
-        dataSize: dbStats.dataSize,
-        dataSizeDisplay: `${(dbStats.dataSize / 1024 / 1024).toFixed(2)} MB`,
+        dataSize: dataSize,
+        dataSizeDisplay: `${(dataSize / 1024 / 1024).toFixed(2)} MB`,
         storageSize: dbStats.storageSize,
         storageSizeDisplay: `${(dbStats.storageSize / 1024 / 1024).toFixed(2)} MB`,
+        freeLimit: MONGODB_FREE_TIER_LIMIT,
+        freeLimitDisplay: '512 MB',
+        usagePercent: usagePercent,
+        remaining: MONGODB_FREE_TIER_LIMIT - dataSize,
+        remainingDisplay: `${((MONGODB_FREE_TIER_LIMIT - dataSize) / 1024 / 1024).toFixed(2)} MB`,
         collections: dbStats.collections,
         indexes: dbStats.indexes,
-        avgObjSize: dbStats.avgObjSize
+        avgObjSize: dbStats.avgObjSize,
+        warning: usagePercent > 80 ? '⚠️ Storage usage above 80%' : null
       };
       console.log('✅ MongoDB storage info retrieved');
     } catch (mongoError) {
@@ -351,32 +375,35 @@ export const getStorageInfo = async (req, res) => {
           });
 
           if (response.data) {
-            const bytesUsed = response.data.bytes_used || 0;
-            const bytesQuota = response.data.bytes_quota || 0;
-            const creditsUsed = response.data.credits_used || 0;
-            const creditsTotal = response.data.credits || 0;
+            // Parse Cloudinary API response
+            const bytesUsed = response.data.storage?.usage || 0;
+            const creditsLimit = response.data.credits?.limit || 0;
+            const creditsUsed = response.data.credits?.usage || 0;
+            const creditsRemaining = creditsLimit - creditsUsed;
             
             const storageData = {
               status: 'healthy',
               storage: {
                 bytesUsed,
-                bytesUsedDisplay: `${(bytesUsed / 1024 / 1024 / 1024).toFixed(2)} GB`,
-                bytesQuota,
-                bytesQuotaDisplay: `${(bytesQuota / 1024 / 1024 / 1024).toFixed(2)} GB`,
-                usagePercent: bytesQuota ? ((bytesUsed / bytesQuota) * 100).toFixed(2) + '%' : 'N/A'
+                bytesUsedDisplay: `${(bytesUsed / 1024 / 1024).toFixed(2)} MB`,
+                bytesQuota: 0,
+                bytesQuotaDisplay: 'Unlimited',
+                usagePercent: 'N/A'
               },
               credits: {
-                total: creditsTotal,
+                total: creditsLimit,
                 used: creditsUsed,
-                remaining: creditsTotal - creditsUsed,
-                usagePercent: creditsTotal ? ((creditsUsed / creditsTotal) * 100).toFixed(2) + '%' : 'N/A'
+                remaining: creditsRemaining,
+                usagePercent: creditsLimit ? 
+                  ((creditsUsed / creditsLimit) * 100).toFixed(2) + '%' : 
+                  'N/A'
               },
               resources: response.data.resources || 0,
-              transformations: response.data.transformations || 0
+              transformations: response.data.transformations?.usage || 0,
+              bandwidth: response.data.bandwidth?.usage || 0
             };
             
             storageInfo.cloudinary = storageData;
-            cloudinaryRateLimiter.updateCache('healthy', 'Cloudinary storage retrieved', 0, storageData);
             console.log('✅ Cloudinary storage info retrieved');
           }
         }
@@ -384,10 +411,26 @@ export const getStorageInfo = async (req, res) => {
         // Use cached data
         const cachedStorage = cloudinaryRateLimiter.getCachedStorage();
         if (cachedStorage) {
+          // Ensure proper structure for cached data
           storageInfo.cloudinary = {
-            ...cachedStorage,
+            status: 'healthy',
             cached: true,
-            timeSinceLastCheck: cloudinaryRateLimiter.getTimeSinceLastCheck()
+            storage: cachedStorage.storage || {
+              bytesUsed: cachedStorage.bytesUsed || 0,
+              bytesQuota: cachedStorage.bytesQuota || 0,
+              bytesUsedDisplay: cachedStorage.bytesUsedDisplay || '0.00 GB',
+              bytesQuotaDisplay: cachedStorage.bytesQuotaDisplay || '0.00 GB',
+              usagePercent: cachedStorage.usagePercent || 'N/A'
+            },
+            credits: cachedStorage.credits || {
+              total: cachedStorage.credits?.total || 0,
+              used: cachedStorage.credits?.used || 0,
+              remaining: cachedStorage.credits?.remaining || 0,
+              usagePercent: cachedStorage.credits?.usagePercent || 'N/A'
+            },
+            timeSinceLastCheck: cloudinaryRateLimiter.getTimeSinceLastCheck(),
+            cachedAt: cachedStorage.cachedAt,
+            nextVerification: cachedStorage.nextVerification
           };
           console.log('☁️ Using cached Cloudinary storage info');
         } else {

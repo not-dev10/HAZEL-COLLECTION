@@ -9,6 +9,7 @@ import { SecurityLoggingService } from "./services/securityLoggingService.js";
 import { startGuestCleanupScheduler } from "./services/guestCleanup.service.js";
 import { initializePort, logServerStartup } from "./utils/portDetection.js";
 import { mailService } from "./utils/mailService.js";
+import { initializeAdminUser } from "./utils/adminInitializer.js";
 
 async function startServer() {
   try {
@@ -35,6 +36,10 @@ async function startServer() {
       console.warn('⚠️ SMTP credentials not configured. Email service disabled.');
       console.warn('   Set SMTP_USER and SMTP_PASS environment variables to enable email.');
     }
+    
+    // Initialize admin user on first startup
+    console.log('👤 Initializing admin user...');
+    await initializeAdminUser();
     
     // Start guest data cleanup scheduler
     startGuestCleanupScheduler();

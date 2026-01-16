@@ -183,43 +183,65 @@ const TechStackHealth: React.FC = () => {
       }
 
       const data = await response.json();
+      console.log('📊 Storage data received:', data);
       
       // Transform MongoDB data to match StorageInfo interface
       if (data.storage?.mongodb) {
         const mongoData = data.storage.mongodb;
+        console.log('📦 MongoDB data:', mongoData);
+        // Use the free tier limit (512 MB) for total storage
+        const freeLimit = mongoData.freeLimit || (512 * 1024 * 1024); // 512 MB in bytes
+        const dataSize = mongoData.dataSize || 0;
+        const usagePercent = mongoData.usagePercent || ((dataSize / freeLimit) * 100);
+        
         setMongoStorage({
-          used: mongoData.dataSize || 0,
-          total: mongoData.storageSize || 0,
-          percentage: mongoData.storageSize ? ((mongoData.dataSize / mongoData.storageSize) * 100) : 0,
+          used: dataSize,
+          total: freeLimit,
+          percentage: parseFloat(usagePercent),
           collections: mongoData.collections,
           documents: mongoData.collections // Will be updated if we have document count
         });
       }
       
       // Transform Cloudinary data to match CloudinaryInfo interface
-      if (data.storage?.cloudinary && data.storage.cloudinary.status === 'healthy') {
+      if (data.storage?.cloudinary && data.storage.cloudinary.status !== 'error' && data.storage.cloudinary.status !== 'not_configured') {
         const cloudData = data.storage.cloudinary;
+        console.log('☁️ Cloudinary data received:', cloudData);
+        
+        // Extract storage values - handle both nested and flat structures
+        const storageUsed = cloudData.storage?.bytesUsed ?? cloudData.bytesUsed ?? 0;
+        const storageTotal = cloudData.storage?.bytesQuota ?? cloudData.bytesQuota ?? 0;
+        
+        // Extract credits - ensure we get numeric values
+        const creditsTotal = typeof cloudData.credits?.total === 'number' ? cloudData.credits.total : 0;
+        const creditsUsed = typeof cloudData.credits?.used === 'number' ? cloudData.credits.used : 0;
+        const creditsRemaining = typeof cloudData.credits?.remaining === 'number' ? cloudData.credits.remaining : 0;
+        
+        console.log('✅ Setting Cloudinary info:', { storageUsed, storageTotal, creditsTotal, creditsRemaining });
+        
         setCloudinaryInfo({
           storage: {
-            used: cloudData.storage.bytesUsed || 0,
-            total: cloudData.storage.bytesQuota || 0,
-            percentage: cloudData.storage.bytesQuota ? ((cloudData.storage.bytesUsed / cloudData.storage.bytesQuota) * 100) : 0,
-            bytes: cloudData.storage.bytesUsed || 0
+            used: storageUsed,
+            total: storageTotal || 1, // Use 1 as denominator if unlimited to avoid division by zero
+            percentage: storageTotal ? ((storageUsed / storageTotal) * 100) : 0,
+            bytes: storageUsed
           },
           credits: {
-            remaining: cloudData.credits.remaining || 0,
-            total: cloudData.credits.total || 0,
-            percentage: cloudData.credits.total ? ((cloudData.credits.remaining / cloudData.credits.total) * 100) : 0,
-            status: cloudData.credits.remaining > (cloudData.credits.total * 0.75) ? 'abundant' :
-                    cloudData.credits.remaining > (cloudData.credits.total * 0.50) ? 'good' :
-                    cloudData.credits.remaining > (cloudData.credits.total * 0.25) ? 'warning' : 'critical'
+            remaining: creditsRemaining,
+            total: creditsTotal,
+            percentage: creditsTotal ? ((creditsRemaining / creditsTotal) * 100) : 0,
+            status: creditsRemaining > (creditsTotal * 0.75) ? 'abundant' :
+                    creditsRemaining > (creditsTotal * 0.50) ? 'good' :
+                    creditsRemaining > (creditsTotal * 0.25) ? 'warning' : 'critical'
           },
           bandwidth: {
-            used: cloudData.resources || 0,
-            total: 1000000, // Placeholder
+            used: cloudData.bandwidth || 0,
+            total: 1000000,
             percentage: 0
           }
         });
+      } else {
+        console.warn('⚠️ No Cloudinary data in storage response or Cloudinary not configured');
       }
     } catch (error) {
       console.error('❌ Error fetching storage info:', error);
@@ -330,6 +352,8 @@ const TechStackHealth: React.FC = () => {
       return 'bg-green-600';
     };
 
+    const isUnlimited = total === 0 || total === 1;
+
     return (
       <Card>
         <CardHeader className="pb-3">
@@ -339,21 +363,23 @@ const TechStackHealth: React.FC = () => {
               <CardTitle className="text-lg">{label}</CardTitle>
             </div>
             <Badge className={`bg-blue-100 text-blue-800 hover:bg-blue-100`}>
-              {percentage.toFixed(1)}%
+              {isUnlimited ? 'Unlimited' : percentage.toFixed(1) + '%'}
             </Badge>
           </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-              <div 
-                className={`h-3 rounded-full transition-all ${getColorClass()}`}
-                style={{ width: `${Math.min(percentage, 100)}%` }}
-              />
-            </div>
+            {!isUnlimited && (
+              <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                <div 
+                  className={`h-3 rounded-full transition-all ${getColorClass()}`}
+                  style={{ width: `${Math.min(percentage, 100)}%` }}
+                />
+              </div>
+            )}
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">Used: <span className="font-semibold">{formatBytes(used)}</span></span>
-              <span className="text-gray-600">Total: <span className="font-semibold">{formatBytes(total)}</span></span>
+              <span className="text-gray-600">Total: <span className="font-semibold">{isUnlimited ? 'Unlimited' : formatBytes(total)}</span></span>
             </div>
           </div>
         </CardContent>
@@ -625,7 +651,7 @@ const TechStackHealth: React.FC = () => {
           )}
 
           {/* Cloudinary Storage & Credits */}
-          {cloudinaryInfo && (
+          {cloudinaryInfo ? (
             <div>
               <h3 className="text-lg font-semibold mb-4">Cloudinary Resources</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
@@ -689,6 +715,16 @@ const TechStackHealth: React.FC = () => {
                 />
               </div>
             </div>
+          ) : (
+            <Card className="mb-6">
+              <CardContent className="pt-6">
+                <div className="text-center py-8">
+                  <Cloud className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-500">Cloudinary data not available</p>
+                  <p className="text-xs text-gray-400 mt-2">Check if Cloudinary credentials are configured</p>
+                </div>
+              </CardContent>
+            </Card>
           )}
         </>
       )}

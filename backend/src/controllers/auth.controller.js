@@ -202,9 +202,20 @@ export const adminLogin = async (req, res) => {
 
     console.log("✓ Password verified");
 
+    // Check if user is actually an admin
+    if (user.role !== 'admin' && user.type !== 'admin') {
+      console.log("❌ User is not an admin");
+      return res.status(403).json({
+        success: false,
+        message: "Admin access required"
+      });
+    }
+
+    console.log("✓ Admin role verified");
+
     // Issue JWT for admin
     const token = jwt.sign(
-      { id: user._id.toString(), email: user.email, role: 'admin', type: 'admin' },
+      { id: user._id.toString(), email: user.email, role: user.role || 'admin', type: 'admin' },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
@@ -218,7 +229,7 @@ export const adminLogin = async (req, res) => {
         id: user._id.toString(),
         email: user.email,
         fullName: user.fullName,
-        role: 'admin'
+        role: user.role
       },
       token
     });
