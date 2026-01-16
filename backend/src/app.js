@@ -70,18 +70,24 @@ app.use(helmet({
 
 // 🔒 SECURE CORS Configuration - Environment-based (BEST PRACTICE)
 const allowedOrigins = process.env.NODE_ENV === 'production'
-  ? (process.env.FRONTEND_URL || 'https://didifashion.com').split(',')
-  : ['http://localhost:8080', 'http://127.0.0.1:8080'];
+  ? (process.env.FRONTEND_URL || '').split(',').filter(url => url.trim())
+  : ['http://localhost:8080', 'http://127.0.0.1:8080', 'http://localhost:5173', 'http://127.0.0.1:5173'];
 
 const corsOptions = {
   origin: function (origin, callback) {
     // Allow requests with no origin (mobile apps, Postman, curl)
     if (!origin) return callback(null, true);
     
-    // Check if origin is in allowed list
-    if (allowedOrigins.includes(origin)) {
+    // In development, allow all localhost origins
+    if (process.env.NODE_ENV !== 'production') {
+      return callback(null, true);
+    }
+    
+    // In production, check if origin is in allowed list
+    if (allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
+      console.warn(`⚠️ CORS blocked request from origin: ${origin}`);
       callback(new Error('Not allowed by CORS'));
     }
   },
