@@ -44,8 +44,8 @@ async function startServer() {
     // Start guest data cleanup scheduler
     startGuestCleanupScheduler();
     
-    // Find available port dynamically
-    const PORT = await initializePort();
+    // Get PORT from environment (Render sets this) or use default
+    const PORT = process.env.PORT || 5000;
     
     app.listen(PORT, () => {
       // Log server startup information
