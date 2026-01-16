@@ -118,7 +118,7 @@ export const createOrder = async (req, res) => {
         firstName: firstName,
         deliveryAddress: `${deliveryStreet || billingStreet}, ${deliveryCity || billingCity}, ${deliveryState || billingState} ${deliveryZip || billingZip}`
       });
-      console.log('✅ Order confirmation email sent to:', email);
+      console.log('✅ Order confirmation email sent');
     } catch (emailError) {
       console.warn('⚠️ Order confirmation email failed (non-critical):', emailError.message);
       // Don't fail order creation if email fails
@@ -397,7 +397,7 @@ export const requestOrderOTP = async (req, res) => {
   try {
     const { orderNumber, email } = req.body;
 
-    console.log('📧 OTP request for order:', orderNumber, 'email:', email);
+    console.log('📧 OTP request received');
 
     // Validate inputs
     if (!orderNumber || !email) {

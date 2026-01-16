@@ -10,12 +10,12 @@ v2.config({
 });
 
 // Debug configuration
-console.log('🔧 Cloudinary Config Debug:');
-console.log('Cloud Name:', process.env.CLOUDINARY_CLOUD_NAME);
-console.log('API Key:', process.env.CLOUDINARY_API_KEY ? '✅ Set' : '❌ Missing');
-console.log('API Secret:', process.env.CLOUDINARY_API_SECRET ? '✅ Set' : '❌ Missing');
-console.log('Cloudinary v2 type:', typeof v2);
-console.log('Cloudinary v2.uploader type:', typeof v2.uploader);
+if (process.env.NODE_ENV === 'development') {
+  console.log('🔧 Cloudinary Config Debug:');
+  console.log('Cloud Name:', process.env.CLOUDINARY_CLOUD_NAME ? '✅ Set' : '❌ Missing');
+  console.log('API Key:', process.env.CLOUDINARY_API_KEY ? '✅ Set' : '❌ Missing');
+  console.log('API Secret:', process.env.CLOUDINARY_API_SECRET ? '✅ Set' : '❌ Missing');
+}
 
 // Export the v2 API
 export default v2;

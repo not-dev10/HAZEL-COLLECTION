@@ -33,7 +33,7 @@ export class ResetToken {
         used: false
       });
 
-      console.log('✅ Reset token created for email:', email);
+      console.log('✅ Reset token created');
       return result;
     } catch (error) {
       console.error('❌ Error creating reset token:', error);
@@ -65,7 +65,7 @@ export class ResetToken {
         return null;
       }
 
-      console.log('✅ Reset token validated for user:', record.userId);
+      console.log('✅ Reset token validated');
       return record;
     } catch (error) {
       console.error('❌ Error finding reset token:', error);

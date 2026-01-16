@@ -81,7 +81,7 @@ export const updateOrderStatus = async (req, res) => {
         });
         
         if (success) {
-          console.log('✅ Order status update email sent to:', customerEmail);
+          console.log('✅ Order status update email sent');
         } else {
           console.warn('⚠️ Order status email failed to send (non-critical)');
         }

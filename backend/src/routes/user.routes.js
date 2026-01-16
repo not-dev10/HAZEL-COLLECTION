@@ -143,7 +143,7 @@ router.delete("/profile", requireAuth, async (req, res) => {
     // Verify password before deletion
     const validPassword = await User.verifyPassword(password, user.password);
     if (!validPassword) {
-      console.log('❌ Invalid password for account deletion:', req.user.email);
+      console.log('❌ Invalid password for account deletion');
       return res.status(401).json({
         success: false,
         message: "Invalid password"
@@ -160,7 +160,7 @@ router.delete("/profile", requireAuth, async (req, res) => {
       });
     }
 
-    console.log('✅ Account deleted successfully:', req.user.email);
+    console.log('✅ Account deleted successfully');
     res.json({
       success: true,
       message: "Account permanently deleted successfully"

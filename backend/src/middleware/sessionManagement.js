@@ -39,7 +39,7 @@ export const sessionTimeoutMiddleware = (req, res, next) => {
       // Check if session has timed out (2 hours of inactivity)
       if (timeSinceLastActivity > SESSION_TIMEOUT) {
         activeSessions.delete(userId);
-        console.log(`⏰ Session timeout for user: ${decoded.email}`);
+        console.log(`⏰ Session timeout`);
         return res.status(401).json({
           success: false,
           message: "Session expired due to inactivity. Please login again.",
@@ -105,7 +105,7 @@ export const tokenRotationMiddleware = (req, res, next) => {
       res.setHeader('X-New-Token', newToken);
       res.setHeader('X-Token-Rotated', 'true');
       
-      console.log(`🔄 Token rotated for user: ${req.user.email}`);
+      console.log(`🔄 Token rotated`);
     }
 
     next();

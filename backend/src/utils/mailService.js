@@ -177,7 +177,7 @@ class MailService {
       };
 
       const info = await this.transporter.sendMail(mailOptions);
-      console.log('✅ Password reset email sent:', info.messageId);
+      console.log('✅ Password reset email sent successfully');
       return true;
     } catch (error) {
       console.error('❌ Error sending password reset email:', error.message);
@@ -266,7 +266,7 @@ class MailService {
       };
 
       const info = await this.transporter.sendMail(mailOptions);
-      console.log('✅ Welcome email sent:', info.messageId);
+      console.log('✅ Welcome email sent successfully');
       return true;
     } catch (error) {
       console.error('❌ Error sending welcome email:', error.message);
@@ -392,7 +392,7 @@ class MailService {
       };
 
       const info = await this.transporter.sendMail(mailOptions);
-      console.log('✅ Order confirmation email sent:', info.messageId);
+      console.log('✅ Order confirmation email sent successfully');
       return true;
     } catch (error) {
       console.error('❌ Error sending order confirmation email:', error.message);

@@ -65,7 +65,7 @@ export const signup = async (req, res) => {
     try {
       const { mailService } = await import('../utils/mailService.js');
       await mailService.sendWelcomeEmail(email, fullName || 'User');
-      console.log('✅ Welcome email sent to:', email);
+      console.log('✅ Welcome email sent');
     } catch (emailError) {
       console.warn('⚠️ Welcome email failed (non-critical):', emailError.message);
       // Don't fail signup if email fails
@@ -98,7 +98,7 @@ export const signup = async (req, res) => {
  */
 export const login = async (req, res) => {
   try {
-    console.log("🔐 Login attempt:", req.body);
+    console.log("🔐 Login attempt");
     const { email, password } = req.body;
 
     if (!email || !password) {
@@ -111,19 +111,19 @@ export const login = async (req, res) => {
     // Find user
     const user = await User.findByEmail(email);
     if (!user) {
-      console.log("❌ User not found:", email);
+      console.log("❌ User not found");
       return res.status(401).json({
         success: false,
         message: "Invalid credentials"
       });
     }
 
-    console.log("✓ User found:", email);
+    console.log("✓ User found");
 
     // Verify password
     const validPassword = await User.verifyPassword(password, user.password);
     if (!validPassword) {
-      console.log("❌ Invalid password for:", email);
+      console.log("❌ Invalid password");
       return res.status(401).json({
         success: false,
         message: "Invalid credentials"
@@ -168,7 +168,7 @@ export const login = async (req, res) => {
  */
 export const adminLogin = async (req, res) => {
   try {
-    console.log("🔐 Admin login attempt:", req.body);
+    console.log("🔐 Admin login attempt");
     const { email, password } = req.body;
 
     if (!email || !password) {
@@ -181,19 +181,19 @@ export const adminLogin = async (req, res) => {
     // Find user
     const user = await User.findByEmail(email);
     if (!user) {
-      console.log("❌ User not found:", email);
+      console.log("❌ User not found");
       return res.status(401).json({
         success: false,
         message: "Invalid credentials"
       });
     }
 
-    console.log("✓ User found:", email);
+    console.log("✓ User found");
 
     // Verify password
     const validPassword = await User.verifyPassword(password, user.password);
     if (!validPassword) {
-      console.log("❌ Invalid password for:", email);
+      console.log("❌ Invalid password");
       return res.status(401).json({
         success: false,
         message: "Invalid credentials"
