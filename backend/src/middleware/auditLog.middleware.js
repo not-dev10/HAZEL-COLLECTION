@@ -129,7 +129,7 @@ export const logAuthEvent = async (eventType, userId, email, ip, userAgent, deta
     if (process.env.NODE_ENV === 'production') {
       await SecurityLoggingService.logAuthEvent(event);
     } else {
-      console.log(`[AUTH] ${eventType} - ${email} from ${ip}`);
+      console.log(`[AUTH] ${eventType} - from ${ip}`);
     }
   } catch (error) {
     console.error('Auth logging error:', error);

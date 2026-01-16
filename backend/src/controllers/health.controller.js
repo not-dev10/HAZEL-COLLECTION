@@ -590,7 +590,6 @@ export const testEmailService = async (req, res) => {
     }
 
     console.log('📧 Testing email service...');
-    console.log(`   Target email: ${email}`);
     console.log(`   Mail service initialized: ${mailService.initialized}`);
 
     if (!mailService.initialized) {
