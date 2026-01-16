@@ -10,6 +10,11 @@ services:
         value: production
       - key: NODE_OPTIONS
         value: --openssl-legacy-provider
+      - key: FRONTEND_URL
+        fromService:
+          name: didi-fashion-frontend
+          type: web
+          property: url
     autoDeploy: false
     plan: free
     
@@ -22,5 +27,10 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      - key: VITE_API_URL
+        fromService:
+          name: didi-fashion-backend
+          type: web
+          property: url
     autoDeploy: false
     plan: free
