@@ -35,3 +35,6 @@ coverage/
 
 # Misc
 .turbo
+
+# Audit files (may contain sensitive information)
+audits/
