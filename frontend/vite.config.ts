@@ -58,39 +58,11 @@ export default defineConfig(async ({ mode }) => {
           manualChunks: {
             // Vendor chunks
             'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-            'vendor-ui': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-accordion'],
+            'vendor-ui': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-accordion', '@radix-ui/react-tooltip'],
             'vendor-icons': ['lucide-react'],
             'vendor-charts': ['recharts'],
             'vendor-query': ['@tanstack/react-query'],
             'vendor-forms': ['@hookform/resolvers', 'react-hook-form'],
-            
-            // Admin panel chunks
-            'admin-pages': [
-              './src/admin/pages/Dashboard',
-              './src/admin/pages/Products',
-              './src/admin/pages/Orders',
-              './src/admin/pages/Inventory',
-              './src/admin/pages/Customers',
-              './src/admin/pages/Analytics',
-              './src/admin/pages/Settings',
-            ],
-            'admin-core': [
-              './src/admin/components/AdminLayout',
-              './src/admin/context/AdminContext',
-              './src/admin/hooks/useApi',
-            ],
-            
-            // Main app pages
-            'app-pages': [
-              './src/pages/Home',
-              './src/pages/Collection',
-              './src/pages/Product',
-              './src/pages/Cart',
-              './src/pages/Checkout',
-              './src/pages/Account',
-              './src/pages/Wishlist',
-              './src/pages/SearchProducts',
-            ],
           },
         },
       },
