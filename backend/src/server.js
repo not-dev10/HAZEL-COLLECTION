@@ -46,8 +46,9 @@ async function startServer() {
     
     // Get PORT from environment (Render sets this) or use default
     const PORT = process.env.PORT || 5000;
+    const HOST = process.env.NODE_ENV === 'production' ? '0.0.0.0' : 'localhost';
     
-    app.listen(PORT, () => {
+    app.listen(PORT, HOST, () => {
       // Log server startup information
       logServerStartup(PORT);
       
