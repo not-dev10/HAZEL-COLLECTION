@@ -3,8 +3,8 @@ services:
     name: didi-fashion-backend
     runtime: node
     runtimeVersion: 20.10.0
-    buildCommand: cd backend && npm install
-    startCommand: cd backend && npm start
+    buildCommand: cd backend && yarn install
+    startCommand: cd backend && yarn start
     envVars:
       - key: NODE_ENV
         value: production
@@ -22,8 +22,8 @@ services:
     name: didi-fashion-frontend
     runtime: node
     runtimeVersion: 20.10.0
-    buildCommand: cd frontend && npm install && npm run build
-    startCommand: cd frontend && npm run preview
+    buildCommand: cd frontend && yarn install && yarn build
+    startCommand: cd frontend && yarn preview
     envVars:
       - key: NODE_ENV
         value: production

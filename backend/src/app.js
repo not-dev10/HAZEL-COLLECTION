@@ -122,5 +122,43 @@ app.use("/api/settings", logAdminAccess, ipWhitelistMiddleware, settingsRoutes);
 app.use("/api/home-page", logAdminAccess, ipWhitelistMiddleware, homePageRoutes);
 app.use("/api/analytics", logAdminAccess, ipWhitelistMiddleware, analyticsRoutes);
 
+// ❌ 404 HANDLER - Must be after all routes
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: `Route ${req.method} ${req.originalUrl} not found`,
+    error: "Not Found"
+  });
+});
+
+// 🚨 GLOBAL ERROR HANDLER - Must be last middleware
+app.use((err, req, res, next) => {
+  console.error('🚨 Global Error Handler:', err);
+
+  // Log error details for debugging
+  console.error('Error Stack:', err.stack);
+  console.error('Request URL:', req.originalUrl);
+  console.error('Request Method:', req.method);
+  console.error('Request Body:', req.body);
+
+  // Default error status and message
+  const statusCode = err.statusCode || err.status || 500;
+  const message = err.message || 'Internal Server Error';
+
+  // Don't leak sensitive error details in production
+  const errorResponse = {
+    success: false,
+    message: process.env.NODE_ENV === 'production' 
+      ? (statusCode === 500 ? 'Internal Server Error' : message)
+      : message,
+    ...(process.env.NODE_ENV !== 'production' && {
+      error: err.name,
+      stack: err.stack
+    })
+  };
+
+  res.status(statusCode).json(errorResponse);
+});
+
 export default app;
 
