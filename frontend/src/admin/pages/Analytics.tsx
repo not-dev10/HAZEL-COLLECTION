@@ -18,7 +18,7 @@ const Analytics: React.FC = () => {
   const [dateRange, setDateRange] = useState(30);
   const [period, setPeriod] = useState('daily');
 
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
   useEffect(() => {
     fetchAnalyticsData();

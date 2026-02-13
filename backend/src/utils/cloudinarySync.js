@@ -260,8 +260,8 @@ export const seedProductsWithCloudinary = async () => {
         description: 'A stunning velvet bridal piece featuring luxurious soft velvet fabric with elegant detailing. Perfect for your special day.',
         price: 1250,
         category: 'bridal',
-        image: `https://res.cloudinary.com/${process.env.CLOUDINARY_CLOUD_NAME}/image/upload/q_auto,f_auto/hezal-couture/products/velvet-bridal-collection`,
-        cloudinaryPublicId: 'hezal-couture/products/velvet-bridal-collection',
+        image: `https://res.cloudinary.com/${process.env.CLOUDINARY_CLOUD_NAME}/image/upload/q_auto,f_auto/hezal-couture/products/velvet-bridal-collection.jpg`,
+        cloudinaryPublicId: 'hezal-couture/products/velvet-bridal-collection.jpg',
         stock: 5,
         inStock: true,
         details: [

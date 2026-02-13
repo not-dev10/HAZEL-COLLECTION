@@ -7,7 +7,7 @@ import { useUser } from '@/context/UserContext';
 import { getProductImageUrl, CLOUDINARY_IMAGES } from '@/lib/cloudinary';
 import logo from '@/assets/file.svg';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 interface Category {
   label: string;
@@ -84,42 +84,114 @@ const Header = () => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [products, setProducts] = useState<any[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
+  const [dynamicCategories, setDynamicCategories] = useState<MainCategory[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
   const { wishlistCount } = useWishlist();
   const { isLoggedIn, logout } = useUser();
   const navigate = useNavigate();
 
-  // Fetch products for search suggestions
+  // Fetch categories on component mount
   useEffect(() => {
-    const fetchProducts = async () => {
+    const fetchCategories = async () => {
       try {
-        setLoadingProducts(true);
-        const response = await fetch(`${API_BASE_URL}/api/products`);
+        setLoadingCategories(true);
+        const response = await fetch(`${API_BASE_URL}/api/products/categories`);
         if (response.ok) {
           const data = await response.json();
-          // Handle different response structures
+          const categoryList: string[] = data.categories || [];
+          
+          // Transform flat categories list into grouped structure
+          const grouped: MainCategory[] = [];
+          
+          // Group categories intelligently based on common patterns
+          const groupedByType: { [key: string]: string[] } = {};
+          
+          categoryList.forEach(cat => {
+            const lower = cat.toLowerCase();
+            let groupKey = 'ALL CATEGORIES';
+            
+            if (lower.includes('unstitched')) {
+              groupKey = 'UNSTITCHED';
+            } else if (lower.includes('pret') || lower.includes('ready')) {
+              groupKey = 'READY TO WEAR';
+            } else if (lower.includes('bridal') || lower.includes('wedding')) {
+              groupKey = 'BRIDAL';
+            } else if (lower.includes('jewel') || lower.includes('earring') || lower.includes('necklace') || lower.includes('bracelet')) {
+              groupKey = 'JEWELLERY';
+            } else if (lower.includes('new') || lower.includes('arrival')) {
+              groupKey = 'NEW ARRIVALS';
+            }
+            
+            if (!groupedByType[groupKey]) {
+              groupedByType[groupKey] = [];
+            }
+            groupedByType[groupKey].push(cat);
+          });
+          
+          // Convert grouped categories to MainCategory format
+          Object.entries(groupedByType).forEach(([groupName, items]) => {
+            grouped.push({
+              name: groupName,
+              items: items.map(item => ({
+                label: item.toUpperCase(),
+                href: `/collection/${item.toLowerCase().replace(/\s+/g, '-')}`
+              }))
+            });
+          });
+          
+          // If no categories, use defaults
+          if (grouped.length === 0) {
+            setDynamicCategories(categories);
+          } else {
+            setDynamicCategories(grouped);
+          }
+        } else {
+          // Fallback to hardcoded categories
+          setDynamicCategories(categories);
+        }
+      } catch (error) {
+        console.error('Failed to fetch categories:', error);
+        // Fallback to hardcoded categories
+        setDynamicCategories(categories);
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
+  // Fetch products for search suggestions only when query changes (with debounce)
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setProducts([]);
+      return;
+    }
+
+    const debounceTimer = setTimeout(async () => {
+      try {
+        setLoadingProducts(true);
+        const response = await fetch(`${API_BASE_URL}/api/products?search=${encodeURIComponent(searchQuery)}&limit=8`);
+        if (response.ok) {
+          const data = await response.json();
           let productsArray = [];
           if (Array.isArray(data)) {
             productsArray = data;
           } else if (data.products && Array.isArray(data.products)) {
             productsArray = data.products;
-          } else if (data.data && Array.isArray(data.data)) {
-            productsArray = data.data;
           }
           setProducts(productsArray);
-        } else {
-          console.warn('API returned non-ok status:', response.status);
-          setProducts([]);
         }
       } catch (error) {
-        console.error('Failed to fetch products for search:', error);
+        console.error('Failed to fetch search results:', error);
         setProducts([]);
       } finally {
         setLoadingProducts(false);
       }
-    };
+    }, 300); // Debounce for 300ms
 
-    fetchProducts();
-  }, []);
+    return () => clearTimeout(debounceTimer);
+  }, [searchQuery]);
 
   const handleLogout = () => {
     logout();
@@ -137,20 +209,15 @@ const Header = () => {
     }
   };
 
-  const handleSuggestionClick = (productName: string) => {
-    const productSlug = productName.toLowerCase().replace(/\s+/g, '-');
-    navigate(`/product/${productSlug}`);
+  const handleSuggestionClick = (product: any) => {
+    const productId = product.id || product._id;
+    const productSlug = (product.name || 'product').toLowerCase().replace(/\s+/g, '-');
+    navigate(`/product/${productId}/${productSlug}`);
     setSearchQuery('');
     setShowSuggestions(false);
   };
 
-  const suggestions = searchQuery.trim()
-    ? products
-        .filter((product) =>
-          product.name?.toLowerCase().includes(searchQuery.toLowerCase())
-        )
-        .slice(0, 8) // Limit to 8 suggestions
-    : [];
+  const suggestions = products; // Already filtered + limited from API
 
   return (
     <>
@@ -201,7 +268,7 @@ const Header = () => {
                   }`}
                 >
                   <div className="grid grid-cols-3 gap-8">
-                    {categories.map((category, idx) => (
+                    {dynamicCategories.map((category, idx) => (
                       <div key={category.name} className={`transform transition-all duration-300 ${wardrobeMenuOpen ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`} style={{ transitionDelay: `${idx * 50}ms` }}>
                         <h3 className="text-xs font-semibold tracking-[0.3em] uppercase mb-4 text-foreground">
                           {category.name}
@@ -265,7 +332,7 @@ const Header = () => {
                     {suggestions.map((product) => (
                       <button
                         key={product.id || product._id}
-                        onClick={() => handleSuggestionClick(product.name)}
+                        onClick={() => handleSuggestionClick(product)}
                         className="w-full flex items-center gap-3 p-2 hover:bg-muted rounded transition-colors text-left"
                       >
                         {(product.image || product.imageUrl || product.imageUrls?.[0]) && (

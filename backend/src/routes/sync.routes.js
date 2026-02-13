@@ -281,9 +281,10 @@ router.get('/status', auth, async (req, res) => {
     // Check if Inventory model exists and fetch inventory
     let inventory = [];
     try {
+      const backendUrl = process.env.BACKEND_URL || `${process.env.NODE_ENV === 'production' ? 'https' : 'http'}://${process.env.BACKEND_HOST || 'localhost'}:${process.env.PORT || 5000}`;
       // Try to import Inventory model if it exists
       const inventoryResponse = await fetch(
-        `${process.env.API_BASE_URL || 'http://localhost:5000'}/api/inventory`,
+        `${backendUrl}/api/inventory`,
         {
           headers: { 'Authorization': req.headers.authorization }
         }
@@ -355,8 +356,9 @@ router.post('/product-to-inventory', auth, async (req, res) => {
 
     // Update inventory via API call
     try {
+      const backendUrl = process.env.BACKEND_URL || `${process.env.NODE_ENV === 'production' ? 'https' : 'http'}://${process.env.BACKEND_HOST || 'localhost'}:${process.env.PORT || 5000}`;
       const updateResponse = await fetch(
-        `${process.env.API_BASE_URL || 'http://localhost:5000'}/api/products-attributes/${productId}/stock`,
+        `${backendUrl}/api/products-attributes/${productId}/stock`,
         {
           method: 'PUT',
           headers: {
@@ -416,8 +418,9 @@ router.post('/inventory-to-product', auth, async (req, res) => {
     // Fetch inventory item
     let inventoryItem = null;
     try {
+      const backendUrl = process.env.BACKEND_URL || `${process.env.NODE_ENV === 'production' ? 'https' : 'http'}://${process.env.BACKEND_HOST || 'localhost'}:${process.env.PORT || 5000}`;
       const inventoryResponse = await fetch(
-        `${process.env.API_BASE_URL || 'http://localhost:5000'}/api/inventory/${productId}`,
+        `${backendUrl}/api/inventory/${productId}`,
         {
           headers: { 'Authorization': req.headers.authorization }
         }
@@ -475,8 +478,9 @@ router.post('/all', auth, async (req, res) => {
     for (const product of products) {
       try {
         // Sync product to inventory (P → I direction)
+        const backendUrl = process.env.BACKEND_URL || `${process.env.NODE_ENV === 'production' ? 'https' : 'http'}://${process.env.BACKEND_HOST || 'localhost'}:${process.env.PORT || 5000}`;
         const updateResponse = await fetch(
-          `${process.env.API_BASE_URL || 'http://localhost:5000'}/api/products-attributes/${product._id}/stock`,
+          `${backendUrl}/api/products-attributes/${product._id}/stock`,
           {
             method: 'PUT',
             headers: {

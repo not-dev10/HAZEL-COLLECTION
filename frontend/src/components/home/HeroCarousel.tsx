@@ -13,6 +13,37 @@ interface Slide {
   order: number;
 }
 
+// Default slides - reusable fallback
+const getDefaultSlides = (): Slide[] => [
+  {
+    id: 1,
+    image: getProductImageUrl(CLOUDINARY_IMAGES.HERO_BRIDAL, 'hero'),
+    imageUrl: getProductImageUrl(CLOUDINARY_IMAGES.HERO_BRIDAL, 'hero'),
+    collection: 'Studio Portraits',
+    subtitle: 'Hezal the Label Bridal 2025',
+    cta: 'LIVE NOW',
+    order: 1
+  },
+  {
+    id: 2,
+    image: getProductImageUrl(CLOUDINARY_IMAGES.HERO_FESTIVE, 'hero'),
+    imageUrl: getProductImageUrl(CLOUDINARY_IMAGES.HERO_FESTIVE, 'hero'),
+    collection: 'Winter Luxe',
+    subtitle: 'Festive Collection 2025',
+    cta: 'SHOP NOW',
+    order: 2
+  },
+  {
+    id: 3,
+    image: getProductImageUrl(CLOUDINARY_IMAGES.HERO_UNSTITCHED, 'hero'),
+    imageUrl: getProductImageUrl(CLOUDINARY_IMAGES.HERO_UNSTITCHED, 'hero'),
+    collection: 'Ethereal Dreams',
+    subtitle: 'Ready To Wear Collection',
+    cta: 'EXPLORE',
+    order: 3
+  }
+];
+
 const HeroCarousel = () => {
   const [slides, setSlides] = useState<Slide[]>([]);
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -23,90 +54,19 @@ const HeroCarousel = () => {
   useEffect(() => {
     const fetchCarouselData = async () => {
       try {
-        console.log('🎠 Fetching carousel data...');
         const response = await fetch(`${API_BASE_URL}/api/home-page`);
         const data = await response.json();
-        
-        console.log('🎠 Carousel API response:', {
-          success: data.success,
-          slidesCount: data.data?.carousel?.slides?.length,
-          slides: data.data?.carousel?.slides?.map((s: any) => ({
-            id: s.id,
-            hasImageUrl: !!s.imageUrl,
-            imageUrl: s.imageUrl?.substring(0, 50),
-            image: s.image,
-            subtitle: s.subtitle
-          }))
-        });
 
         if (data.success && data.data?.carousel?.slides) {
           const carouselSlides = data.data.carousel.slides
             .sort((a: Slide, b: Slide) => a.order - b.order);
           setSlides(carouselSlides);
         } else {
-          // Fallback if API response is not successful
-          setSlides([
-            {
-              id: 1,
-              image: getProductImageUrl(CLOUDINARY_IMAGES.HERO_BRIDAL, 'hero'),
-              imageUrl: getProductImageUrl(CLOUDINARY_IMAGES.HERO_BRIDAL, 'hero'),
-              collection: 'Studio Portraits',
-              subtitle: 'Hezal the Label Bridal 2025',
-              cta: 'LIVE NOW',
-              order: 1
-            },
-            {
-              id: 2,
-              image: getProductImageUrl(CLOUDINARY_IMAGES.HERO_FESTIVE, 'hero'),
-              imageUrl: getProductImageUrl(CLOUDINARY_IMAGES.HERO_FESTIVE, 'hero'),
-              collection: 'Winter Luxe',
-              subtitle: 'Festive Collection 2025',
-              cta: 'SHOP NOW',
-              order: 2
-            },
-            {
-              id: 3,
-              image: getProductImageUrl(CLOUDINARY_IMAGES.HERO_UNSTITCHED, 'hero'),
-              imageUrl: getProductImageUrl(CLOUDINARY_IMAGES.HERO_UNSTITCHED, 'hero'),
-              collection: 'Ethereal Dreams',
-              subtitle: 'Ready To Wear Collection',
-              cta: 'EXPLORE',
-              order: 3
-            }
-          ]);
+          setSlides(getDefaultSlides());
         }
       } catch (error) {
         console.error('Failed to fetch carousel data:', error);
-        // Fallback to default slides if API fails
-        setSlides([
-          {
-            id: 1,
-            image: getProductImageUrl(CLOUDINARY_IMAGES.HERO_BRIDAL, 'hero'),
-            imageUrl: getProductImageUrl(CLOUDINARY_IMAGES.HERO_BRIDAL, 'hero'),
-            collection: 'Studio Portraits',
-            subtitle: 'Hezal the Label Bridal 2025',
-            cta: 'LIVE NOW',
-            order: 1
-          },
-          {
-            id: 2,
-            image: getProductImageUrl(CLOUDINARY_IMAGES.HERO_FESTIVE, 'hero'),
-            imageUrl: getProductImageUrl(CLOUDINARY_IMAGES.HERO_FESTIVE, 'hero'),
-            collection: 'Winter Luxe',
-            subtitle: 'Festive Collection 2025',
-            cta: 'SHOP NOW',
-            order: 2
-          },
-          {
-            id: 3,
-            image: getProductImageUrl(CLOUDINARY_IMAGES.HERO_UNSTITCHED, 'hero'),
-            imageUrl: getProductImageUrl(CLOUDINARY_IMAGES.HERO_UNSTITCHED, 'hero'),
-            collection: 'Ethereal Dreams',
-            subtitle: 'Ready To Wear Collection',
-            cta: 'EXPLORE',
-            order: 3
-          }
-        ]);
+        setSlides(getDefaultSlides());
       } finally {
         setLoading(false);
       }

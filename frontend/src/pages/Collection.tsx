@@ -27,59 +27,34 @@ const Collection = () => {
   const [loading, setLoading] = useState(true);
   const [collectionTitle, setCollectionTitle] = useState('Collection');
 
-  // Fetch products from API
+  // Fetch products from API - filtered by category
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/api/products`);
+        // Map slug to category for API filtering
+        const categoryMap: Record<string, string> = {
+          'new-arrivals': 'new-arrivals',
+          'ready-to-wear': 'ready-to-wear',
+          'unstitched': 'unstitched',
+          'bridals': 'bridal',
+          'jewellery': 'jewellery',
+          'studio-portraits': 'studio-portraits',
+          'festive-aw-2025': 'festive',
+          'pret-aw-2025': 'pret',
+          'basics-aw-2025': 'basics',
+          'hc-basics-ss-25': 'hc-basics',
+          'winter-unstitched-2025': 'winter-unstitched',
+          'wedding-unstitched-2025': 'wedding-unstitched',
+        };
+        
+        const category = categoryMap[slug] || slug;
+        const response = await fetch(`${API_BASE_URL}/api/products?category=${encodeURIComponent(category)}`);
         const data = await response.json();
         if (data.success && data.products) {
-          // Map slug to category for filtering
-          const categoryMap: Record<string, string> = {
-            'new-arrivals': 'new-arrivals',
-            'ready-to-wear': 'ready-to-wear',
-            'unstitched': 'unstitched',
-            'bridals': 'bridal',
-            'jewellery': 'jewellery',
-            'studio-portraits': 'studio-portraits',
-            'festive-aw-2025': 'festive',
-            'pret-aw-2025': 'pret',
-            'basics-aw-2025': 'basics',
-            'hc-basics-ss-25': 'hc-basics',
-            'winter-unstitched-2025': 'winter-unstitched',
-            'wedding-unstitched-2025': 'wedding-unstitched',
-            'handcrafted': 'handcrafted',
-            'bebak-2025': 'bebak',
-            'winter-2025': 'winter-unstitched',
-            'wedding-2025': 'wedding-unstitched',
-            'lawn': 'lawn',
-            'cotton': 'cotton',
-            'silk': 'silk',
-            'festive': 'festive',
-            'pret': 'pret',
-            'basics': 'basics',
-            'luxury-pret': 'luxury-pret',
-            'bridal-collection': 'bridal',
-            'custom-bridal': 'custom-bridal',
-            'earrings': 'earrings',
-            'necklaces': 'necklaces',
-            'bangles': 'bangles',
-          };
-
-          const category = categoryMap[slug || 'new-arrivals'];
+          setProducts(data.products);
           
-          // Filter products by category if slug exists
-          const filteredProducts = category 
-            ? data.products.filter((p: any) => 
-                p.category?.toLowerCase().includes(category.toLowerCase()) ||
-                p.category?.toLowerCase() === category.toLowerCase()
-              )
-            : data.products;
-
-          setProducts(filteredProducts);
-          
-          // Set title based on slug
-          const titles: Record<string, string> = {
+          // Set collection title based on slug
+          const titleMap: Record<string, string> = {
             'new-arrivals': 'New Arrivals',
             'ready-to-wear': 'Ready To Wear',
             'unstitched': 'Unstitched',
@@ -89,27 +64,8 @@ const Collection = () => {
             'festive-aw-2025': 'Festive A/W 2025',
             'pret-aw-2025': 'Pret A/W 2025',
             'basics-aw-2025': 'Basics A/W 2025',
-            'hc-basics-ss-25': 'HC Basics SS 25',
-            'winter-unstitched-2025': 'Winter Unstitched 2025',
-            'wedding-unstitched-2025': 'Wedding Unstitched 2025',
-            'handcrafted': 'Handcrafted',
-            'bebak-2025': 'Bebak 2025',
-            'winter-2025': 'Winter Unstitched 2025',
-            'wedding-2025': 'Wedding Unstitched 2025',
-            'lawn': 'Lawn Collection',
-            'cotton': 'Cotton Collection',
-            'silk': 'Silk Collection',
-            'festive': 'Festive Collection',
-            'pret': 'Pret Collection',
-            'basics': 'Basics Collection',
-            'luxury-pret': 'Luxury Pret',
-            'bridal-collection': 'Bridal Collection',
-            'custom-bridal': 'Custom Bridal',
-            'earrings': 'Earrings',
-            'necklaces': 'Necklaces',
-            'bangles': 'Bangles',
           };
-          setCollectionTitle(titles[slug || 'new-arrivals'] || 'Collection');
+          setCollectionTitle(titleMap[slug] || 'Collection');
         }
       } catch (error) {
         console.error('Failed to fetch products:', error);

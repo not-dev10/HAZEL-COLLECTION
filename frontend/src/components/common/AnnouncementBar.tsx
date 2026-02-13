@@ -1,8 +1,7 @@
 const AnnouncementBar = () => {
   return (
-    <div className="announcement-bar">
+    <div className="announcement-bar hidden">
       <p className="font-sans">
-        Free Shipping Over £250 (Not Applicable for Bridals and Formals)
       </p>
     </div>
   );

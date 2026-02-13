@@ -27,7 +27,7 @@ export const testPort = async (
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
 
-    const response = await fetch(`http://${hostname}:${port}/api/products`, {
+    const response = await fetch(`${window.location.protocol}//${hostname}:${port}/api/products`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
       signal: controller.signal,
@@ -73,7 +73,7 @@ export const getDynamicApiUrl = async (
   config: PortDetectionConfig = DEFAULT_CONFIG
 ): Promise<string> => {
   if (typeof window === 'undefined') {
-    return 'http://localhost:5000';
+    return process.env.VITE_API_URL || 'http://localhost:5000';
   }
 
   const { protocol, hostname } = window.location;
@@ -84,12 +84,13 @@ export const getDynamicApiUrl = async (
     if (port) {
       return `${protocol}//${hostname}:${port}`;
     }
-    // Fallback to default port
+    // Fallback to default port only if port detection fails in development
     return `${protocol}//${hostname}:5000`;
   }
 
-  // For production, use same domain
-  return `${protocol}//${hostname}`;
+  // For production (same domain), use relative path to /api
+  // This works automatically without hardcoding ports or domains
+  return '';
 };
 
 /**
@@ -109,7 +110,7 @@ export const getFrontendPort = (): number => {
  */
 export const getFrontendUrl = (): string => {
   if (typeof window === 'undefined') {
-    return 'http://localhost:8080';
+    return process.env.VITE_PORT ? `http://localhost:${process.env.VITE_PORT}` : 'http://localhost:8080';
   }
 
   const { protocol, hostname, port } = window.location;

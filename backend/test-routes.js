@@ -3,7 +3,7 @@
  * Tests all API endpoints to ensure no breaking changes
  */
 
-const BASE_URL = 'http://localhost:5000';
+const BASE_URL = process.env.BACKEND_URL || 'http://localhost:5000';
 
 // Test configuration
 const tests = {

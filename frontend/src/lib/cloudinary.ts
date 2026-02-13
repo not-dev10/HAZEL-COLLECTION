@@ -120,7 +120,7 @@ export const getAssetImageUrl = (
 export const CLOUDINARY_IMAGES = {
   // Products - Successfully uploaded
   EMBROIDERED_SILK_ENSEMBLE: 'hezal-couture/products/embroidered-silk-ensemble',
-  VELVET_BRIDAL_COLLECTION: 'hezal-couture/products/velvet-bridal-collection',
+  VELVET_BRIDAL_COLLECTION: 'hezal-couture/products/velvet-bridal-collection.jpg',
   COTTON_LAWN_THREE_PIECE: 'hezal-couture/products/cotton-lawn-three-piece',
   FESTIVE_FORMAL_WEAR: 'hezal-couture/products/festive-formal-wear',
   
@@ -135,7 +135,7 @@ export const CLOUDINARY_IMAGES = {
   SLIDER_IMAGE_3: 'didi-monorepo/hero',
   
   // Bridal Section Image
-  BRIDAL_SECTION_IMAGE: 'hezal-couture/products/velvet-bridal-collection',
+  BRIDAL_SECTION_IMAGE: 'hezal-couture/products/velvet-bridal-collection.jpg',
   
   // Collection Banner Images
   COLLECTION_BANNER_1: 'didi-monorepo/collection',
@@ -144,7 +144,7 @@ export const CLOUDINARY_IMAGES = {
   // ===== ASSETS FOLDER - Location-specific images =====
   
   // Hero Assets
-  HERO_BRIDAL: 'hezal-couture/products/velvet-bridal-collection',
+  HERO_BRIDAL: 'hezal-couture/products/velvet-bridal-collection.jpg',
   HERO_COLLECTION: 'hezal-couture/products/embroidered-silk-ensemble',
   HERO_UNSTITCHED: 'hezal-couture/products/cotton-lawn-three-piece',
   HERO_FESTIVE: 'hezal-couture/products/festive-formal-wear',
@@ -152,17 +152,17 @@ export const CLOUDINARY_IMAGES = {
   // Collection Assets
   COLLECTION_RTW: 'hezal-couture/products/embroidered-silk-ensemble',
   COLLECTION_UNSTITCHED: 'hezal-couture/products/cotton-lawn-three-piece',
-  COLLECTION_BRIDAL: 'hezal-couture/products/velvet-bridal-collection',
+  COLLECTION_BRIDAL: 'hezal-couture/products/velvet-bridal-collection.jpg',
   COLLECTION_FESTIVE: 'hezal-couture/products/festive-formal-wear',
   
   // Editorial Assets
-  EDITORIAL_BRIDAL: 'hezal-couture/products/velvet-bridal-collection',
+  EDITORIAL_BRIDAL: 'hezal-couture/products/velvet-bridal-collection.jpg',
   EDITORIAL_COLLECTION: 'hezal-couture/products/embroidered-silk-ensemble',
   EDITORIAL_UNSTITCHED: 'hezal-couture/products/cotton-lawn-three-piece',
   
   // Product Grid Assets (use real product images - rotate through what we have)
   PRODUCT_GRID_1: 'hezal-couture/products/embroidered-silk-ensemble',
-  PRODUCT_GRID_2: 'hezal-couture/products/velvet-bridal-collection',
+  PRODUCT_GRID_2: 'hezal-couture/products/velvet-bridal-collection.jpg',
   PRODUCT_GRID_3: 'hezal-couture/products/cotton-lawn-three-piece',
   PRODUCT_GRID_4: 'hezal-couture/products/festive-formal-wear',
   PRODUCT_GRID_5: 'hezal-couture/products/test-product-1',
@@ -172,13 +172,13 @@ export const CLOUDINARY_IMAGES = {
   
   // Product Recommendations Assets (use real product images)
   RECOMMENDATION_1: 'hezal-couture/products/embroidered-silk-ensemble',
-  RECOMMENDATION_2: 'hezal-couture/products/velvet-bridal-collection',
+  RECOMMENDATION_2: 'hezal-couture/products/velvet-bridal-collection.jpg',
   RECOMMENDATION_3: 'hezal-couture/products/cotton-lawn-three-piece',
   RECOMMENDATION_4: 'hezal-couture/products/festive-formal-wear',
   
   // Blog Assets (use product images as blog featured images)
   BLOG_FEATURED_1: 'hezal-couture/products/embroidered-silk-ensemble',
-  BLOG_FEATURED_2: 'hezal-couture/products/velvet-bridal-collection',
+  BLOG_FEATURED_2: 'hezal-couture/products/velvet-bridal-collection.jpg',
   BLOG_FEATURED_3: 'hezal-couture/products/cotton-lawn-three-piece',
   BLOG_FEATURED_4: 'hezal-couture/products/festive-formal-wear',
 };

@@ -19,21 +19,8 @@ const CollectionBanner = () => {
 
   const fetchCollectionData = async () => {
     try {
-      console.log('🏪 Fetching collection banner data...');
       const response = await fetch(`${API_BASE_URL}/api/home-page`);
       const data = await response.json();
-      
-      console.log('🏪 Collection banner API response:', {
-        success: data.success,
-        collectionsCount: data.data?.collectionBanner?.collections?.length,
-        collections: data.data?.collectionBanner?.collections?.map((c: any) => ({
-          id: c.id,
-          title: c.title,
-          hasImageUrl: !!c.imageUrl,
-          imageUrl: c.imageUrl?.substring(0, 50),
-          image: c.image
-        }))
-      });
 
       if (data.success && data.data?.collectionBanner) {
         setVisible(data.data.collectionBanner.visible !== false);
@@ -43,36 +30,12 @@ const CollectionBanner = () => {
       }
     } catch (error) {
       console.error('Failed to fetch collection data:', error);
-      // Fallback to default collections
-      setCollections([
-        {
-          id: 1,
-          title: 'Ready To Wear',
-          subtitle: 'Effortless Elegance',
-          image: getProductImageUrl(CLOUDINARY_IMAGES.COLLECTION_RTW, 'hero'),
-          imageUrl: getProductImageUrl(CLOUDINARY_IMAGES.COLLECTION_RTW, 'hero'),
-          link: '/collection/ready-to-wear',
-          order: 1
-        },
-        {
-          id: 2,
-          title: 'Unstitched',
-          subtitle: 'Create Your Own',
-          image: getProductImageUrl(CLOUDINARY_IMAGES.COLLECTION_UNSTITCHED, 'hero'),
-          imageUrl: getProductImageUrl(CLOUDINARY_IMAGES.COLLECTION_UNSTITCHED, 'hero'),
-          link: '/collection/unstitched',
-          order: 2
-        }
-      ]);
+      setCollections([]);
     }
   };
 
   useEffect(() => {
     fetchCollectionData();
-    
-    // Set up interval to refetch every 5 seconds to catch admin updates
-    const interval = setInterval(fetchCollectionData, 5000);
-    return () => clearInterval(interval);
   }, []);
 
   const handleImageError = (collectionId: number) => {

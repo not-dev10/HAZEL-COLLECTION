@@ -29,7 +29,6 @@ const ProductCard = ({
   category,
 }: ProductCardProps) => {
   const navigate = useNavigate();
-  const productSlug = name.toLowerCase().replace(/\s+/g, '-');
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const allImages = images && images.length > 0 ? images : [image];
   const displayImage = allImages[currentImageIndex] || image;
@@ -42,11 +41,13 @@ const ProductCard = ({
     image,
   };
 
+  // Use product ID as the routing param instead of name-based slug
+  // This ensures we can always find the product reliably
   const handleCardClick = (e: React.MouseEvent) => {
     if ((e.target as HTMLElement).closest('button')) {
       return;
     }
-    navigate(`/product/${productSlug}`);
+    navigate(`/product/${id}/${name.toLowerCase().replace(/\s+/g, '-')}`);
   };
 
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {

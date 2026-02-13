@@ -6,6 +6,15 @@ import MongoStore from 'connect-mongo';
  * Persists sessions in MongoDB for production-grade session management
  */
 
+// Validate required environment variables
+if (!process.env.SESSION_SECRET && !process.env.JWT_SECRET) {
+  throw new Error('❌ SESSION_SECRET or JWT_SECRET must be set in environment variables');
+}
+
+if (!process.env.ENCRYPTION_KEY && process.env.NODE_ENV === 'production') {
+  throw new Error('❌ ENCRYPTION_KEY must be set in environment variables for production');
+}
+
 export const sessionConfig = {
   secret: process.env.SESSION_SECRET || process.env.JWT_SECRET,
   resave: false,
@@ -16,9 +25,11 @@ export const sessionConfig = {
     ttl: 2 * 60 * 60, // 2 hours (matches session timeout)
     autoRemove: 'native', // Auto-remove expired sessions
     touchAfter: 24 * 3600, // Lazy session update (update only once per 24h)
-    crypto: {
-      secret: process.env.ENCRYPTION_KEY
-    }
+    ...(process.env.ENCRYPTION_KEY && {
+      crypto: {
+        secret: process.env.ENCRYPTION_KEY
+      }
+    })
   }),
   cookie: {
     secure: process.env.NODE_ENV === 'production', // HTTPS only in production

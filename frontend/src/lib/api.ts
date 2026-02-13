@@ -1,6 +1,6 @@
 // Dynamic API Configuration - automatically finds backend
 const getApiBaseUrl = () => {
-  // Try environment variable first
+  // Try environment variable first (VITE_API_URL takes precedence)
   if (import.meta.env.VITE_API_URL) {
     return import.meta.env.VITE_API_URL;
   }
@@ -19,11 +19,12 @@ const getApiBaseUrl = () => {
       return `${protocol}//${hostname}:5000`;
     }
     
-    // For production, assume same domain
-    return `${protocol}//${hostname}`;
+    // For production (same domain), use relative path to /api
+    // This avoids hardcoding localhost and works with any domain
+    return '';
   }
   
-  // Final fallback
+  // Server-side fallback (for SSR or tests)
   return 'http://localhost:5000';
 };
 
@@ -35,7 +36,7 @@ export const detectBackendPort = async (): Promise<number> => {
   
   for (const port of commonPorts) {
     try {
-      const response = await fetch(`http://localhost:${port}/api/products`, {
+      const response = await fetch(`${window.location.protocol}//${window.location.hostname}:${port}/api/products`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
         signal: AbortSignal.timeout(1000), // 1 second timeout
@@ -84,7 +85,7 @@ const testApiConnection = async () => {
     });
   } catch (error) {
     if (error.message.includes('fetch')) {
-      console.warn('⚠️ Backend connection failed. Make sure backend is running on port 5000+');
+      console.warn('⚠️ Backend connection failed. Make sure backend is running.');
     }
   }
 };

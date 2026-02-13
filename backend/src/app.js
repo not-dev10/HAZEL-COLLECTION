@@ -42,19 +42,36 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 // 🔒 SECURITY HEADERS - Prevents XSS, Clickjacking, and other attacks
+// Build CSP directives dynamically based on environment
+const getCspDirectives = () => {
+  const directives = {
+    defaultSrc: ["'self'"],
+    styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+    scriptSrc: ["'self'"],
+    imgSrc: ["'self'", "data:", "https://res.cloudinary.com", "https://*.cloudinary.com"],
+    connectSrc: ["'self'", "https://api.cloudinary.com"],
+    fontSrc: ["'self'", "https://fonts.gstatic.com"],
+    objectSrc: ["'none'"],
+    mediaSrc: ["'self'"],
+    frameSrc: ["'none'"],
+  };
+  
+  // Add localhost for development only
+  if (process.env.NODE_ENV === 'development') {
+    directives.connectSrc.push("http://localhost:*");
+  }
+  
+  // Add frontend URL for production
+  if (process.env.FRONTEND_URL) {
+    directives.connectSrc.push(process.env.FRONTEND_URL);
+  }
+  
+  return directives;
+};
+
 app.use(helmet({
   contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-      scriptSrc: ["'self'"],
-      imgSrc: ["'self'", "data:", "https://res.cloudinary.com", "https://*.cloudinary.com"],
-      connectSrc: ["'self'", "http://localhost:*", "https://api.cloudinary.com"],
-      fontSrc: ["'self'", "https://fonts.gstatic.com"],
-      objectSrc: ["'none'"],
-      mediaSrc: ["'self'"],
-      frameSrc: ["'none'"],
-    },
+    directives: getCspDirectives(),
   },
   hsts: {
     maxAge: 31536000, // 1 year
@@ -70,10 +87,45 @@ app.use(helmet({
 
 // 🔒 SECURE CORS Configuration
 const corsOptions = {
-  origin: true, // Allow all origins (will be restricted in production with proper FRONTEND_URL)
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps, Postman, or curl)
+    if (!origin) return callback(null, true);
+    
+    // Allowed origins - always include localhost in development
+    const allowedOrigins = process.env.NODE_ENV === 'development' ? [
+      'http://localhost:8080',
+      'http://localhost:3000',
+      'http://localhost:5000',
+      'http://127.0.0.1:8080',
+      'http://127.0.0.1:3000',
+      'http://127.0.0.1:5000',
+    ] : [
+      'https://hazel-collection.onrender.com',
+    ];
+    
+    // Add production frontend URL if configured
+    if (process.env.FRONTEND_URL && process.env.NODE_ENV !== 'development') {
+      process.env.FRONTEND_URL.split(',').forEach(url => {
+        allowedOrigins.push(url.trim());
+      });
+    }
+    
+    // In development, allow all origins
+    if (process.env.NODE_ENV === 'development') {
+      return callback(null, true);
+    }
+    
+    // In production, check against whitelist (fail closed)
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.warn(`⚠️ CORS rejected origin: ${origin}`);
+      callback(new Error('CORS not allowed for this origin: ' + origin));
+    }
+  },
   credentials: true, // Allow cookies and authorization headers
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Session-ID'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH', 'HEAD'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Session-ID', 'X-CSRF-Token'],
   exposedHeaders: ['X-New-Token', 'X-Token-Rotated'], // For token rotation
   maxAge: 86400, // Cache preflight requests for 24 hours
 };
@@ -93,9 +145,10 @@ app.use(xss()); // Sanitize user input from XSS
 app.use(mongoSanitize()); // Prevent NoSQL injection attacks
 
 // File upload middleware
+import { tmpdir } from 'os';
 app.use(fileUpload({
   useTempFiles: true,
-  tempFileDir: '/tmp/',
+  tempFileDir: tmpdir(), // Use OS-independent temp directory
   limits: { fileSize: 50 * 1024 * 1024 }, // 50MB
 }));
 
@@ -110,8 +163,19 @@ app.use("/api/orders", orderRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/health", healthRoutes);
 app.use("/api/csrf", csrfRoutes); // CSRF token endpoint
+app.use("/api/home-page", homePageRoutes); // GET is public, PUT is admin-protected by requireAdmin middleware
 
 // 🔒 Admin routes - IP Whitelist + Logging
+// Handle CORS preflight requests for admin routes BEFORE IP whitelist
+app.options("/api/orders-management/*", cors(corsOptions));
+app.options("/api/customers/*", cors(corsOptions));
+app.options("/api/cloudinary/*", cors(corsOptions));
+app.options("/api/upload/*", cors(corsOptions));
+app.options("/api/logs/*", cors(corsOptions));
+app.options("/api/sync/*", cors(corsOptions));
+app.options("/api/settings/*", cors(corsOptions));
+app.options("/api/analytics/*", cors(corsOptions));
+
 app.use("/api/orders-management", logAdminAccess, ipWhitelistMiddleware, orderManagementRoutes);
 app.use("/api/customers", logAdminAccess, ipWhitelistMiddleware, customerRoutes);
 app.use("/api/cloudinary", logAdminAccess, ipWhitelistMiddleware, cloudinaryRoutes);
@@ -119,7 +183,6 @@ app.use("/api/upload", logAdminAccess, ipWhitelistMiddleware, imageUploadRoutes)
 app.use("/api/logs", logAdminAccess, ipWhitelistMiddleware, logsRoutes);
 app.use("/api/sync", logAdminAccess, ipWhitelistMiddleware, syncRoutes);
 app.use("/api/settings", logAdminAccess, ipWhitelistMiddleware, settingsRoutes);
-app.use("/api/home-page", logAdminAccess, ipWhitelistMiddleware, homePageRoutes);
 app.use("/api/analytics", logAdminAccess, ipWhitelistMiddleware, analyticsRoutes);
 
 // ❌ 404 HANDLER - Must be after all routes

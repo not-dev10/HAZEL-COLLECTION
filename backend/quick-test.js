@@ -2,7 +2,7 @@
  * Quick Route Health Check
  */
 
-const BASE_URL = 'http://localhost:5000';
+const BASE_URL = process.env.BACKEND_URL || 'http://localhost:5000';
 
 const routes = [
   '/api/health/ping',

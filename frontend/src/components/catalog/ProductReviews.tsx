@@ -41,16 +41,10 @@ const Reviews = ({ productId, productName }: ReviewsProps) => {
   const fetchReviews = async () => {
     setLoading(true);
     try {
-      console.log('📋 Fetching reviews for product:', productId);
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/reviews/product/${productId}`);
+      const response = await fetch(`${import.meta.env.VITE_API_URL || API_BASE_URL}/api/reviews/product/${productId}`);
       const data = await response.json();
       
       if (data.success) {
-        console.log('✅ Reviews fetched successfully:', {
-          count: data.reviews.length,
-          avgRating: data.avgRating,
-          reviews: data.reviews
-        });
         setReviews(data.reviews);
         setAvgRating(parseFloat(data.avgRating) || 0);
       } else {

@@ -3,7 +3,7 @@ import { getProductImageUrl, CLOUDINARY_IMAGES } from '@/lib/cloudinary';
 import { API_BASE_URL } from '@/lib/api';
 
 const EditorialSection = () => {
-  const [imageError, setImageError] = useState(false);
+  const [failedImageSources, setFailedImageSources] = useState<Set<number>>(new Set());
   const [bridalData, setBridalData] = useState({
     visible: true,
     heading: 'Bridal Collection 2025',
@@ -17,17 +17,8 @@ const EditorialSection = () => {
 
   const fetchBridalData = async () => {
     try {
-      console.log('🎨 Fetching bridal section data...');
       const response = await fetch(`${API_BASE_URL}/api/home-page`);
       const data = await response.json();
-      
-      console.log('🎨 Bridal section API response:', {
-        success: data.success,
-        hasImageUrl: !!data.data?.bridalSection?.imageUrl,
-        imageUrl: data.data?.bridalSection?.imageUrl?.substring(0, 50),
-        image: data.data?.bridalSection?.image,
-        heading: data.data?.bridalSection?.heading
-      });
 
       if (data.success && data.data?.bridalSection) {
         setBridalData(data.data.bridalSection);
@@ -39,32 +30,41 @@ const EditorialSection = () => {
 
   useEffect(() => {
     fetchBridalData();
-    
-    // Set up interval to refetch every 5 seconds to catch admin updates
-    const interval = setInterval(fetchBridalData, 5000);
-    return () => clearInterval(interval);
   }, []);
 
-  const handleImageError = () => {
-    console.error('Editorial image failed to load');
-    setImageError(true);
+  const handleImageError = (sourceIndex: number) => {
+    console.error(`Bridal image source ${sourceIndex} failed to load`);
+    setFailedImageSources(prev => new Set(prev).add(sourceIndex));
   };
 
   if (!bridalData.visible) {
     return null;
   }
 
-  // Build image URL - prefer admin-provided URL, fallback to default
-  const defaultImageUrl = getProductImageUrl(CLOUDINARY_IMAGES.BRIDAL_SECTION_IMAGE, 'hero');
-  const imageUrl = bridalData.imageUrl && bridalData.imageUrl.trim() ? bridalData.imageUrl : defaultImageUrl;
+  // Smart image URL logic with multiple fallbacks (like HeroCarousel)
+  // Source 0: Admin-provided imageUrl
+  // Source 1: Cloudinary BRIDAL_SECTION_IMAGE with hero variant
+  // Source 2: Cloudinary BRIDAL_SECTION_IMAGE without variant as last resort
   
-  console.log('🎨 Editorial Section Image Debug:', {
-    bridalDataImageUrl: bridalData.imageUrl?.substring(0, 50) || 'empty',
-    isAdminImageEmpty: !bridalData.imageUrl || bridalData.imageUrl.trim() === '',
-    defaultImageUrl: defaultImageUrl?.substring(0, 50),
-    finalImageUrl: imageUrl?.substring(0, 50),
-    isValid: !!imageUrl && imageUrl.startsWith('https://')
-  });
+  const primaryImageUrl = bridalData.imageUrl && bridalData.imageUrl.trim() ? bridalData.imageUrl : null;
+  const fallbackImageUrl = getProductImageUrl(CLOUDINARY_IMAGES.BRIDAL_SECTION_IMAGE, 'hero');
+  const lastResortImageUrl = getProductImageUrl(CLOUDINARY_IMAGES.BRIDAL_SECTION_IMAGE);
+  
+  // Determine which image to display based on what hasn't failed
+  const getDisplayImageUrl = (): string | null => {
+    if (primaryImageUrl && !failedImageSources.has(0)) {
+      return primaryImageUrl;
+    }
+    if (!failedImageSources.has(1)) {
+      return fallbackImageUrl;
+    }
+    if (!failedImageSources.has(2)) {
+      return lastResortImageUrl;
+    }
+    return null; // All sources exhausted
+  };
+
+  const imageUrl = getDisplayImageUrl();
 
   return (
     <section className="py-16 md:py-24 bg-muted">
@@ -87,11 +87,19 @@ const EditorialSection = () => {
           {/* Right Image */}
           <div className="order-1 md:order-2">
             <div className="aspect-[4/5] overflow-hidden bg-muted">
-              {!imageError ? (
+              {imageUrl ? (
                 <img
                   src={imageUrl}
                   alt={bridalData.heading}
-                  onError={handleImageError}
+                  onError={() => {
+                    // Try next fallback source
+                    const nextSource = !failedImageSources.has(0) ? 1 : (!failedImageSources.has(1) ? 2 : 3);
+                    if (nextSource <= 2) {
+                      handleImageError(nextSource);
+                    } else {
+                      handleImageError(nextSource); // Mark all as failed
+                    }
+                  }}
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
                 />
               ) : (

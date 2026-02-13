@@ -21,9 +21,9 @@ router.get('/ping', (req, res) => {
 /**
  * @route   GET /api/health
  * @desc    Check system health (MongoDB, Cloudinary, Server)
- * @access  Private (Admin only)
+ * @access  Public
  */
-router.get('/', requireAuth, requireAdmin, checkSystemHealth);
+router.get('/', checkSystemHealth);
 
 /**
  * @route   GET /api/health/storage

@@ -25,69 +25,58 @@ interface ProductDetail {
 }
 
 const Product = () => {
-  const { slug } = useParams<{ slug: string }>();
+  const { id, slug } = useParams<{ id: string; slug?: string }>();
   const { addToCart } = useCart();
   const [product, setProduct] = useState<ProductDetail | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(true);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [error, setError] = useState<string | null>(null);
   const [cartMessage, setCartMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  // Fetch product from API
+  // Fetch product by ID from API
   useEffect(() => {
     const fetchProduct = async () => {
       try {
         setLoading(true);
-        console.log('📥 Fetching products... (slug:', slug, ')');
+        setError(null);
         
-        const response = await fetch(`${API_BASE_URL}/api/products`);
+        if (!id) {
+          setError('Product ID not provided');
+          return;
+        }
+
+        const response = await fetch(`${API_BASE_URL}/api/products/${id}`);
         const data = await response.json();
         
-        console.log('✅ Products fetched:', data);
-        
-        if (data.success && data.products) {
-          console.log('📦 Total products:', data.products.length);
-          
-          // Find product by name slug
-          const foundProduct = data.products.find(
-            (p: any) => {
-              const productSlug = p.name.toLowerCase().replace(/\s+/g, '-');
-              console.log('Comparing:', productSlug, '===', slug);
-              return productSlug === slug;
-            }
-          );
-          
-          if (foundProduct) {
-            console.log('✨ Product found:', foundProduct.name);
-            setProduct({
-              id: foundProduct._id || foundProduct.id,
-              name: foundProduct.name,
-              price: foundProduct.price,
-              originalPrice: foundProduct.originalPrice,
-              description: foundProduct.description || '',
-              details: foundProduct.details || [],
-              image: foundProduct.image,
-              images: foundProduct.images || [foundProduct.image],
-              category: foundProduct.category,
-              inStock: foundProduct.inStock !== false && foundProduct.stock > 0,
-              stock: foundProduct.stock || 0,
-            });
-          } else {
-            console.warn('❌ Product not found for slug:', slug);
-            console.log('Available slugs:', data.products.map((p: any) => p.name.toLowerCase().replace(/\s+/g, '-')));
-          }
+        if (data.success && data.product) {
+          const foundProduct = data.product;
+          setProduct({
+            id: foundProduct._id || foundProduct.id,
+            name: foundProduct.name,
+            price: foundProduct.price,
+            originalPrice: foundProduct.originalPrice,
+            description: foundProduct.description || '',
+            details: foundProduct.details || [],
+            image: foundProduct.image,
+            images: foundProduct.images || [foundProduct.image],
+            category: foundProduct.category,
+            inStock: foundProduct.inStock !== false && foundProduct.stock > 0,
+            stock: foundProduct.stock || 0,
+          });
         } else {
-          console.error('❌ Invalid response:', data);
+          setError('Product not found');
         }
       } catch (error) {
-        console.error('❌ Failed to fetch product:', error);
+        console.error('Error fetching product:', error);
+        setError('Failed to load product. Please try again.');
       } finally {
         setLoading(false);
       }
     };
 
     fetchProduct();
-  }, [slug]);
+  }, [id]);
 
   const handleAddToCart = async () => {
     if (!product) {
@@ -146,7 +135,10 @@ const Product = () => {
         <main>
           <div className="container mx-auto px-4 py-12 text-center">
             <h1 className="text-2xl font-serif mb-4">Product not found</h1>
-            <p className="text-muted-foreground">The product you're looking for doesn't exist.</p>
+            <p className="text-muted-foreground mb-6">{error || "The product you're looking for doesn't exist."}</p>
+            <a href="/collection/new-arrivals" className="btn-primary">
+              Continue Shopping
+            </a>
           </div>
         </main>
         <Footer />

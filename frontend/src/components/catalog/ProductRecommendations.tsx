@@ -76,7 +76,7 @@ const ProductRecommendations = ({ currentProductId }: ProductRecommendationsProp
           .map((product) => (
             <div
               key={product.id}
-              onClick={() => navigate(`/product/${getProductSlug(product.name)}`)}
+              onClick={() => navigate(`/product/${product.id}/${getProductSlug(product.name)}`)}
               className="cursor-pointer transition-transform hover:scale-105"
             >
               <ProductCard {...product} />

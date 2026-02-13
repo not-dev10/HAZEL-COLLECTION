@@ -37,6 +37,39 @@ export const getAllProducts = async (req, res) => {
 };
 
 /**
+ * GET /api/products/categories
+ * Get all unique product categories for navigation
+ */
+export const getCategories = async (req, res) => {
+  try {
+    const products = await Product.findAll();
+    
+    // Extract unique categories from products
+    const categoriesSet = new Set();
+    products.forEach(product => {
+      if (product.category) {
+        categoriesSet.add(product.category);
+      }
+    });
+    
+    const categories = Array.from(categoriesSet).sort();
+
+    return res.status(200).json({
+      success: true,
+      categories: categories,
+      count: categories.length
+    });
+  } catch (err) {
+    console.error("Get categories error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch categories",
+      categories: []
+    });
+  }
+};
+
+/**
  * GET /api/products/:id
  * Get single product by ID
  */

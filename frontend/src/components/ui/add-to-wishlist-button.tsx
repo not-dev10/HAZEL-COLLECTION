@@ -26,18 +26,26 @@ export const AddToWishlistButton = ({
   const [showAnimation, setShowAnimation] = useState(false);
   const inWishlist = isInWishlist(itemId);
 
-  const handleClick = () => {
-    if (inWishlist) {
-      removeFromWishlist(itemId);
-    } else {
-      setShowAnimation(true);
-      addToWishlist({
-        id: itemId,
-        name: itemName,
-        price: itemPrice,
-        image: itemImage,
-      });
-      setTimeout(() => setShowAnimation(false), 600);
+  const handleClick = async () => {
+    try {
+      if (inWishlist) {
+        await removeFromWishlist(itemId);
+      } else {
+        setShowAnimation(true);
+        await addToWishlist({
+          id: itemId,
+          name: itemName,
+          price: itemPrice,
+          image: itemImage,
+        });
+        // Keep animation visible for a bit after successful add
+        setTimeout(() => setShowAnimation(false), 600);
+      }
+    } catch (error) {
+      console.error('Wishlist action failed:', error);
+      // Show error feedback to user
+      alert('Failed to update wishlist. Please check your connection and try again.');
+      setShowAnimation(false);
     }
   };
 

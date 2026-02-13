@@ -463,13 +463,13 @@ const SearchProducts = () => {
               ) : filteredProducts.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {filteredProducts.map((product) => {
-                    const productSlug = (product.name || 'product').toLowerCase().replace(/\s+/g, '-');
                     const productId = product.id || product._id;
+                    const productSlug = (product.name || 'product').toLowerCase().replace(/\s+/g, '-');
                     
                     return (
                       <div
                         key={productId}
-                        onClick={() => navigate(`/product/${productSlug}`)}
+                        onClick={() => navigate(`/product/${productId}/${productSlug}`)}
                         className="cursor-pointer group"
                       >
                         <div className="transition-all duration-300 hover:shadow-xl">

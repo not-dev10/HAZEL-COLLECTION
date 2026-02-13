@@ -6,7 +6,7 @@ import { AlertCircle, RefreshCw, CheckCircle, AlertTriangle, Loader } from 'luci
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import TokenManager from '@/utils/tokenManager';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 interface SyncStatus {
   id: string;

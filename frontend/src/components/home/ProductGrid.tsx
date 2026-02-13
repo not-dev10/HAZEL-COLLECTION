@@ -15,21 +15,24 @@ const ProductGrid = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch home page content for text
+        // Fetch home page content ONCE - includes both carousel, bridal, and new arrivals
         const homePageResponse = await fetch(`${API_BASE_URL}/api/home-page`);
         const homePageData = await homePageResponse.json();
         
         if (homePageData.success && homePageData.data?.newArrivals) {
           setHomePageData(homePageData.data.newArrivals);
-        }
-
-        // Fetch products
-        const productsResponse = await fetch(`${API_BASE_URL}/api/products`);
-        const productsData = await productsResponse.json();
-        if (productsData.success && productsData.products) {
-          // Use limit from home page settings
-          const limit = homePageData.data?.newArrivals?.limit || 8;
-          setProducts(productsData.products.slice(0, limit));
+          // Extract products from home page data if available
+          if (homePageData.data?.newArrivals?.products) {
+            setProducts(homePageData.data.newArrivals.products);
+          } else {
+            // Fallback: fetch products separately only if not in home page data
+            const productsResponse = await fetch(`${API_BASE_URL}/api/products`);
+            const productsData = await productsResponse.json();
+            if (productsData.success && productsData.products) {
+              const limit = homePageData.data?.newArrivals?.limit || 8;
+              setProducts(productsData.products.slice(0, limit));
+            }
+          }
         }
       } catch (error) {
         console.error('Failed to fetch data:', error);

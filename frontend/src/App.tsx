@@ -52,7 +52,7 @@ const App = () => (
                   <Routes>
                     <Route path="/" element={<Home />} />
                     <Route path="/collection/:slug" element={<Collection />} />
-                    <Route path="/product/:slug" element={<Product />} />
+                    <Route path="/product/:id/:slug?" element={<Product />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/forgot-password" element={<ForgotPassword />} />
                     <Route path="/reset-password" element={<ResetPassword />} />

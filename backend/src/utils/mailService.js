@@ -98,7 +98,16 @@ class MailService {
     }
 
     try {
-      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:8080';
+      // Validate FRONTEND_URL is set (required for password reset links)
+      const frontendUrl = process.env.FRONTEND_URL;
+      if (!frontendUrl) {
+        console.error('❌ FRONTEND_URL not configured. Cannot send password reset email.');
+        if (process.env.NODE_ENV === 'production') {
+          throw new Error('FRONTEND_URL environment variable not set');
+        }
+        return false;
+      }
+      
       const resetLink = `${frontendUrl}/reset-password?token=${resetToken}`;
 
       const htmlContent = `
