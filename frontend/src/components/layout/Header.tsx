@@ -5,7 +5,7 @@ import { MiniCart } from '@/components/cart/MiniCart';
 import { useWishlist } from '@/context/WishlistContext';
 import { useUser } from '@/context/UserContext';
 import { getProductImageUrl, CLOUDINARY_IMAGES } from '@/lib/cloudinary';
-import logo from '@/assets/file.svg';
+import logo from '../../../../WhatsApp Image 2026-01-12 at 2.01.32 PM (1).jpeg';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
@@ -222,7 +222,7 @@ const Header = () => {
   return (
     <>
       {/* Main Header */}
-      <header className="sticky lg:top-0 -top-1 z-50 bg-[#ead9c5] border-b border-[#e8dfd5]">
+      <header className="sticky lg:top-0 -top-1 z-50 bg-[#e5d5be] border-b border-[#e8dfd5]">
       <div className="container mx-auto">
         <div className="flex items-center justify-between gap-3 h-16 lg:h-20 px-3 lg:px-6">
           {/* Left Section - Logo and Navigation */}
@@ -237,13 +237,14 @@ const Header = () => {
             </button>
 
             {/* Brand Logo */}
-            <a href="/" className="hidden lg:flex items-center gap-3 flex-shrink-0 relative">
-              <img 
-                src={logo}
-                alt="Hezal the Label Logo"
-                className="h-20 w-auto"
-              />
-              <span className="font-serif text-base tracking-[0.05em] leading-tight">HEZAL THE LABEL</span>
+            <a href="/" className="hidden lg:flex flex-col items-center gap-0 flex-shrink-0 relative -mt-1">
+              <div className="flex flex-col items-center overflow-hidden scale-95">
+                <img 
+                  src={logo}
+                  alt="Hezal the Label Logo"
+                  className="h-20 w-auto object-cover object-top"
+                />
+              </div>
             </a>
 
             {/* Desktop Navigation - Wardrobe Icon */}
