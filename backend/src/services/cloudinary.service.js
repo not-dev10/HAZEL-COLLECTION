@@ -19,25 +19,54 @@ export class CloudinaryService {
   /**
    * Upload product image with unified ID structure
    * Folder: didi-fashion/products/{productId}/{imageType}
+   * Accepts: file path (string), Buffer, or Stream
    */
-  async uploadProductImage(filePath, productId, imageType = 'main') {
+  async uploadProductImage(fileInput, productId, imageType = 'main') {
     try {
-      const result = await cloudinary.v2.uploader.upload(filePath, {
-        folder: `didi-fashion/products/${productId}`,
-        public_id: imageType,  // main, alt1, alt2, thumbnail, swatch
-        resource_type: 'auto',
-        quality: 'auto',
-        fetch_format: 'auto',
-        overwrite: true,  // Overwrite if exists
-        
-        // Image optimization based on type
-        width: this.getImageDimensions(imageType).width,
-        height: this.getImageDimensions(imageType).height,
-        crop: 'fill',
-        
-        // Tags for easy identification and cleanup
-        tags: ['product', productId, imageType, 'didi-fashion']
-      });
+      const { Readable } = await import('stream');
+      
+      // If input is a Buffer, convert to stream for upload_stream
+      let uploadPromise;
+      if (Buffer.isBuffer(fileInput)) {
+        uploadPromise = new Promise((resolve, reject) => {
+          const stream = Readable.from(fileInput);
+          const uploadStream = cloudinary.v2.uploader.upload_stream(
+            {
+              folder: `didi-fashion/products/${productId}`,
+              public_id: imageType,
+              resource_type: 'auto',
+              quality: 'auto',
+              fetch_format: 'auto',
+              overwrite: true,
+              width: this.getImageDimensions(imageType).width,
+              height: this.getImageDimensions(imageType).height,
+              crop: 'fill',
+              tags: ['product', productId, imageType, 'didi-fashion']
+            },
+            (error, result) => {
+              if (error) reject(error);
+              else resolve(result);
+            }
+          );
+          stream.pipe(uploadStream);
+        });
+      } else {
+        // File path (string) - use regular upload
+        uploadPromise = cloudinary.v2.uploader.upload(fileInput, {
+          folder: `didi-fashion/products/${productId}`,
+          public_id: imageType,
+          resource_type: 'auto',
+          quality: 'auto',
+          fetch_format: 'auto',
+          overwrite: true,
+          width: this.getImageDimensions(imageType).width,
+          height: this.getImageDimensions(imageType).height,
+          crop: 'fill',
+          tags: ['product', productId, imageType, 'didi-fashion']
+        });
+      }
+
+      const result = await uploadPromise;
 
       return {
         success: true,

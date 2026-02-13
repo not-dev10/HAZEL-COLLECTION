@@ -49,40 +49,44 @@ const isLocalhost = (ip) => {
 /**
  * IP Whitelist Middleware
  * Configure allowed IPs in .env: ADMIN_ALLOWED_IPS=1.2.3.4,5.6.7.8
+ * For universal access: ADMIN_ALLOWED_IPS=0.0.0.0 (allows all IPs)
  */
 export const ipWhitelistMiddleware = (req, res, next) => {
   const clientIp = getClientIp(req);
   const normalizedIp = normalizeIp(clientIp);
 
-  // In development, allow localhost
-  if (process.env.NODE_ENV === 'development' || !process.env.NODE_ENV) {
+  // Get whitelist from environment variable
+  const whitelistRaw = process.env.ADMIN_ALLOWED_IPS?.trim() || '';
+  const whitelist = whitelistRaw.length > 0 ? whitelistRaw.split(',').map(ip => ip.trim()).filter(ip => ip) : [];
+
+  // ✅ UNIVERSAL ALLOW - If '0.0.0.0' is in whitelist (allow all IPs)
+  if (whitelist.includes('0.0.0.0')) {
+    console.log(`✅ Admin access: UNIVERSAL MODE (0.0.0.0) - allowing all IPs | IP: ${normalizedIp}`);
+    return next();
+  }
+
+  // ✅ WILDCARD ALLOW - If '*' is in whitelist
+  if (whitelist.includes('*')) {
+    console.log(`✅ Admin access: WILDCARD (*) - allowing all IPs | IP: ${normalizedIp}`);
+    return next();
+  }
+
+  // In development, allow localhost if no whitelist configured
+  if ((process.env.NODE_ENV === 'development' || !process.env.NODE_ENV) && whitelist.length === 0) {
     if (isLocalhost(clientIp)) {
       console.log(`✅ Admin access allowed from localhost: ${normalizedIp}`);
       return next();
     }
   }
 
-  // Get whitelist from environment variable
-  const whitelist = process.env.ADMIN_ALLOWED_IPS?.split(',').map(ip => ip.trim()) || [];
-
-  // If whitelist contains '*' or '0.0.0.0/0', allow all IPs (development only)
-  if (whitelist.includes('*') || whitelist.includes('0.0.0.0/0') || whitelist.includes('0.0.0.0')) {
-    console.log(`⚠️ Admin access: Wildcard enabled - allowing all IPs (development mode)`);
-    return next();
-  }
-
-  // If no whitelist configured, allow in development
-  if (whitelist.length === 0) {
-    if (process.env.NODE_ENV === 'development' || !process.env.NODE_ENV) {
-      console.log(`⚠️ No IP whitelist configured. Allowing in development mode.`);
-      return next();
-    } else {
-      console.log(`❌ Admin access denied: No IP whitelist configured in production`);
-      return res.status(403).json({
-        success: false,
-        message: "Admin access denied. IP whitelist not configured."
-      });
-    }
+  // If no whitelist configured in production - DENY
+  if (whitelist.length === 0 && process.env.NODE_ENV === 'production') {
+    console.log(`❌ Admin access denied: No IP whitelist configured in production`);
+    return res.status(403).json({
+      success: false,
+      message: "Admin access denied. IP whitelist not configured.",
+      code: "IP_WHITELIST_NOT_CONFIGURED"
+    });
   }
 
   // Check if IP is in whitelist
@@ -91,14 +95,15 @@ export const ipWhitelistMiddleware = (req, res, next) => {
     return next();
   }
 
-  // IP not in whitelist
-  console.log(`❌ Admin access denied from IP: ${normalizedIp}`);
-  console.log(`   Whitelist: ${whitelist.join(', ')}`);
+  // IP not in whitelist - DENY
+  console.log(`❌ Admin access DENIED from IP: ${normalizedIp}`);
+  console.log(`   Configured whitelist: ${whitelist.length > 0 ? whitelist.join(', ') : 'EMPTY'}`);
 
   return res.status(403).json({
     success: false,
     message: "Admin access denied. Your IP address is not authorized.",
-    code: "IP_NOT_WHITELISTED"
+    code: "IP_NOT_WHITELISTED",
+    clientIp: normalizedIp
   });
 };
 
