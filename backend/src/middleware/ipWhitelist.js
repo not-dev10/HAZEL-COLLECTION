@@ -65,6 +65,12 @@ export const ipWhitelistMiddleware = (req, res, next) => {
   // Get whitelist from environment variable
   const whitelist = process.env.ADMIN_ALLOWED_IPS?.split(',').map(ip => ip.trim()) || [];
 
+  // If whitelist contains '*' or '0.0.0.0/0', allow all IPs (development only)
+  if (whitelist.includes('*') || whitelist.includes('0.0.0.0/0') || whitelist.includes('0.0.0.0')) {
+    console.log(`⚠️ Admin access: Wildcard enabled - allowing all IPs (development mode)`);
+    return next();
+  }
+
   // If no whitelist configured, allow in development
   if (whitelist.length === 0) {
     if (process.env.NODE_ENV === 'development' || !process.env.NODE_ENV) {
