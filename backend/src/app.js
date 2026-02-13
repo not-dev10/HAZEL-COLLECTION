@@ -101,6 +101,7 @@ const corsOptions = {
       'http://127.0.0.1:5000',
     ] : [
       'https://hazel-collection.onrender.com',
+      'https://hazel-collection-gtme.vercel.app',
     ];
     
     // Add production frontend URL if configured
