@@ -38,3 +38,5 @@ coverage/
 
 # Audit files (may contain sensitive information)
 audits/
+.vercel
+.env*.local

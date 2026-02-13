@@ -505,6 +505,9 @@ const Inventory: React.FC = () => {
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>Add Inventory Item</DialogTitle>
+                  <DialogDescription>
+                    Add a new item to your inventory system
+                  </DialogDescription>
                 </DialogHeader>
                 <form className="space-y-4">
                   <Input placeholder="Product Name" />
