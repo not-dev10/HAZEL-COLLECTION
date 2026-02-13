@@ -1,0 +1,75 @@
+# Fly.io Configuration
+# Full-stack deployment of Hazel Collection (Backend + Frontend)
+
+app = "hazel-collection"
+primary_region = "sin"  # Singapore (closest to India), or change to: "del" (Delhi), "iad" (US), "lhr" (London)
+
+# Build configuration
+[build]
+  dockerfile = "Dockerfile"
+  docker-compose = "docker-compose.yml"
+
+# HTTP service configuration
+[[services]]
+  internal_port = 5000
+  processes = ["app"]
+  protocol = "tcp"
+  
+  [[services.ports]]
+    force_https = true
+    handlers = ["http"]
+    port = 80
+  
+  [[services.ports]]
+    handlers = ["tls", "http"]
+    port = 443
+
+  # Health check for backend
+  [services.tcp_checks]
+    enabled = true
+    grace_period = "10s"
+    interval = "15s"
+    timeout = "5s"
+
+# Environment variables - change these for production
+[env]
+  NODE_ENV = "production"
+  PORT = "5000"
+  FRONTEND_URL = "https://hazel-collection.fly.dev"
+  BACKEND_URL = "https://hazel-collection.fly.dev/api"
+  BACKEND_HOST = "localhost"
+
+# Secrets (use `fly secrets set` command to add these)
+# fly secrets set JWT_SECRET=your_secret_here
+# fly secrets set REFRESH_TOKEN_SECRET=your_secret_here
+# fly secrets set ENCRYPTION_KEY=your_key_here
+# fly secrets set MONGODB_URI=your_connection_string
+# fly secrets set CLOUDINARY_CLOUD_NAME=your_cloud_name
+# fly secrets set CLOUDINARY_API_KEY=your_api_key
+# fly secrets set CLOUDINARY_API_SECRET=your_api_secret
+# fly secrets set SMTP_USER=your_email@gmail.com
+# fly secrets set SMTP_PASS=your_app_password
+# fly secrets set ADMIN_EMAIL=admin@example.com
+# fly secrets set ADMIN_PASSWORD=your_admin_password
+# fly secrets set ADMIN_SECRET=your_admin_secret
+
+# Scaling - adjust based on traffic
+[processes]
+  app = "sh -c 'npm install && node src/server.js'"
+
+# Machine configuration
+[mounts]
+  source = "hazel_data"
+  destination = "/app/data"
+
+# Auto-scaling (optional)
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory_mb = 512
+
+# Metrics and monitoring
+[metrics]
+  port = 5000
+  handlers = ["http"]
+  path = "/metrics"
