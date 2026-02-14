@@ -107,9 +107,14 @@ const SearchProducts = () => {
         (product.price || 0) >= priceRange[0] && 
         (product.price || 0) <= priceRange[1];
       
+      // Normalize both sides for comparison
+      const normalizedProductCategory = product.category
+        ? product.category.trim().toLowerCase().replace(/\s+/g, ' ')
+        : '';
+      
       const matchesCategory = 
         selectedCategory === 'all' || 
-        (product.category && product.category === selectedCategory);
+        (normalizedProductCategory && normalizedProductCategory === selectedCategory);
       
       return matchesSearch && matchesPrice && matchesCategory;
     })

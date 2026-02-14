@@ -32,24 +32,45 @@ const Collection = () => {
     const fetchProducts = async () => {
       try {
         // Map slug to category for API filtering
+        // Convert slug back to a normalized category name
+        const categoryFromSlug = slug
+          .split('-')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ')
+          .replace(/(\d{4})/, '$1'); // Handle years like 2025
+        
+        // Try the mapped category first, then the converted slug, then the slug as-is
         const categoryMap: Record<string, string> = {
-          'new-arrivals': 'new-arrivals',
-          'ready-to-wear': 'ready-to-wear',
-          'unstitched': 'unstitched',
-          'bridals': 'bridal',
-          'jewellery': 'jewellery',
-          'studio-portraits': 'studio-portraits',
-          'festive-aw-2025': 'festive',
-          'pret-aw-2025': 'pret',
-          'basics-aw-2025': 'basics',
-          'hc-basics-ss-25': 'hc-basics',
-          'winter-unstitched-2025': 'winter-unstitched',
-          'wedding-unstitched-2025': 'wedding-unstitched',
+          'new-arrivals': 'New Arrivals',
+          'ready-to-wear': 'Ready To Wear',
+          'unstitched': 'Unstitched',
+          'bridals': 'Bridal',
+          'jewellery': 'Jewellery',
+          'studio-portraits': 'Studio Portraits',
+          'festive-aw-2025': 'Festive A/W 2025',
+          'pret-aw-2025': 'Pret A/W 2025',
+          'basics-aw-2025': 'Basics A/W 2025',
+          'hc-basics-ss-25': 'HC Basics SS 25',
+          'winter-unstitched-2025': 'Winter Unstitched 2025',
+          'wedding-unstitched-2025': 'Wedding Unstitched 2025',
+          'lawn': 'Lawn',
+          'cotton': 'Cotton',
+          'silk': 'Silk',
+          'festive': 'Festive',
+          'pret': 'Pret',
+          'basics': 'Basics',
         };
         
+        // Use mapped category if available, otherwise use the slug as the API expects it
         const category = categoryMap[slug] || slug;
+        
+        console.log('Fetching products for category:', category, 'from slug:', slug);
+        
         const response = await fetch(`${API_BASE_URL}/api/products?category=${encodeURIComponent(category)}`);
         const data = await response.json();
+        
+        console.log('API Response:', { success: data.success, productCount: data.products?.length || 0 });
+        
         if (data.success && data.products) {
           setProducts(data.products);
           
@@ -65,7 +86,9 @@ const Collection = () => {
             'pret-aw-2025': 'Pret A/W 2025',
             'basics-aw-2025': 'Basics A/W 2025',
           };
-          setCollectionTitle(titleMap[slug] || 'Collection');
+          setCollectionTitle(titleMap[slug] || categoryFromSlug);
+        } else {
+          console.warn('No products found for category:', category);
         }
       } catch (error) {
         console.error('Failed to fetch products:', error);

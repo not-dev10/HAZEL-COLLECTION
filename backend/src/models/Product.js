@@ -147,7 +147,19 @@ export class Product {
     const products = db.collection("products");
 
     const query = {};
-    if (filters.category) query.category = filters.category;
+    
+    // Normalize category filter - convert hyphens to spaces and handle case-insensitive search
+    if (filters.category) {
+      const normalizedCategory = filters.category
+        .toLowerCase()
+        .replace(/-/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+      
+      // Use regex for case-insensitive, space-flexible matching
+      query.category = { $regex: `^${normalizedCategory}$`, $options: "i" };
+    }
+    
     if (filters.search) {
       query.name = { $regex: filters.search, $options: "i" };
     }
