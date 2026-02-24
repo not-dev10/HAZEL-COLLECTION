@@ -9,7 +9,7 @@ import { useCart } from '@/context/CartContext';
 import { API_BASE_URL } from '@/lib/api';
 
 interface Product {
-  id: number;
+  id: string;
   name: string;
   price: number;
   originalPrice?: number;
@@ -21,7 +21,7 @@ interface Product {
 const Collection = () => {
   const { slug } = useParams<{ slug: string }>();
   const { addToCart } = useCart();
-  const [selectedProducts, setSelectedProducts] = useState<number[]>([]);
+  const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [collectionTitle, setCollectionTitle] = useState('Collection');
@@ -43,6 +43,7 @@ const Collection = () => {
           'new-arrivals': 'New Arrivals',
           'ready-to-wear': 'Ready To Wear',
           'unstitched': 'Unstitched',
+          'stitched': 'Stitched',
           'bridals': 'Bridal',
           'jewellery': 'Jewellery',
           'studio-portraits': 'Studio Portraits',
@@ -71,13 +72,24 @@ const Collection = () => {
         console.log('API Response:', { success: data.success, productCount: data.products?.length || 0 });
         
         if (data.success && data.products) {
-          setProducts(data.products);
+          // Transform API response to match Product interface
+          const normalizedProducts = data.products.map((product: any) => ({
+            id: product._id || product.id,
+            name: product.name,
+            price: product.price,
+            originalPrice: product.originalPrice,
+            image: product.image || product.imageUrl,
+            images: product.images || product.imageUrls || [product.image || product.imageUrl],
+            category: product.category,
+          }));
+          setProducts(normalizedProducts);
           
           // Set collection title based on slug
           const titleMap: Record<string, string> = {
             'new-arrivals': 'New Arrivals',
             'ready-to-wear': 'Ready To Wear',
             'unstitched': 'Unstitched',
+            'stitched': 'Stitched',
             'bridals': 'Bridals',
             'jewellery': 'Jewellery',
             'studio-portraits': 'Studio Portraits',
