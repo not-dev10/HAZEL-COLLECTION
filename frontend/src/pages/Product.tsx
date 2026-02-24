@@ -199,6 +199,11 @@ const Product = () => {
 
             {/* Product Info */}
             <div className="flex flex-col justify-start">
+              {product.category && (
+                <p className="text-[10px] tracking-widest uppercase text-muted-foreground font-semibold mb-3">
+                  {product.category}
+                </p>
+              )}
               <h1 className="font-serif text-2xl sm:text-3xl md:text-4xl lg:text-5xl mb-4 break-words">
                 {product.name}
               </h1>

@@ -4,10 +4,8 @@ import AnnouncementBar from '@/components/common/AnnouncementBar';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import ScrollToTop from '@/components/common/ScrollToTop';
-import { Button } from '@/components/ui/button';
-import { AddToWishlistButton } from '@/components/ui/add-to-wishlist-button';
+import ProductCard from '@/components/catalog/ProductCard';
 import { useCart } from '@/context/CartContext';
-import { ShoppingBag } from 'lucide-react';
 import { API_BASE_URL } from '@/lib/api';
 
 interface Product {
@@ -16,6 +14,7 @@ interface Product {
   price: number;
   originalPrice?: number;
   image: string;
+  images?: string[];
   category: string;
 }
 
@@ -154,41 +153,16 @@ const Collection = () => {
           {products.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {products.map((product) => (
-                <div key={product.id} className="group">
-                  <div className="relative overflow-hidden bg-secondary mb-4">
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                      className="w-full h-96 object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                  </div>
-                  <h3 className="font-medium text-sm md:text-base mb-2">{product.name}</h3>
-                  <div className="flex items-center gap-2 mb-4">
-                    <span className="text-lg font-semibold">£{product.price}</span>
-                    {product.originalPrice && (
-                      <span className="text-sm line-through text-muted-foreground">£{product.originalPrice}</span>
-                    )}
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      onClick={() => handleAddToCart(product)}
-                      className={`flex-1 text-xs tracking-widest ${
-                        selectedProducts.includes(product.id) ? 'bg-green-600 hover:bg-green-700' : ''
-                      }`}
-                    >
-                      <ShoppingBag size={16} className="mr-2" />
-                      {selectedProducts.includes(product.id) ? 'Added!' : 'Add to Cart'}
-                    </Button>
-                    <AddToWishlistButton
-                      itemId={product.id.toString()}
-                      itemName={product.name}
-                      itemPrice={product.price}
-                      itemImage={product.image}
-                      variant="outline"
-                      size="md"
-                    />
-                  </div>
-                </div>
+                <ProductCard
+                  key={product.id}
+                  id={product.id}
+                  name={product.name}
+                  price={product.price}
+                  image={product.image}
+                  images={product.images}
+                  originalPrice={product.originalPrice}
+                  category={product.category}
+                />
               ))}
             </div>
           ) : (
