@@ -64,7 +64,10 @@ const getCspDirectives = () => {
   // Add frontend URL(s) for production (supports comma-separated values)
   if (process.env.FRONTEND_URL) {
     process.env.FRONTEND_URL.split(',').forEach(url => {
-      directives.connectSrc.push(url.trim());
+      const trimmed = url.trim();
+      if (trimmed && /^https?:\/\//.test(trimmed)) {
+        directives.connectSrc.push(trimmed);
+      }
     });
   }
   
