@@ -61,9 +61,11 @@ const getCspDirectives = () => {
     directives.connectSrc.push("http://localhost:*");
   }
   
-  // Add frontend URL for production
+  // Add frontend URL(s) for production (supports comma-separated values)
   if (process.env.FRONTEND_URL) {
-    directives.connectSrc.push(process.env.FRONTEND_URL);
+    process.env.FRONTEND_URL.split(',').forEach(url => {
+      directives.connectSrc.push(url.trim());
+    });
   }
   
   return directives;
