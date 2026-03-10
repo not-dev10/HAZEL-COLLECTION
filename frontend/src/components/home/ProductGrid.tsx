@@ -94,7 +94,7 @@ const ProductGrid = () => {
         </div>
         {products.length > 0 && (
           <div className="text-center mt-12 md:mt-16">
-            <a href="/collection/new-arrivals" className="btn-outline">
+            <a href="/search" className="btn-outline">
               View All
             </a>
           </div>
