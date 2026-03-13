@@ -49,6 +49,8 @@ const HeroCarousel = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [failedImages, setFailedImages] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(true);
+  const [touchStart, setTouchStart] = useState(0);
+  const [touchEnd, setTouchEnd] = useState(0);
 
   // Fetch carousel slides from API
   useEffect(() => {
@@ -97,6 +99,29 @@ const HeroCarousel = () => {
     setCurrentSlide((prev) => (prev + 1) % slides.length);
   };
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    setTouchEnd(e.changedTouches[0].clientX);
+    handleSwipe();
+  };
+
+  const handleSwipe = () => {
+    if (!touchStart || !touchEnd) return;
+    
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+    
+    if (isLeftSwipe) {
+      goToNext();
+    } else if (isRightSwipe) {
+      goToPrev();
+    }
+  };
+
   const handleImageError = (slideId: number) => {
     console.error(`Hero image failed to load for slide ${slideId}`);
     setFailedImages(prev => new Set(prev).add(slideId));
@@ -125,7 +150,11 @@ const HeroCarousel = () => {
   }
 
   return (
-    <section className="relative h-[60vh] md:h-[80vh] lg:h-screen overflow-hidden bg-gray-300">
+    <section 
+      className="relative h-[60vh] md:h-[80vh] lg:h-screen overflow-hidden bg-gray-300"
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
       {slides.map((slide, index) => (
         <div
           key={slide.id}

@@ -444,7 +444,7 @@ const Header = () => {
               {/* Collections Section */}
               <div className="border-b border-border pb-6">
                 <h2 className="text-sm tracking-wider uppercase font-semibold mb-4">COLLECTIONS</h2>
-                {categories.map((category) => (
+                {dynamicCategories.map((category) => (
                   <div key={category.name} className="mb-6">
                     <h3 className="text-xs tracking-wider uppercase font-medium text-muted-foreground mb-3">
                       {category.name}

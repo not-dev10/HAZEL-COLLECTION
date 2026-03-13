@@ -48,6 +48,8 @@ const ProductCard = ({
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [selectedVariant, setSelectedVariant] = useState<any | null>(null);
+  const [touchStart, setTouchStart] = useState(0);
+  const [touchEnd, setTouchEnd] = useState(0);
   
   const allImages = images && images.length > 0 ? images : [image];
   const displayImage = allImages[currentImageIndex] || image;
@@ -113,6 +115,29 @@ const ProductCard = ({
     setSelectedVariant(null);
   };
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    setTouchEnd(e.changedTouches[0].clientX);
+    handleSwipe();
+  };
+
+  const handleSwipe = () => {
+    if (!touchStart || !touchEnd || allImages.length <= 1) return;
+    
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+    
+    if (isLeftSwipe) {
+      setCurrentImageIndex((prev) => (prev === allImages.length - 1 ? 0 : prev + 1));
+    } else if (isRightSwipe) {
+      setCurrentImageIndex((prev) => (prev === 0 ? allImages.length - 1 : prev - 1));
+    }
+  };
+
   const cartItem: CartItem = {
     id: id.toString(),
     name,
@@ -126,7 +151,10 @@ const ProductCard = ({
       className="group flex flex-col h-full cursor-pointer"
       onClick={handleCardClick}
     >
-      <div className="product-card-image relative aspect-[3/4] bg-muted mb-4 flex-shrink-0">
+      <div className="product-card-image relative aspect-[3/4] bg-muted mb-4 flex-shrink-0"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
         <img
           src={displayImage}
           alt={name}
