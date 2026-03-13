@@ -332,6 +332,15 @@ export default function OrdersPage() {
                                     {item.category && (
                                       <p className="text-xs text-gray-500 mt-1">Category: {item.category}</p>
                                     )}
+                                    {/* Variant Information */}
+                                    <div className="text-xs text-gray-600 mt-2 space-y-1">
+                                      {item.color && (
+                                        <p>Color: <span className="font-medium">{item.color}</span></p>
+                                      )}
+                                      {item.size && (
+                                        <p>Size: <span className="font-medium">{item.size}</span></p>
+                                      )}
+                                    </div>
                                   </div>
                                   <div className="flex justify-between items-center text-sm">
                                     <div className="text-gray-600">

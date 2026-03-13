@@ -113,7 +113,7 @@ export const addToCart = async (req, res) => {
       };
     }
 
-    const { id, name, price, quantity, image, size, color } = req.body;
+    const { id, name, price, quantity, image, size, color, productId, category, variantId } = req.body;
 
     // Validation
     if (!id || !name || !price || !quantity) {
@@ -130,6 +130,9 @@ export const addToCart = async (req, res) => {
       image,
       size,
       color,
+      productId,
+      category,
+      variantId,
     };
 
     const result = await Cart.addToCart(auth.identifier, item, auth.isGuest);

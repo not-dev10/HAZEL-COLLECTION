@@ -15,7 +15,18 @@ export class Order {
     
     const order = {
       userId: new ObjectId(orderData.userId),
-      items: orderData.items,
+      items: orderData.items.map(item => ({
+        productId: item.productId,
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+        image: item.image,
+        category: item.category,
+        // Variant information
+        variantId: item.variantId || null,
+        color: item.color || null,
+        size: item.size || null
+      })),
       personalInfo: {
         firstName: orderData.firstName,
         lastName: orderData.lastName,

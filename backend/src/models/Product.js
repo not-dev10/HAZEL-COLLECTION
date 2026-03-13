@@ -97,7 +97,8 @@ export class Product {
     
     return {
       id: product._id.toString(),
-      ...product
+      ...product,
+      stock: this.calculateTotalStock(product)
     };
   }
 
@@ -173,8 +174,23 @@ export class Product {
     const allProducts = await products.find(query).toArray();
     return allProducts.map(p => ({
       id: p._id.toString(),
-      ...p
+      ...p,
+      stock: this.calculateTotalStock(p)
     }));
+  }
+
+  /**
+   * Calculate total stock from all variants
+   */
+  static calculateTotalStock(product) {
+    if (!product.variants || product.variants.length === 0) {
+      return product.stock || 0;
+    }
+    
+    return product.variants.reduce((total, variant) => {
+      const variantStock = variant.sizes?.reduce((sum, size) => sum + (size.stock || 0), 0) || 0;
+      return total + variantStock;
+    }, 0);
   }
 
   static async findById(id) {
@@ -190,7 +206,8 @@ export class Product {
 
       return {
         id: product._id.toString(),
-        ...product
+        ...product,
+        stock: this.calculateTotalStock(product)
       };
     } catch (err) {
       return null;
@@ -243,6 +260,45 @@ export class Product {
       return result.deletedCount > 0;
     } catch (err) {
       return false;
+    }
+  }
+
+  /**
+   * Deduct stock from a specific variant
+   */
+  static async deductVariantStock(productId, variantId, size, quantity) {
+    const db = getDB();
+    const products = db.collection("products");
+
+    try {
+      const result = await products.findOneAndUpdate(
+        { 
+          _id: new ObjectId(productId),
+          'variants.id': variantId,
+          'variants.sizes.size': size
+        },
+        {
+          $inc: {
+            'variants.$[v].sizes.$[s].stock': -quantity
+          }
+        },
+        {
+          arrayFilters: [
+            { 'v.id': variantId },
+            { 's.size': size }
+          ],
+          returnDocument: 'after'
+        }
+      );
+
+      return result.value ? {
+        id: result.value._id.toString(),
+        ...result.value,
+        stock: this.calculateTotalStock(result.value)
+      } : null;
+    } catch (err) {
+      console.error('Error deducting variant stock:', err);
+      return null;
     }
   }
 }

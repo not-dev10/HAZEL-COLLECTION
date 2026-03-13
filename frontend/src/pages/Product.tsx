@@ -107,14 +107,20 @@ const Product = () => {
     }
     
     try {
+      // Find the selected variant to get its ID
+      const selectedVariant = product.variants?.find(v => v.color === selectedColor);
+      
       const cartItem = {
         id: product.id.toString(),
+        productId: product.id.toString(),
         name: product.name,
         price: product.price,
         quantity,
         image: product.image,
+        category: product.category,
         color: selectedColor || undefined,
         size: selectedSize || undefined,
+        variantId: selectedVariant?.id || undefined,
       };
       
       console.log('🛒 Adding to cart:', cartItem);

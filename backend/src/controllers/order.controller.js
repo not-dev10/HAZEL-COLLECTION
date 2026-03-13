@@ -1,4 +1,5 @@
 import { Order } from '../models/Order.js';
+import { Product } from '../models/Product.js';
 import { OTP } from '../models/OTP.js';
 import jwt from 'jsonwebtoken';
 import { mailService } from '../utils/mailService.js';
@@ -75,6 +76,13 @@ export const createOrder = async (req, res) => {
 
     if (!paymentMethod) {
       return res.status(400).json({ message: 'Payment method is required' });
+    }
+
+    // Deduct stock from variants for each item
+    for (const item of items) {
+      if (item.variantId && item.size) {
+        await Product.deductVariantStock(item.productId, item.variantId, item.size, item.quantity);
+      }
     }
 
     const orderData = {

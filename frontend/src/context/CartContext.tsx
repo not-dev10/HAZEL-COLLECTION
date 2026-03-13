@@ -3,12 +3,15 @@ import { API_BASE_URL } from '@/lib/api';
 
 export interface CartItem {
   id: string;
+  productId?: string;
   name: string;
   price: number;
   quantity: number;
   image?: string;
+  category?: string;
   size?: string;
   color?: string;
+  variantId?: string;
 }
 
 interface CartContextType {
