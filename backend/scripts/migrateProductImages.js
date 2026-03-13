@@ -4,37 +4,35 @@
  * Usage: node scripts/migrateProductImages.js
  * 
  * This script:
- * 1. Finds all products with images
+ * 1. Finds all products with images array (stored in Cloudinary)
  * 2. Extracts the last image as sizeReferenceImage
  * 3. Removes the last image from the images array
  * 4. Updates the product in the database
  * 
  * Note: Size reference images are always last in the order
+ * 
+ * Image Flow:
+ * - Admin uploads images via drag-drop in Products.tsx
+ * - Images sent to /api/upload/product-images endpoint
+ * - Images uploaded to Cloudinary with folder: didi-fashion/products/{productId}
+ * - URLs stored in product.images array in MongoDB
+ * - Last image in array is the size reference chart
  */
 
-import { MongoClient, ObjectId } from 'mongodb';
-import dotenv from 'dotenv';
-
-dotenv.config();
-
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/didi-fashion';
-const DB_NAME = 'didi-fashion';
+import { getDB } from '../src/config/mongodb.js';
 
 async function migrateProductImages() {
-  let client;
   try {
-    // Connect to MongoDB
-    client = new MongoClient(MONGODB_URI);
-    await client.connect();
-    console.log('✅ Connected to MongoDB\n');
-
-    const db = client.db(DB_NAME);
+    const db = getDB();
     const products = db.collection('products');
 
     console.log('🔍 Starting product image migration...\n');
 
-    // Find all products with images
-    const allProducts = await products.find({ images: { $exists: true, $ne: [] } }).toArray();
+    // Find all products with images array
+    const allProducts = await products.find({ 
+      images: { $exists: true, $type: 'array', $ne: [] } 
+    }).toArray();
+    
     console.log(`📦 Found ${allProducts.length} products with images\n`);
 
     let migratedCount = 0;
@@ -70,6 +68,7 @@ async function migrateProductImages() {
             $set: {
               sizeReferenceImage: lastImage,
               images: remainingImages,
+              image: remainingImages[0] || product.image,  // Update primary image if needed
               updatedAt: new Date()
             }
           },
@@ -131,13 +130,14 @@ async function migrateProductImages() {
   } catch (error) {
     console.error('❌ Migration failed:', error);
     process.exit(1);
-  } finally {
-    if (client) {
-      await client.close();
-      console.log('🔌 MongoDB connection closed');
-    }
   }
 }
 
 // Run migration
-migrateProductImages();
+migrateProductImages().then(() => {
+  console.log('🎉 Migration script completed!');
+  process.exit(0);
+}).catch(error => {
+  console.error('Fatal error:', error);
+  process.exit(1);
+});
