@@ -16,6 +16,8 @@ interface Product {
   image: string;
   images?: string[];
   category: string;
+  inStock?: boolean;
+  stock?: number;
   variants?: Array<{
     id: string;
     color: string;
@@ -87,6 +89,8 @@ const Collection = () => {
             image: product.image || product.imageUrl,
             images: product.images || product.imageUrls || [product.image || product.imageUrl],
             category: product.category,
+            inStock: product.inStock !== false && product.stock > 0,
+            stock: product.stock || 0,
             variants: product.variants || [],
           }));
           setProducts(normalizedProducts);
@@ -181,6 +185,8 @@ const Collection = () => {
                   images={product.images}
                   originalPrice={product.originalPrice}
                   category={product.category}
+                  inStock={product.inStock}
+                  stock={product.stock}
                   variants={product.variants}
                 />
               ))}

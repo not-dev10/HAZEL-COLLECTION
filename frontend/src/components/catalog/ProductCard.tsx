@@ -17,6 +17,8 @@ interface ProductCardProps {
   isSale?: boolean;
   originalPrice?: number;
   category?: string;
+  inStock?: boolean;
+  stock?: number;
   variants?: Array<{
     id: string;
     color: string;
@@ -35,6 +37,8 @@ const ProductCard = ({
   isSale,
   originalPrice,
   category,
+  inStock = true,
+  stock = 0,
   variants,
 }: ProductCardProps) => {
   const navigate = useNavigate();
@@ -172,9 +176,12 @@ const ProductCard = ({
         <div className="hidden md:absolute md:inset-0 md:bg-black/40 md:opacity-0 md:group-hover:opacity-100 md:transition-opacity md:duration-300 md:flex md:items-center md:justify-center md:gap-3">
           <button
             onClick={handleAddToCartClick}
-            className="px-6 py-2.5 bg-foreground text-background hover:bg-foreground/90 transition-colors duration-300 rounded-full flex items-center gap-2 text-sm font-medium uppercase tracking-wider"
+            disabled={!inStock}
+            className={`px-6 py-2.5 bg-foreground text-background hover:bg-foreground/90 transition-colors duration-300 rounded-full flex items-center gap-2 text-sm font-medium uppercase tracking-wider ${
+              !inStock ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
           >
-            Add to Cart
+            {inStock ? 'Add to Cart' : 'Out of Stock'}
           </button>
           <AddToWishlistButton
             itemId={id.toString()}
@@ -212,9 +219,12 @@ const ProductCard = ({
           <div className="flex-1">
             <button
               onClick={handleAddToCartClick}
-              className="w-full px-3 py-2 bg-foreground text-background hover:bg-foreground/90 transition-colors duration-300 rounded text-xs font-medium uppercase tracking-wider"
+              disabled={!inStock}
+              className={`w-full px-3 py-2 bg-foreground text-background hover:bg-foreground/90 transition-colors duration-300 rounded text-xs font-medium uppercase tracking-wider ${
+                !inStock ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
             >
-              Add to Cart
+              {inStock ? 'Add to Cart' : 'Out of Stock'}
             </button>
           </div>
           <div>
