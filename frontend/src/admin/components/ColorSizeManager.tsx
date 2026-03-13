@@ -32,7 +32,7 @@ const PREDEFINED_COLORS = [
   { name: 'Brown', code: '#92400E' },
 ];
 
-const PREDEFINED_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
+const PREDEFINED_SIZES = ['X', 'S', 'M', 'L', 'XL'];
 
 export const ColorSizeManager: React.FC<ColorSizeManagerProps> = ({ variants, onVariantsChange }) => {
   const [showColorPicker, setShowColorPicker] = useState(false);

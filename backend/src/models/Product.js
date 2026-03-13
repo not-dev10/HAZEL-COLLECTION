@@ -56,9 +56,6 @@ export class Product {
       reviews: [],
       sold: 0,
       
-      // Custom product flag - for products with single color variant (no color selection needed)
-      isCustomizable: false,
-      
       // Metadata
       isActive: true,
       createdAt: new Date(),

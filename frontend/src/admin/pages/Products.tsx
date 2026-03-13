@@ -6,11 +6,10 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Edit2, Trash2, Upload, Search, Download, Filter, X, Check, AlertCircle, Loader } from 'lucide-react';
+import { Plus, Edit2, Trash2, Upload, Search, Download, X, Check, AlertCircle, Loader } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import TokenManager from '@/utils/tokenManager';
 import { ColorSizeManager } from '../components/ColorSizeManager';
-import { CustomProductManager } from '../components/CustomProductManager';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
@@ -100,8 +99,8 @@ const Products: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [newProduct, setNewProduct] = useState({ name: '', price: '', stock: '', category: '', description: '', images: [] as File[], variants: [] as any[], isCustomizable: false, customVariant: null as any });
-  const [editProduct, setEditProduct] = useState({ name: '', price: '', stock: '', category: '', description: '', editImages: [] as File[], currentImages: [] as string[], originalImageOrder: [] as string[], variants: [] as any[], isCustomizable: false, customVariant: null as any });
+  const [newProduct, setNewProduct] = useState({ name: '', price: '', stock: '', category: '', description: '', images: [] as File[], variants: [] as any[], sizeReferenceImage: null as File | null });
+  const [editProduct, setEditProduct] = useState({ name: '', price: '', stock: '', category: '', description: '', editImages: [] as File[], currentImages: [] as string[], originalImageOrder: [] as string[], variants: [] as any[], sizeReferenceImage: null as string | null, editSizeReferenceImage: null as File | null });
   const [showSuccessMsg, setShowSuccessMsg] = useState(false);
   const [savingProductId, setSavingProductId] = useState<string | null>(null);
   const [uploadingImages, setUploadingImages] = useState(false);
@@ -112,8 +111,8 @@ const Products: React.FC = () => {
   );
 
   const handleAddProduct = async () => {
-    if (!newProduct.name || !newProduct.price || !newProduct.stock || !newProduct.category) {
-      alert('Please fill all required fields');
+    if (!newProduct.name || !newProduct.price || !newProduct.category || !newProduct.stock) {
+      alert('Please fill all required fields: Name, Price, Category, Stock');
       return;
     }
 
@@ -139,8 +138,7 @@ const Products: React.FC = () => {
           price: parseFloat(newProduct.price),
           stock: parseInt(newProduct.stock),
           category: newProduct.category,
-          variants: newProduct.isCustomizable && newProduct.customVariant ? [newProduct.customVariant] : newProduct.variants,
-          isCustomizable: newProduct.isCustomizable,
+          variants: newProduct.variants,
         }),
       });
 
@@ -207,7 +205,7 @@ const Products: React.FC = () => {
       };
 
       setProducts([...products, newProd]);
-      setNewProduct({ name: '', price: '', stock: '', category: '', description: '', images: [], variants: [], isCustomizable: false, customVariant: null });
+      setNewProduct({ name: '', price: '', stock: '', category: '', description: '', images: [], variants: [], sizeReferenceImage: null });
       setShowSuccessMsg(true);
       setTimeout(() => setShowSuccessMsg(false), 3000);
     } catch (err) {
@@ -222,7 +220,6 @@ const Products: React.FC = () => {
     const product = products.find(p => p.id === id);
     if (product) {
       const currentImages = product.images || [];
-      const isCustomizable = product.variants && product.variants.length === 1;
       setEditProduct({
         name: product.name,
         price: product.price.toString(),
@@ -232,9 +229,9 @@ const Products: React.FC = () => {
         editImages: [],
         currentImages: currentImages,
         originalImageOrder: [...currentImages],
-        variants: isCustomizable ? [] : (product.variants || []),
-        isCustomizable: isCustomizable,
-        customVariant: isCustomizable ? product.variants?.[0] : null,
+        variants: product.variants || [],
+        sizeReferenceImage: null,
+        editSizeReferenceImage: null,
       });
       setEditingId(id);
     }
@@ -267,8 +264,7 @@ const Products: React.FC = () => {
           price: parseFloat(editProduct.price),
           stock: parseInt(editProduct.stock),
           category: editProduct.category,
-          variants: editProduct.isCustomizable && editProduct.customVariant ? [editProduct.customVariant] : editProduct.variants,
-          isCustomizable: editProduct.isCustomizable,
+          variants: editProduct.variants,
         }),
       });
 
@@ -714,55 +710,27 @@ const Products: React.FC = () => {
                     onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
                   />
                   
-                  {/* Custom Product Toggle - Separate Section */}
-                  <div className="space-y-3 p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border-2 border-purple-200">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="text-sm font-semibold text-gray-900">Custom Product</h3>
-                        <p className="text-xs text-gray-600 mt-1">Single color with multiple sizes (no color selection needed)</p>
-                      </div>
-                      <label className="flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={newProduct.isCustomizable}
-                          onChange={(e) => {
-                            setNewProduct({ 
-                              ...newProduct, 
-                              isCustomizable: e.target.checked,
-                              category: e.target.checked ? 'Custom Product' : '',
-                              customVariant: e.target.checked ? newProduct.customVariant : null,
-                              variants: e.target.checked ? [] : newProduct.variants
-                            });
-                          }}
-                          className="w-5 h-5 rounded border-gray-300 text-purple-600 focus:ring-purple-500 cursor-pointer"
-                        />
-                      </label>
-                    </div>
-                  </div>
-                  
-                  {/* Category Input - For all products */}
+                  {/* Category Input */}
                   <div className="space-y-2">
                     <label className="block text-sm font-medium text-gray-700">Category</label>
                     <Input
-                      placeholder="e.g., Dresses, Tops, Bottoms, Accessories, Custom Product"
+                      placeholder="e.g., Dresses, Tops, Bottoms, Accessories"
                       value={newProduct.category}
                       onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
                     />
                   </div>
                   
-                  {/* Stock Quantity - Only for products without variants */}
-                  {!newProduct.isCustomizable && newProduct.variants.length === 0 && (
-                    <Input
-                      placeholder="Stock Quantity"
-                      type="number"
-                      value={newProduct.stock}
-                      onChange={(e) => setNewProduct({ ...newProduct, stock: e.target.value })}
-                    />
-                  )}
+                  {/* Stock Quantity */}
+                  <Input
+                    placeholder="Stock Quantity"
+                    type="number"
+                    value={newProduct.stock}
+                    onChange={(e) => setNewProduct({ ...newProduct, stock: e.target.value })}
+                  />
                   
                   {/* Info Box */}
-                  {(newProduct.isCustomizable || newProduct.variants.length > 0) && (
+                  {newProduct.variants.length > 0 && (
                     <div className="p-3 bg-blue-50 rounded border border-blue-200">
                       <p className="text-xs text-blue-900">
                         <strong>ℹ️ Stock Management:</strong> Stock is managed through the variant manager below. Overall stock is calculated as the sum of all variant sizes.
@@ -770,18 +738,11 @@ const Products: React.FC = () => {
                     </div>
                   )}
                   
-                  {/* Conditional Variant Manager */}
-                  {newProduct.isCustomizable ? (
-                    <CustomProductManager
-                      variant={newProduct.customVariant}
-                      onVariantChange={(variant) => setNewProduct({ ...newProduct, customVariant: variant })}
-                    />
-                  ) : (
-                    <ColorSizeManager
-                      variants={newProduct.variants}
-                      onVariantsChange={(variants) => setNewProduct({ ...newProduct, variants })}
-                    />
-                  )}
+                  {/* Color & Size Manager */}
+                  <ColorSizeManager
+                    variants={newProduct.variants}
+                    onVariantsChange={(variants) => setNewProduct({ ...newProduct, variants })}
+                  />
                   
                   {/* Image Upload */}
                   <div className="space-y-2">
@@ -856,6 +817,43 @@ const Products: React.FC = () => {
                             </div>
                           ))}
                         </div>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Size Reference Image */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">Size Reference Image</label>
+                    <p className="text-xs text-gray-500">Upload a size chart/reference image (no cropping, original size)</p>
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-purple-500 transition">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => setNewProduct({ ...newProduct, sizeReferenceImage: e.target.files?.[0] || null })}
+                        className="hidden"
+                        id="size-reference-image"
+                      />
+                      <label htmlFor="size-reference-image" className="cursor-pointer">
+                        <Upload className="mx-auto mb-2 text-gray-400" size={24} />
+                        <p className="text-sm text-gray-600">Click to upload size reference</p>
+                        <p className="text-xs text-gray-500">PNG, JPG up to 10MB</p>
+                      </label>
+                    </div>
+                    {newProduct.sizeReferenceImage && (
+                      <div className="space-y-2">
+                        <p className="text-sm font-medium text-gray-700">Selected: {newProduct.sizeReferenceImage.name}</p>
+                        <img 
+                          src={URL.createObjectURL(newProduct.sizeReferenceImage)}
+                          alt="Size Reference Preview"
+                          className="w-full max-h-48 object-contain rounded border border-gray-200"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setNewProduct({ ...newProduct, sizeReferenceImage: null })}
+                          className="text-red-600 hover:text-red-700 text-sm"
+                        >
+                          Remove
+                        </button>
                       </div>
                     )}
                   </div>
@@ -1121,7 +1119,7 @@ Summer Dress,SD-001,49.99,45,Dresses
                               />
                               
                               {/* Stock Quantity - Only for products without variants */}
-                              {editProduct.category !== 'Custom Product' && editProduct.variants.length === 0 && (
+                              {editProduct.variants.length === 0 && (
                                 <Input
                                   placeholder="Stock Quantity"
                                   type="number"
@@ -1130,37 +1128,11 @@ Summer Dress,SD-001,49.99,45,Dresses
                                 />
                               )}
                               
-                              {/* Custom Product Toggle - Separate Section */}
-                              <div className="space-y-3 p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border-2 border-purple-200">
-                                <div className="flex items-center justify-between">
-                                  <div>
-                                    <h3 className="text-sm font-semibold text-gray-900">Custom Product</h3>
-                                    <p className="text-xs text-gray-600 mt-1">Single color with multiple sizes</p>
-                                  </div>
-                                  <label className="flex items-center cursor-pointer">
-                                    <input
-                                      type="checkbox"
-                                      checked={editProduct.isCustomizable}
-                                      onChange={(e) => {
-                                        setEditProduct({ 
-                                          ...editProduct, 
-                                          isCustomizable: e.target.checked,
-                                          category: e.target.checked ? 'Custom Product' : '',
-                                          customVariant: e.target.checked ? editProduct.customVariant : null,
-                                          variants: e.target.checked ? [] : editProduct.variants
-                                        });
-                                      }}
-                                      className="w-5 h-5 rounded border-gray-300 text-purple-600 focus:ring-purple-500 cursor-pointer"
-                                    />
-                                  </label>
-                                </div>
-                              </div>
-                              
-                              {/* Category Input - For all products */}
+                              {/* Category Input */}
                               <div className="space-y-2">
                                 <label className="block text-sm font-medium text-gray-700">Category</label>
                                 <Input
-                                  placeholder="e.g., Dresses, Tops, Bottoms, Accessories, Custom Product"
+                                  placeholder="e.g., Dresses, Tops, Bottoms, Accessories"
                                   value={editProduct.category}
                                   onChange={(e) => setEditProduct({ ...editProduct, category: e.target.value })}
                                   className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
@@ -1168,7 +1140,7 @@ Summer Dress,SD-001,49.99,45,Dresses
                               </div>
 
                               {/* Info Box */}
-                              {(editProduct.isCustomizable || editProduct.variants.length > 0) && (
+                              {editProduct.variants.length > 0 && (
                                 <div className="p-3 bg-blue-50 rounded border border-blue-200">
                                   <p className="text-xs text-blue-900">
                                     <strong>ℹ️ Stock Management:</strong> Stock is managed through the variant manager below. Overall stock is calculated as the sum of all variant sizes.
@@ -1176,18 +1148,11 @@ Summer Dress,SD-001,49.99,45,Dresses
                                 </div>
                               )}
 
-                              {/* Conditional Variant Manager */}
-                              {editProduct.isCustomizable ? (
-                                <CustomProductManager
-                                  variant={editProduct.customVariant}
-                                  onVariantChange={(variant) => setEditProduct({ ...editProduct, customVariant: variant })}
-                                />
-                              ) : (
-                                <ColorSizeManager
-                                  variants={editProduct.variants}
-                                  onVariantsChange={(variants) => setEditProduct({ ...editProduct, variants })}
-                                />
-                              )}
+                              {/* Color & Size Manager */}
+                              <ColorSizeManager
+                                variants={editProduct.variants}
+                                onVariantsChange={(variants) => setEditProduct({ ...editProduct, variants })}
+                              />
 
                               {/* Image Upload Section */}
                               <div className="space-y-2 border-t pt-4">
@@ -1330,6 +1295,68 @@ Summer Dress,SD-001,49.99,45,Dresses
                                   </div>
                                 )}
                                 <p className="text-xs text-amber-600">⚠️ Uploading new images will replace all existing images</p>
+                              </div>
+
+                              {/* Size Reference Image */}
+                              <div className="space-y-2 border-t pt-4">
+                                <label className="block text-sm font-medium text-gray-700">Size Reference Image</label>
+                                <p className="text-xs text-gray-500">Upload a size chart/reference image (no cropping, original size)</p>
+                                
+                                {/* Current Size Reference */}
+                                {editProduct.sizeReferenceImage && (
+                                  <div className="mb-4">
+                                    <p className="text-xs text-gray-600 mb-2">Current Size Reference</p>
+                                    <img 
+                                      src={editProduct.sizeReferenceImage}
+                                      alt="Current Size Reference"
+                                      className="w-full max-h-48 object-contain rounded border border-gray-200"
+                                      onError={(e) => {
+                                        console.error('Failed to load size reference image');
+                                        e.currentTarget.src = 'https://via.placeholder.com/200?text=Image+Error';
+                                      }}
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() => setEditProduct({ ...editProduct, sizeReferenceImage: null })}
+                                      className="text-red-600 hover:text-red-700 text-sm mt-2"
+                                    >
+                                      Remove Current
+                                    </button>
+                                  </div>
+                                )}
+                                
+                                {/* Upload New Size Reference */}
+                                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-purple-500 transition">
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={(e) => setEditProduct({ ...editProduct, editSizeReferenceImage: e.target.files?.[0] || null })}
+                                    className="hidden"
+                                    id="edit-size-reference-image"
+                                  />
+                                  <label htmlFor="edit-size-reference-image" className="cursor-pointer">
+                                    <Upload className="mx-auto mb-2 text-gray-400" size={24} />
+                                    <p className="text-sm text-gray-600">Click to upload new size reference</p>
+                                    <p className="text-xs text-gray-500">PNG, JPG up to 10MB</p>
+                                  </label>
+                                </div>
+                                {editProduct.editSizeReferenceImage && (
+                                  <div className="space-y-2">
+                                    <p className="text-sm font-medium text-green-700">New: {editProduct.editSizeReferenceImage.name}</p>
+                                    <img 
+                                      src={URL.createObjectURL(editProduct.editSizeReferenceImage)}
+                                      alt="New Size Reference Preview"
+                                      className="w-full max-h-48 object-contain rounded border border-green-200"
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() => setEditProduct({ ...editProduct, editSizeReferenceImage: null })}
+                                      className="text-red-600 hover:text-red-700 text-sm"
+                                    >
+                                      Remove New
+                                    </button>
+                                  </div>
+                                )}
                               </div>
 
                               <Button 

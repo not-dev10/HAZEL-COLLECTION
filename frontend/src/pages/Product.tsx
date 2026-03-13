@@ -7,7 +7,6 @@ import ScrollToTop from '@/components/common/ScrollToTop';
 import { AddToWishlistButton } from '@/components/ui/add-to-wishlist-button';
 import Reviews from '@/components/catalog/ProductReviews';
 import ProductVariants from '@/components/catalog/ProductVariants';
-import CustomProductSelector from '@/components/catalog/CustomProductSelector';
 import { useCart } from '@/context/CartContext';
 import { Share2 } from 'lucide-react';
 import { API_BASE_URL } from '@/lib/api';
@@ -95,35 +94,22 @@ const Product = () => {
       return;
     }
 
-    // Check if it's a custom product (single variant)
-    const isCustomProduct = product.category === 'Custom Product' && product.variants && product.variants.length === 1;
-
     // Check if variants exist and require selection
     if (product.variants && product.variants.length > 0) {
-      if (isCustomProduct) {
-        // For custom products, only size selection is required
-        if (!selectedSize) {
-          setCartMessage({ type: 'error', text: 'Please select a size' });
-          return;
-        }
-      } else {
-        // For regular products, both color and size are required
-        if (!selectedColor) {
-          setCartMessage({ type: 'error', text: 'Please select a color' });
-          return;
-        }
-        if (!selectedSize) {
-          setCartMessage({ type: 'error', text: 'Please select a size' });
-          return;
-        }
+      // For all products with variants, both color and size are required
+      if (!selectedColor) {
+        setCartMessage({ type: 'error', text: 'Please select a color' });
+        return;
+      }
+      if (!selectedSize) {
+        setCartMessage({ type: 'error', text: 'Please select a size' });
+        return;
       }
     }
     
     try {
       // Find the selected variant to get its ID
-      const selectedVariant = isCustomProduct 
-        ? product.variants?.[0]
-        : product.variants?.find(v => v.color === selectedColor);
+      const selectedVariant = product.variants?.find(v => v.color === selectedColor);
       
       const cartItem = {
         id: product.id.toString(),
@@ -270,18 +256,11 @@ const Product = () => {
 
               {/* Color & Size Variants */}
               {product.variants && product.variants.length > 0 && (
-                product.category === 'Custom Product' ? (
-                  <CustomProductSelector
-                    variant={product.variants[0]}
-                    onSizeSelect={(size) => setSelectedSize(size)}
-                  />
-                ) : (
-                  <ProductVariants 
-                    variants={product.variants}
-                    onColorSelect={setSelectedColor}
-                    onSizeSelect={setSelectedSize}
-                  />
-                )
+                <ProductVariants 
+                  variants={product.variants}
+                  onColorSelect={setSelectedColor}
+                  onSizeSelect={setSelectedSize}
+                />
               )}
 
               {/* Details */}
