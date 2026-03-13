@@ -1,26 +1,64 @@
 import { useWishlist } from '@/context/WishlistContext';
 import { useCart } from '@/context/CartContext';
+import { VariantSelectionModal } from '@/components/catalog/VariantSelectionModal';
 import AnnouncementBar from '@/components/common/AnnouncementBar';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import ScrollToTop from '@/components/common/ScrollToTop';
 import { AddToWishlistButton } from '@/components/ui/add-to-wishlist-button';
-import { AddToCartButton } from '@/components/ui/add-to-cart-button';
 import { Trash2, ShoppingBag, Heart } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useState } from 'react';
 
 const Wishlist = () => {
   const { items, removeFromWishlist, clearWishlist } = useWishlist();
   const { addToCart } = useCart();
+  const [showVariantModal, setShowVariantModal] = useState(false);
+  const [selectedWishlistItem, setSelectedWishlistItem] = useState<any | null>(null);
+  const [selectedColor, setSelectedColor] = useState<string | null>(null);
+  const [selectedSize, setSelectedSize] = useState<string | null>(null);
+  const [selectedVariant, setSelectedVariant] = useState<any | null>(null);
 
   const handleAddToCart = (item: any) => {
+    // If item has variants, show modal
+    if (item.variants && item.variants.length > 0) {
+      setSelectedWishlistItem(item);
+      setShowVariantModal(true);
+    } else {
+      // No variants, add directly
+      addToCart({
+        id: item.id,
+        name: item.name,
+        price: item.price,
+        quantity: 1,
+        image: item.image,
+      });
+    }
+  };
+
+  const handleConfirmVariant = () => {
+    if (!selectedColor || !selectedSize || !selectedVariant) {
+      alert('Please select both color and size');
+      return;
+    }
+
     addToCart({
-      id: item.id,
-      name: item.name,
-      price: item.price,
+      id: selectedWishlistItem.id,
+      productId: selectedWishlistItem.id,
+      name: selectedWishlistItem.name,
+      price: selectedWishlistItem.price,
       quantity: 1,
-      image: item.image,
+      image: selectedWishlistItem.image,
+      color: selectedColor,
+      size: selectedSize,
+      variantId: selectedVariant.id,
     });
+
+    setShowVariantModal(false);
+    setSelectedWishlistItem(null);
+    setSelectedColor(null);
+    setSelectedSize(null);
+    setSelectedVariant(null);
   };
 
   return (
@@ -135,6 +173,23 @@ const Wishlist = () => {
       </main>
       <Footer />
       <ScrollToTop />
+
+      {/* Variant Selection Modal */}
+      {showVariantModal && selectedWishlistItem && selectedWishlistItem.variants && selectedWishlistItem.variants.length > 0 && (
+        <VariantSelectionModal
+          variants={selectedWishlistItem.variants}
+          selectedColor={selectedColor}
+          selectedSize={selectedSize}
+          onColorSelect={(color, variant) => {
+            setSelectedColor(color);
+            setSelectedVariant(variant);
+            setSelectedSize(null);
+          }}
+          onSizeSelect={setSelectedSize}
+          onConfirm={handleConfirmVariant}
+          onCancel={() => setShowVariantModal(false)}
+        />
+      )}
     </div>
   );
 };

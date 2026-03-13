@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { AddToCartButton } from '@/components/ui/add-to-cart-button';
 import { AddToWishlistButton } from '@/components/ui/add-to-wishlist-button';
+import { VariantSelectionModal } from '@/components/catalog/VariantSelectionModal';
 import { CartItem } from '@/context/CartContext';
+import { useCart } from '@/context/CartContext';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
@@ -15,6 +17,12 @@ interface ProductCardProps {
   isSale?: boolean;
   originalPrice?: number;
   category?: string;
+  variants?: Array<{
+    id: string;
+    color: string;
+    colorCode: string;
+    sizes: Array<{ size: string; stock: number }>;
+  }>;
 }
 
 const ProductCard = ({
@@ -27,22 +35,19 @@ const ProductCard = ({
   isSale,
   originalPrice,
   category,
+  variants,
 }: ProductCardProps) => {
   const navigate = useNavigate();
+  const { addToCart } = useCart();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [showVariantModal, setShowVariantModal] = useState(false);
+  const [selectedColor, setSelectedColor] = useState<string | null>(null);
+  const [selectedSize, setSelectedSize] = useState<string | null>(null);
+  const [selectedVariant, setSelectedVariant] = useState<any | null>(null);
+  
   const allImages = images && images.length > 0 ? images : [image];
   const displayImage = allImages[currentImageIndex] || image;
 
-  const cartItem: CartItem = {
-    id: id.toString(),
-    name,
-    price,
-    quantity: 1,
-    image,
-  };
-
-  // Use product ID as the routing param instead of name-based slug
-  // This ensures we can always find the product reliably
   const handleCardClick = (e: React.MouseEvent) => {
     if ((e.target as HTMLElement).closest('button')) {
       return;
@@ -53,6 +58,63 @@ const ProductCard = ({
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
     console.error(`Image failed to load for product: ${name}`, image);
     e.currentTarget.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="300" height="400"%3E%3Crect fill="%23f0f0f0" width="300" height="400"/%3E%3Ctext x="50%25" y="50%25" font-size="14" fill="%23999" text-anchor="middle" dy=".3em"%3EImage not available%3C/text%3E%3C/svg%3E';
+  };
+
+  const handleAddToCartClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // If product has variants, show modal
+    if (variants && variants.length > 0) {
+      setShowVariantModal(true);
+    } else {
+      // No variants, add directly
+      handleAddDirectly();
+    }
+  };
+
+  const handleAddDirectly = () => {
+    const cartItem: CartItem = {
+      id: id.toString(),
+      name,
+      price,
+      quantity: 1,
+      image,
+    };
+    addToCart(cartItem);
+  };
+
+  const handleConfirmVariant = () => {
+    if (!selectedColor || !selectedSize || !selectedVariant) {
+      alert('Please select both color and size');
+      return;
+    }
+
+    const cartItem: CartItem = {
+      id: id.toString(),
+      productId: id.toString(),
+      name,
+      price,
+      quantity: 1,
+      image,
+      color: selectedColor,
+      size: selectedSize,
+      variantId: selectedVariant.id,
+    };
+    
+    addToCart(cartItem);
+    setShowVariantModal(false);
+    setSelectedColor(null);
+    setSelectedSize(null);
+    setSelectedVariant(null);
+  };
+
+  const cartItem: CartItem = {
+    id: id.toString(),
+    name,
+    price,
+    quantity: 1,
+    image,
   };
 
   return (
@@ -108,12 +170,12 @@ const ProductCard = ({
         )}
         {/* Action Buttons - Desktop Overlay */}
         <div className="hidden md:absolute md:inset-0 md:bg-black/40 md:opacity-0 md:group-hover:opacity-100 md:transition-opacity md:duration-300 md:flex md:items-center md:justify-center md:gap-3">
-          <AddToCartButton
-            item={cartItem}
-            variant="default"
-            size="md"
-            showIcon={true}
-          />
+          <button
+            onClick={handleAddToCartClick}
+            className="px-6 py-2.5 bg-foreground text-background hover:bg-foreground/90 transition-colors duration-300 rounded-full flex items-center gap-2 text-sm font-medium uppercase tracking-wider"
+          >
+            Add to Cart
+          </button>
           <AddToWishlistButton
             itemId={id.toString()}
             itemName={name}
@@ -148,13 +210,12 @@ const ProductCard = ({
         {/* Action Buttons - Mobile */}
         <div className="md:hidden flex items-center justify-center gap-2 pt-2">
           <div className="flex-1">
-            <AddToCartButton
-              item={cartItem}
-              variant="default"
-              size="sm"
-              showIcon={true}
-              className="w-full text-xs py-2"
-            />
+            <button
+              onClick={handleAddToCartClick}
+              className="w-full px-3 py-2 bg-foreground text-background hover:bg-foreground/90 transition-colors duration-300 rounded text-xs font-medium uppercase tracking-wider"
+            >
+              Add to Cart
+            </button>
           </div>
           <div>
             <AddToWishlistButton
@@ -168,6 +229,23 @@ const ProductCard = ({
           </div>
         </div>
       </div>
+
+      {/* Variant Selection Modal */}
+      {showVariantModal && variants && variants.length > 0 && (
+        <VariantSelectionModal
+          variants={variants}
+          selectedColor={selectedColor}
+          selectedSize={selectedSize}
+          onColorSelect={(color, variant) => {
+            setSelectedColor(color);
+            setSelectedVariant(variant);
+            setSelectedSize(null);
+          }}
+          onSizeSelect={setSelectedSize}
+          onConfirm={handleConfirmVariant}
+          onCancel={() => setShowVariantModal(false)}
+        />
+      )}
     </article>
   );
 };

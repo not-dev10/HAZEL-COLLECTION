@@ -16,6 +16,12 @@ interface Product {
   image: string;
   images?: string[];
   category: string;
+  variants?: Array<{
+    id: string;
+    color: string;
+    colorCode: string;
+    sizes: Array<{ size: string; stock: number }>;
+  }>;
 }
 
 const Collection = () => {
@@ -81,6 +87,7 @@ const Collection = () => {
             image: product.image || product.imageUrl,
             images: product.images || product.imageUrls || [product.image || product.imageUrl],
             category: product.category,
+            variants: product.variants || [],
           }));
           setProducts(normalizedProducts);
           
@@ -174,6 +181,7 @@ const Collection = () => {
                   images={product.images}
                   originalPrice={product.originalPrice}
                   category={product.category}
+                  variants={product.variants}
                 />
               ))}
             </div>
