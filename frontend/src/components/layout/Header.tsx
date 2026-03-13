@@ -333,6 +333,7 @@ const Header = () => {
                     {suggestions.map((product) => (
                       <button
                         key={product.id || product._id}
+                        type="button"
                         onClick={() => handleSuggestionClick(product)}
                         className="w-full flex items-center gap-3 p-2 hover:bg-muted rounded transition-colors text-left"
                       >
