@@ -192,6 +192,41 @@ const Products: React.FC = () => {
         }
       }
 
+      // Upload size reference image if provided
+      if (newProduct.sizeReferenceImage) {
+        try {
+          console.log('📤 Uploading size reference image...');
+          const reader = new FileReader();
+          reader.onload = async () => {
+            try {
+              const sizeRefResponse = await fetch(`${API_BASE_URL}/api/upload/size-reference-image/${productId}`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                  image: reader.result as string
+                }),
+              });
+
+              if (!sizeRefResponse.ok) {
+                const errorData = await sizeRefResponse.json().catch(() => ({}));
+                console.warn('⚠️ Size reference image upload failed:', errorData);
+              } else {
+                const sizeRefData = await sizeRefResponse.json();
+                console.log('✅ Size reference image uploaded successfully:', sizeRefData);
+              }
+            } catch (error) {
+              console.error('Size reference upload error:', error);
+            }
+          };
+          reader.readAsDataURL(newProduct.sizeReferenceImage);
+        } catch (error) {
+          console.error('Error preparing size reference image:', error);
+        }
+      }
+
       const newProd = {
         id: data.product._id || data.product.id,
         _id: data.product._id,
@@ -440,6 +475,41 @@ const Products: React.FC = () => {
           }
         } catch (error) {
           console.error('Reorder request failed:', error);
+        }
+      }
+
+      // Upload size reference image if a new one was selected
+      if (editProduct.editSizeReferenceImage) {
+        try {
+          console.log('📤 Uploading size reference image...');
+          const reader = new FileReader();
+          reader.onload = async () => {
+            try {
+              const sizeRefResponse = await fetch(`${API_BASE_URL}/api/upload/size-reference-image/${editingId}`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                  image: reader.result as string
+                }),
+              });
+
+              if (!sizeRefResponse.ok) {
+                const errorData = await sizeRefResponse.json().catch(() => ({}));
+                console.warn('⚠️ Size reference image upload failed:', errorData);
+              } else {
+                const sizeRefData = await sizeRefResponse.json();
+                console.log('✅ Size reference image uploaded successfully:', sizeRefData);
+              }
+            } catch (error) {
+              console.error('Size reference upload error:', error);
+            }
+          };
+          reader.readAsDataURL(editProduct.editSizeReferenceImage);
+        } catch (error) {
+          console.error('Error preparing size reference image:', error);
         }
       }
 

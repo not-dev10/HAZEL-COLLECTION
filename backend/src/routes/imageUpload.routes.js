@@ -5,6 +5,7 @@ import {
   getCloudinarySignature,
   deleteProductImage,
   reorderProductImages,
+  uploadSizeReferenceImage,
   uploadHomePageImage
 } from '../controllers/imageUpload.controller.js';
 
@@ -12,6 +13,9 @@ const router = express.Router();
 
 // Upload product images to Cloudinary
 router.post('/product-images', requireAuth, requireAdmin, uploadProductImages);
+
+// Upload size reference image to Cloudinary
+router.post('/size-reference-image/:productId', requireAuth, requireAdmin, uploadSizeReferenceImage);
 
 // Upload home page images (carousel, bridal, collections)
 router.post('/', requireAuth, requireAdmin, uploadHomePageImage);

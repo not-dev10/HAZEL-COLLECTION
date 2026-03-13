@@ -391,6 +391,82 @@ export const reorderProductImages = async (req, res) => {
   }
 };
 /**
+ * POST /api/upload/size-reference-image/:productId
+ * Upload size reference image to Cloudinary
+ */
+export const uploadSizeReferenceImage = async (req, res) => {
+  try {
+    const { productId } = req.params;
+    const { image } = req.body;
+
+    if (!productId || !image) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing required fields: productId and image"
+      });
+    }
+
+    // Verify product exists
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found"
+      });
+    }
+
+    try {
+      console.log(`⏳ Uploading size reference image to Cloudinary`);
+      const result = await cloudinary.uploader.upload(image, {
+        folder: `didi-fashion/products/${productId}`,
+        public_id: `size-reference`,
+        resource_type: 'auto',
+        quality: 95,
+        fetch_format: 'auto',
+        overwrite: true,
+        tags: ['product', productId, 'didi-fashion', 'size-reference'],
+        dpr: 'auto',
+        flags: ['progressive']
+      });
+
+      console.log(`✅ Size reference image uploaded successfully:`, result.secure_url);
+
+      // Update product with size reference image URL
+      const updateData = {
+        sizeReferenceImage: result.secure_url,
+        updatedAt: new Date()
+      };
+
+      const updatedProduct = await Product.update(productId, updateData);
+
+      return res.status(200).json({
+        success: true,
+        message: "Size reference image uploaded successfully",
+        data: {
+          productId,
+          sizeReferenceImage: result.secure_url,
+          product: updatedProduct
+        }
+      });
+    } catch (cloudinaryError) {
+      console.error(`❌ Cloudinary upload failed:`, {
+        error: cloudinaryError.message,
+        status: cloudinaryError.status,
+        http_code: cloudinaryError.http_code
+      });
+      throw cloudinaryError;
+    }
+  } catch (error) {
+    console.error('Size reference image upload error:', error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to upload size reference image",
+      error: error.message
+    });
+  }
+};
+
+/**
  * POST /api/upload
  * Upload home page images (carousel, bridal, collections) to Cloudinary
  */
