@@ -48,7 +48,10 @@ export const getCategories = async (req, res) => {
     const categoriesSet = new Set();
     products.forEach(product => {
       if (product.category) {
-        categoriesSet.add(product.category);
+        const trimmedCategory = product.category.trim();
+        if (trimmedCategory) {
+          categoriesSet.add(trimmedCategory);
+        }
       }
     });
     
@@ -130,7 +133,7 @@ export const createProduct = async (req, res) => {
       description,
       price,
       originalPrice,
-      category,
+      category: category ? category.trim() : category,
       image,
       images: Array.isArray(images) ? images : (image ? [image] : []),
       stock: stock || 0,
@@ -177,6 +180,11 @@ export const updateProduct = async (req, res) => {
     // Remove fields that shouldn't be updated
     delete updateData.createdAt;
     delete updateData._id;
+
+    // Normalize category to prevent trailing spaces
+    if (updateData.category && typeof updateData.category === 'string') {
+      updateData.category = updateData.category.trim();
+    }
 
     // Use enhanced Cloudinary update
     const product = await updateProductWithCloudinary(id, updateData);

@@ -786,7 +786,7 @@ const Products: React.FC = () => {
                     <Input
                       placeholder="e.g., Dresses, Tops, Bottoms, Accessories"
                       value={newProduct.category}
-                      onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value })}
+                      onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value.trim() })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
                     />
                   </div>
@@ -1204,7 +1204,7 @@ Summer Dress,SD-001,49.99,45,Dresses
                                 <Input
                                   placeholder="e.g., Dresses, Tops, Bottoms, Accessories"
                                   value={editProduct.category}
-                                  onChange={(e) => setEditProduct({ ...editProduct, category: e.target.value })}
+                                  onChange={(e) => setEditProduct({ ...editProduct, category: e.target.value.trim() })}
                                   className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
                                 />
                               </div>
