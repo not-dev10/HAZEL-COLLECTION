@@ -19,10 +19,12 @@
  * - Last image in array is the size reference chart
  */
 
-import { getDB } from '../src/config/mongodb.js';
+import { getDB, connectDB } from '../src/config/mongodb.js';
 
 async function migrateProductImages() {
   try {
+    // Connect to database first
+    await connectDB();
     const db = getDB();
     const products = db.collection('products');
 
