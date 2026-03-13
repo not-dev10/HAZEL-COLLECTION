@@ -24,6 +24,7 @@ export class Product {
       // Images - Multiple images support
       image,  // Legacy image field for compatibility
       images: Array.isArray(images) ? images : (image ? [image] : []),  // Array of image URLs
+      sizeReferenceImage: null,  // Size chart/reference image (no cropping, original size)
       cloudinaryPublicId: cloudinaryPublicId || null,
       cloudinary: {
         folder: `didi-fashion/products/${productId}`,
