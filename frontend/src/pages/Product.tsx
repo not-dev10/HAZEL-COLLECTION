@@ -20,6 +20,7 @@ interface ProductDetail {
   details: string[];
   image: string;
   images?: string[];
+  sizeReferenceImage?: string;
   category: string;
   inStock: boolean;
   stock: number;
@@ -69,6 +70,7 @@ const Product = () => {
             details: foundProduct.details || [],
             image: foundProduct.image,
             images: foundProduct.images || [foundProduct.image],
+            sizeReferenceImage: foundProduct.sizeReferenceImage,
             category: foundProduct.category,
             inStock: foundProduct.inStock !== false && foundProduct.stock > 0,
             stock: foundProduct.stock || 0,
@@ -331,6 +333,24 @@ const Product = () => {
               </div>
             </div>
           </div>
+
+          {/* Size Reference Image */}
+          {product.sizeReferenceImage && (
+            <div className="mt-16 border-t border-border pt-12">
+              <h2 className="text-2xl font-serif mb-6">Size Reference</h2>
+              <div className="flex justify-center">
+                <img 
+                  src={product.sizeReferenceImage}
+                  alt="Size Reference Chart"
+                  className="w-full max-w-2xl rounded border border-border"
+                  onError={(e) => {
+                    console.error('Failed to load size reference image');
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+              </div>
+            </div>
+          )}
 
           {/* Reviews Section */}
           <div className="mt-16 border-t border-border pt-12">
