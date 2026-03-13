@@ -10,6 +10,7 @@ import { Plus, Edit2, Trash2, Upload, Search, Download, Filter, X, Check, AlertC
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import TokenManager from '@/utils/tokenManager';
 import { ColorSizeManager } from '../components/ColorSizeManager';
+import { CustomProductManager } from '../components/CustomProductManager';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
@@ -99,8 +100,8 @@ const Products: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [newProduct, setNewProduct] = useState({ name: '', price: '', stock: '', category: '', description: '', images: [] as File[], variants: [] as any[] });
-  const [editProduct, setEditProduct] = useState({ name: '', price: '', stock: '', category: '', description: '', editImages: [] as File[], currentImages: [] as string[], originalImageOrder: [] as string[], variants: [] as any[] });
+  const [newProduct, setNewProduct] = useState({ name: '', price: '', stock: '', category: '', description: '', images: [] as File[], variants: [] as any[], isCustomizable: false, customVariant: null as any });
+  const [editProduct, setEditProduct] = useState({ name: '', price: '', stock: '', category: '', description: '', editImages: [] as File[], currentImages: [] as string[], originalImageOrder: [] as string[], variants: [] as any[], isCustomizable: false, customVariant: null as any });
   const [showSuccessMsg, setShowSuccessMsg] = useState(false);
   const [savingProductId, setSavingProductId] = useState<string | null>(null);
   const [uploadingImages, setUploadingImages] = useState(false);
@@ -138,7 +139,8 @@ const Products: React.FC = () => {
           price: parseFloat(newProduct.price),
           stock: parseInt(newProduct.stock),
           category: newProduct.category,
-          variants: newProduct.variants,
+          variants: newProduct.isCustomizable && newProduct.customVariant ? [newProduct.customVariant] : newProduct.variants,
+          isCustomizable: newProduct.isCustomizable,
         }),
       });
 
@@ -205,7 +207,7 @@ const Products: React.FC = () => {
       };
 
       setProducts([...products, newProd]);
-      setNewProduct({ name: '', price: '', stock: '', category: '', description: '', images: [], variants: [] });
+      setNewProduct({ name: '', price: '', stock: '', category: '', description: '', images: [], variants: [], isCustomizable: false, customVariant: null });
       setShowSuccessMsg(true);
       setTimeout(() => setShowSuccessMsg(false), 3000);
     } catch (err) {
@@ -220,6 +222,7 @@ const Products: React.FC = () => {
     const product = products.find(p => p.id === id);
     if (product) {
       const currentImages = product.images || [];
+      const isCustomizable = product.variants && product.variants.length === 1;
       setEditProduct({
         name: product.name,
         price: product.price.toString(),
@@ -229,7 +232,9 @@ const Products: React.FC = () => {
         editImages: [],
         currentImages: currentImages,
         originalImageOrder: [...currentImages],
-        variants: product.variants || [],
+        variants: isCustomizable ? [] : (product.variants || []),
+        isCustomizable: isCustomizable,
+        customVariant: isCustomizable ? product.variants?.[0] : null,
       });
       setEditingId(id);
     }
@@ -262,7 +267,8 @@ const Products: React.FC = () => {
           price: parseFloat(editProduct.price),
           stock: parseInt(editProduct.stock),
           category: editProduct.category,
-          variants: editProduct.variants,
+          variants: editProduct.isCustomizable && editProduct.customVariant ? [editProduct.customVariant] : editProduct.variants,
+          isCustomizable: editProduct.isCustomizable,
         }),
       });
 
@@ -707,23 +713,55 @@ const Products: React.FC = () => {
                     value={newProduct.price}
                     onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
                   />
-                  <Input
-                    placeholder="Stock Quantity"
-                    type="number"
-                    value={newProduct.stock}
-                    onChange={(e) => setNewProduct({ ...newProduct, stock: e.target.value })}
-                  />
-                  <Input
-                    placeholder="Category"
-                    value={newProduct.category}
-                    onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value })}
-                  />
                   
-                  {/* Color & Size Manager */}
-                  <ColorSizeManager
-                    variants={newProduct.variants}
-                    onVariantsChange={(variants) => setNewProduct({ ...newProduct, variants })}
-                  />
+                  {/* Stock Quantity - Only for products without variants */}
+                  {newProduct.category !== 'Custom Product' && newProduct.variants.length === 0 && (
+                    <Input
+                      placeholder="Stock Quantity"
+                      type="number"
+                      value={newProduct.stock}
+                      onChange={(e) => setNewProduct({ ...newProduct, stock: e.target.value })}
+                    />
+                  )}
+                  
+                  {/* Category Selector */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">Category</label>
+                    <select
+                      value={newProduct.category}
+                      onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value, isCustomizable: e.target.value === 'Custom Product' })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    >
+                      <option value="">Select a category</option>
+                      <option value="Dresses">Dresses</option>
+                      <option value="Tops">Tops</option>
+                      <option value="Bottoms">Bottoms</option>
+                      <option value="Accessories">Accessories</option>
+                      <option value="Custom Product">Custom Product</option>
+                    </select>
+                  </div>
+                  
+                  {/* Info Box */}
+                  {(newProduct.category === 'Custom Product' || newProduct.variants.length > 0) && (
+                    <div className="p-3 bg-blue-50 rounded border border-blue-200">
+                      <p className="text-xs text-blue-900">
+                        <strong>ℹ️ Stock Management:</strong> Stock is managed through the variant manager below. Overall stock is calculated as the sum of all variant sizes.
+                      </p>
+                    </div>
+                  )}
+                  
+                  {/* Conditional Variant Manager */}
+                  {newProduct.isCustomizable ? (
+                    <CustomProductManager
+                      variant={newProduct.customVariant}
+                      onVariantChange={(variant) => setNewProduct({ ...newProduct, customVariant: variant })}
+                    />
+                  ) : (
+                    <ColorSizeManager
+                      variants={newProduct.variants}
+                      onVariantsChange={(variants) => setNewProduct({ ...newProduct, variants })}
+                    />
+                  )}}
                   
                   {/* Image Upload */}
                   <div className="space-y-2">
@@ -1061,23 +1099,55 @@ Summer Dress,SD-001,49.99,45,Dresses
                                 value={editProduct.price}
                                 onChange={(e) => setEditProduct({ ...editProduct, price: e.target.value })}
                               />
-                              <Input
-                                placeholder="Stock Quantity"
-                                type="number"
-                                value={editProduct.stock}
-                                onChange={(e) => setEditProduct({ ...editProduct, stock: e.target.value })}
-                              />
-                              <Input
-                                placeholder="Category"
-                                value={editProduct.category}
-                                onChange={(e) => setEditProduct({ ...editProduct, category: e.target.value })}
-                              />
+                              
+                              {/* Stock Quantity - Only for products without variants */}
+                              {editProduct.category !== 'Custom Product' && editProduct.variants.length === 0 && (
+                                <Input
+                                  placeholder="Stock Quantity"
+                                  type="number"
+                                  value={editProduct.stock}
+                                  onChange={(e) => setEditProduct({ ...editProduct, stock: e.target.value })}
+                                />
+                              )}
+                              
+                              {/* Category Selector */}
+                              <div className="space-y-2">
+                                <label className="block text-sm font-medium text-gray-700">Category</label>
+                                <select
+                                  value={editProduct.category}
+                                  onChange={(e) => setEditProduct({ ...editProduct, category: e.target.value, isCustomizable: e.target.value === 'Custom Product' })}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                >
+                                  <option value="">Select a category</option>
+                                  <option value="Dresses">Dresses</option>
+                                  <option value="Tops">Tops</option>
+                                  <option value="Bottoms">Bottoms</option>
+                                  <option value="Accessories">Accessories</option>
+                                  <option value="Custom Product">Custom Product</option>
+                                </select>
+                              </div>
 
-                              {/* Color & Size Manager */}
-                              <ColorSizeManager
-                                variants={editProduct.variants}
-                                onVariantsChange={(variants) => setEditProduct({ ...editProduct, variants })}
-                              />
+                              {/* Info Box */}
+                              {(editProduct.category === 'Custom Product' || editProduct.variants.length > 0) && (
+                                <div className="p-3 bg-blue-50 rounded border border-blue-200">
+                                  <p className="text-xs text-blue-900">
+                                    <strong>ℹ️ Stock Management:</strong> Stock is managed through the variant manager below. Overall stock is calculated as the sum of all variant sizes.
+                                  </p>
+                                </div>
+                              )}
+
+                              {/* Conditional Variant Manager */}
+                              {editProduct.isCustomizable ? (
+                                <CustomProductManager
+                                  variant={editProduct.customVariant}
+                                  onVariantChange={(variant) => setEditProduct({ ...editProduct, customVariant: variant })}
+                                />
+                              ) : (
+                                <ColorSizeManager
+                                  variants={editProduct.variants}
+                                  onVariantsChange={(variants) => setEditProduct({ ...editProduct, variants })}
+                                />
+                              )}
 
                               {/* Image Upload Section */}
                               <div className="space-y-2 border-t pt-4">
