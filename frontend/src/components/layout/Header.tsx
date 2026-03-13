@@ -334,7 +334,10 @@ const Header = () => {
                       <button
                         key={product.id || product._id}
                         type="button"
-                        onClick={() => handleSuggestionClick(product)}
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          handleSuggestionClick(product);
+                        }}
                         className="w-full flex items-center gap-3 p-2 hover:bg-muted rounded transition-colors text-left"
                       >
                         {(product.image || product.imageUrl || product.imageUrls?.[0]) && (
