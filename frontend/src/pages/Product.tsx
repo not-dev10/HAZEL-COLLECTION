@@ -121,6 +121,7 @@ const Product = () => {
         quantity,
         image: product.image,
         category: product.category,
+        color: selectedColor || undefined,
         size: selectedSize || undefined,
         variantId: selectedVariant?.id || undefined,
       };
