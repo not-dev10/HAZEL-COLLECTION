@@ -1,7 +1,7 @@
 /**
  * Migration Script: Extract last image as size reference image
  * 
- * Usage: node migrateProductImages.js
+ * Usage: node scripts/migrateProductImages.js
  * 
  * This script:
  * 1. Finds all products with images
@@ -12,12 +12,23 @@
  * Note: Size reference images are always last in the order
  */
 
-import { getDB } from '../src/config/mongodb.js';
-import { ObjectId } from 'mongodb';
+import { MongoClient, ObjectId } from 'mongodb';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/didi-fashion';
+const DB_NAME = 'didi-fashion';
 
 async function migrateProductImages() {
+  let client;
   try {
-    const db = getDB();
+    // Connect to MongoDB
+    client = new MongoClient(MONGODB_URI);
+    await client.connect();
+    console.log('✅ Connected to MongoDB\n');
+
+    const db = client.db(DB_NAME);
     const products = db.collection('products');
 
     console.log('🔍 Starting product image migration...\n');
@@ -120,6 +131,11 @@ async function migrateProductImages() {
   } catch (error) {
     console.error('❌ Migration failed:', error);
     process.exit(1);
+  } finally {
+    if (client) {
+      await client.close();
+      console.log('🔌 MongoDB connection closed');
+    }
   }
 }
 
