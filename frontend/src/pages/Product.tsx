@@ -6,6 +6,7 @@ import Footer from '@/components/layout/Footer';
 import ScrollToTop from '@/components/common/ScrollToTop';
 import { AddToWishlistButton } from '@/components/ui/add-to-wishlist-button';
 import Reviews from '@/components/catalog/ProductReviews';
+import ProductVariants from '@/components/catalog/ProductVariants';
 import { useCart } from '@/context/CartContext';
 import { Share2 } from 'lucide-react';
 import { API_BASE_URL } from '@/lib/api';
@@ -22,6 +23,12 @@ interface ProductDetail {
   category: string;
   inStock: boolean;
   stock: number;
+  variants?: Array<{
+    id: string;
+    color: string;
+    colorCode: string;
+    sizes: Array<{ size: string; stock: number }>;
+  }>;
 }
 
 const Product = () => {
@@ -33,6 +40,8 @@ const Product = () => {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [cartMessage, setCartMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [selectedColor, setSelectedColor] = useState<string | null>(null);
+  const [selectedSize, setSelectedSize] = useState<string | null>(null);
 
   // Fetch product by ID from API
   useEffect(() => {
@@ -63,6 +72,7 @@ const Product = () => {
             category: foundProduct.category,
             inStock: foundProduct.inStock !== false && foundProduct.stock > 0,
             stock: foundProduct.stock || 0,
+            variants: foundProduct.variants || [],
           });
         } else {
           setError('Product not found');
@@ -83,6 +93,18 @@ const Product = () => {
       setCartMessage({ type: 'error', text: 'Product not loaded' });
       return;
     }
+
+    // Check if variants exist and require selection
+    if (product.variants && product.variants.length > 0) {
+      if (!selectedColor) {
+        setCartMessage({ type: 'error', text: 'Please select a color' });
+        return;
+      }
+      if (!selectedSize) {
+        setCartMessage({ type: 'error', text: 'Please select a size' });
+        return;
+      }
+    }
     
     try {
       const cartItem = {
@@ -91,11 +113,18 @@ const Product = () => {
         price: product.price,
         quantity,
         image: product.image,
+        color: selectedColor || undefined,
+        size: selectedSize || undefined,
       };
       
       console.log('🛒 Adding to cart:', cartItem);
       await addToCart(cartItem);
       setCartMessage({ type: 'success', text: `Added ${quantity} item(s) to cart!` });
+      
+      // Reset selections
+      setSelectedColor(null);
+      setSelectedSize(null);
+      setQuantity(1);
       
       // Clear message after 3 seconds
       setTimeout(() => setCartMessage(null), 3000);
@@ -218,6 +247,15 @@ const Product = () => {
               </div>
 
               <p className="text-muted-foreground mb-6 leading-relaxed">{product.description}</p>
+
+              {/* Color & Size Variants */}
+              {product.variants && product.variants.length > 0 && (
+                <ProductVariants 
+                  variants={product.variants}
+                  onColorSelect={setSelectedColor}
+                  onSizeSelect={setSelectedSize}
+                />
+              )}
 
               {/* Details */}
               {product.details && product.details.length > 0 && (

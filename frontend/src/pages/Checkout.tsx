@@ -927,13 +927,25 @@ const Checkout = () => {
                       key={item.id}
                       className="flex justify-between text-sm mb-3 pb-3 border-b border-border last:border-b-0"
                     >
-                      <div>
+                      <div className="flex-1">
                         <p className="font-medium">{item.name}</p>
-                        <p className="text-muted-foreground">
+                        <div className="flex flex-wrap gap-2 mt-1">
+                          {item.color && (
+                            <span className="text-xs text-muted-foreground">
+                              Color: <span className="font-medium text-foreground">{item.color}</span>
+                            </span>
+                          )}
+                          {item.size && (
+                            <span className="text-xs text-muted-foreground">
+                              Size: <span className="font-medium text-foreground">{item.size}</span>
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
                           Qty: {item.quantity}
                         </p>
                       </div>
-                      <p className="font-semibold">
+                      <p className="font-semibold ml-2">
                         £{(item.price * item.quantity).toFixed(2)}
                       </p>
                     </div>

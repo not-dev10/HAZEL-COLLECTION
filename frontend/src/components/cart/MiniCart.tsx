@@ -73,12 +73,18 @@ export const MiniCart = () => {
                     )}
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-sm truncate">{item.name}</p>
-                      {item.size && (
-                        <p className="text-xs text-muted-foreground">Size: {item.size}</p>
-                      )}
-                      {item.color && (
-                        <p className="text-xs text-muted-foreground">Color: {item.color}</p>
-                      )}
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {item.color && (
+                          <span className="text-xs text-muted-foreground">
+                            Color: <span className="font-medium text-foreground">{item.color}</span>
+                          </span>
+                        )}
+                        {item.size && (
+                          <span className="text-xs text-muted-foreground">
+                            Size: <span className="font-medium text-foreground">{item.size}</span>
+                          </span>
+                        )}
+                      </div>
                       <p className="font-semibold text-sm mt-2">
                         £{(item.price * item.quantity).toFixed(2)}
                       </p>

@@ -98,16 +98,20 @@ const Cart = () => {
                         <h3 className="font-semibold text-foreground">
                           {item.name}
                         </h3>
-                        {item.size && (
-                          <p className="text-sm text-muted-foreground">
-                            Size: {item.size}
-                          </p>
-                        )}
-                        {item.color && (
-                          <p className="text-sm text-muted-foreground">
-                            Color: {item.color}
-                          </p>
-                        )}
+                        <div className="flex flex-wrap gap-3 mt-2">
+                          {item.color && (
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-muted-foreground">Color:</span>
+                              <span className="text-sm font-medium">{item.color}</span>
+                            </div>
+                          )}
+                          {item.size && (
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-muted-foreground">Size:</span>
+                              <span className="text-sm font-medium">{item.size}</span>
+                            </div>
+                          )}
+                        </div>
                         <p className="font-semibold text-sm mt-2 md:hidden">
                           £{item.price.toFixed(2)}
                         </p>

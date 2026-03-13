@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, Edit2, Trash2, Upload, Search, Download, Filter, X, Check, AlertCircle, Loader } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import TokenManager from '@/utils/tokenManager';
+import { ColorSizeManager } from '../components/ColorSizeManager';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
@@ -30,6 +31,12 @@ interface Product {
   lastUpdated?: string;
   image?: string;
   images?: string[];
+  variants?: Array<{
+    id: string;
+    color: string;
+    colorCode: string;
+    sizes: Array<{ size: string; stock: number }>;
+  }>;
 }
 
 const Products: React.FC = () => {
@@ -74,6 +81,7 @@ const Products: React.FC = () => {
           productId: p.productId,
           image: p.image,
           images: p.images || [],
+          variants: p.variants || [],
         }));
 
         setProducts(mappedProducts);
@@ -91,8 +99,8 @@ const Products: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [newProduct, setNewProduct] = useState({ name: '', price: '', stock: '', category: '', description: '', images: [] as File[] });
-  const [editProduct, setEditProduct] = useState({ name: '', price: '', stock: '', category: '', description: '', editImages: [] as File[], currentImages: [] as string[], originalImageOrder: [] as string[] });
+  const [newProduct, setNewProduct] = useState({ name: '', price: '', stock: '', category: '', description: '', images: [] as File[], variants: [] as any[] });
+  const [editProduct, setEditProduct] = useState({ name: '', price: '', stock: '', category: '', description: '', editImages: [] as File[], currentImages: [] as string[], originalImageOrder: [] as string[], variants: [] as any[] });
   const [showSuccessMsg, setShowSuccessMsg] = useState(false);
   const [savingProductId, setSavingProductId] = useState<string | null>(null);
   const [uploadingImages, setUploadingImages] = useState(false);
@@ -130,6 +138,7 @@ const Products: React.FC = () => {
           price: parseFloat(newProduct.price),
           stock: parseInt(newProduct.stock),
           category: newProduct.category,
+          variants: newProduct.variants,
         }),
       });
 
@@ -192,10 +201,11 @@ const Products: React.FC = () => {
         stock: data.product.stock,
         category: data.product.category,
         isActive: true,
+        variants: data.product.variants || [],
       };
 
       setProducts([...products, newProd]);
-      setNewProduct({ name: '', price: '', stock: '', category: '', description: '', images: [] });
+      setNewProduct({ name: '', price: '', stock: '', category: '', description: '', images: [], variants: [] });
       setShowSuccessMsg(true);
       setTimeout(() => setShowSuccessMsg(false), 3000);
     } catch (err) {
@@ -219,6 +229,7 @@ const Products: React.FC = () => {
         editImages: [],
         currentImages: currentImages,
         originalImageOrder: [...currentImages],
+        variants: product.variants || [],
       });
       setEditingId(id);
     }
@@ -251,6 +262,7 @@ const Products: React.FC = () => {
           price: parseFloat(editProduct.price),
           stock: parseInt(editProduct.stock),
           category: editProduct.category,
+          variants: editProduct.variants,
         }),
       });
 
@@ -438,6 +450,7 @@ const Products: React.FC = () => {
               price: data.product.price,
               stock: data.product.stock,
               category: data.product.category,
+              variants: data.product.variants || [],
             }
           : p
       ));
@@ -706,6 +719,12 @@ const Products: React.FC = () => {
                     onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value })}
                   />
                   
+                  {/* Color & Size Manager */}
+                  <ColorSizeManager
+                    variants={newProduct.variants}
+                    onVariantsChange={(variants) => setNewProduct({ ...newProduct, variants })}
+                  />
+                  
                   {/* Image Upload */}
                   <div className="space-y-2">
                     <label className="block text-sm font-medium text-gray-700">Upload Images</label>
@@ -924,6 +943,7 @@ Summer Dress,SD-001,49.99,45,Dresses
                     <TableHead>Product Name</TableHead>
                     <TableHead>Price</TableHead>
                     <TableHead>Stock</TableHead>
+                    <TableHead>Variants</TableHead>
                     <TableHead>Category</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Actions</TableHead>
@@ -970,6 +990,24 @@ Summer Dress,SD-001,49.99,45,Dresses
                       <span className={product.stock < 10 ? 'text-red-600 font-semibold' : ''}>
                         {product.stock}
                       </span>
+                    </TableCell>
+                    <TableCell>
+                      {product.variants && product.variants.length > 0 ? (
+                        <div className="flex flex-wrap gap-1">
+                          {product.variants.map((v, idx) => (
+                            <div key={idx} className="flex items-center gap-1">
+                              <div
+                                className="w-4 h-4 rounded border border-gray-300"
+                                style={{ backgroundColor: v.colorCode }}
+                                title={v.color}
+                              />
+                              <span className="text-xs text-gray-600">{v.color}</span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-xs text-gray-500">No variants</span>
+                      )}
                     </TableCell>
                     <TableCell>{product.category}</TableCell>
                     <TableCell>
@@ -1033,6 +1071,12 @@ Summer Dress,SD-001,49.99,45,Dresses
                                 placeholder="Category"
                                 value={editProduct.category}
                                 onChange={(e) => setEditProduct({ ...editProduct, category: e.target.value })}
+                              />
+
+                              {/* Color & Size Manager */}
+                              <ColorSizeManager
+                                variants={editProduct.variants}
+                                onVariantsChange={(variants) => setEditProduct({ ...editProduct, variants })}
                               />
 
                               {/* Image Upload Section */}

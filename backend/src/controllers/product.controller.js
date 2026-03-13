@@ -115,7 +115,7 @@ export const getProductById = async (req, res) => {
  */
 export const createProduct = async (req, res) => {
   try {
-    const { name, description, price, originalPrice, category, image, images, stock, color, size, isNew, isSale, details, inStock } = req.body;
+    const { name, description, price, originalPrice, category, image, images, stock, color, size, isNew, isSale, details, inStock, variants } = req.body;
 
     if (!name || !price || !category) {
       return res.status(400).json({
@@ -136,6 +136,7 @@ export const createProduct = async (req, res) => {
       stock: stock || 0,
       color,
       size,
+      variants: variants || [],
       isNew,
       isSale,
       details,

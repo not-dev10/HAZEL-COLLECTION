@@ -2,7 +2,7 @@ import { getDB } from "../config/mongodb.js";
 import { ObjectId } from "mongodb";
 
 export class Product {
-  static async create({ name, description, price, originalPrice, category, image, images, stock, color, size, isNew, isSale, details, inStock, cloudinaryPublicId, collection }) {
+  static async create({ name, description, price, originalPrice, category, image, images, stock, color, size, isNew, isSale, details, inStock, cloudinaryPublicId, collection, variants }) {
     const db = getDB();
     const products = db.collection("products");
 
@@ -44,6 +44,10 @@ export class Product {
       stock: Number(stock || 0),
       color: Array.isArray(color) ? color : (color ? [color] : []),
       size: Array.isArray(size) ? size : (size ? [size] : []),
+      
+      // Variants with color/size/stock tracking
+      variants: Array.isArray(variants) ? variants : [],
+      
       isNew: isNew || false,
       isSale: isSale || false,
       details: details || [],
@@ -72,6 +76,7 @@ export class Product {
       stock,
       color,
       size,
+      variants,
       isNew,
       isSale,
       details,
