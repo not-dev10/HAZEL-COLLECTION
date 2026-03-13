@@ -10,22 +10,76 @@
  * 4. Updates the product in the database
  * 
  * Note: Size reference images are always last in the order
- * 
- * Image Flow:
- * - Admin uploads images via drag-drop in Products.tsx
- * - Images sent to /api/upload/product-images endpoint
- * - Images uploaded to Cloudinary with folder: didi-fashion/products/{productId}
- * - URLs stored in product.images array in MongoDB
- * - Last image in array is the size reference chart
  */
 
-import { getDB, connectDB } from '../src/config/mongodb.js';
+import { MongoClient } from 'mongodb';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Get current directory
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Load .env file manually
+function loadEnv() {
+  const envPath = path.join(__dirname, '../.env');
+  if (!fs.existsSync(envPath)) {
+    console.error('❌ .env file not found at:', envPath);
+    process.exit(1);
+  }
+
+  const envContent = fs.readFileSync(envPath, 'utf-8');
+  const lines = envContent.split('\n');
+
+  for (const line of lines) {
+    if (line.trim() && !line.startsWith('#')) {
+      const [key, ...valueParts] = line.split('=');
+      const value = valueParts.join('=').trim();
+      if (key && value) {
+        process.env[key.trim()] = value;
+      }
+    }
+  }
+}
+
+// Load environment variables
+loadEnv();
+
+const MONGODB_URI = process.env.MONGODB_URI;
+
+if (!MONGODB_URI) {
+  console.error('❌ MONGODB_URI not found in .env file');
+  process.exit(1);
+}
+
+console.log('✅ Environment loaded');
+console.log('📍 MongoDB URI:', MONGODB_URI.substring(0, 50) + '...');
 
 async function migrateProductImages() {
+  let client;
   try {
-    // Connect to database first
-    await connectDB();
-    const db = getDB();
+    // Connect to MongoDB
+    client = new MongoClient(MONGODB_URI, {
+      serverApi: {
+        version: '1',
+        strict: false,
+        deprecationErrors: false,
+      },
+      tls: true,
+      tlsAllowInvalidCertificates: false,
+      tlsAllowInvalidHostnames: false,
+      maxPoolSize: 10,
+      minPoolSize: 2,
+      connectTimeoutMS: 10000,
+      socketTimeoutMS: 45000,
+    });
+
+    console.log('🔄 Connecting to MongoDB...');
+    await client.connect();
+    console.log('✅ Connected to MongoDB\n');
+
+    const db = client.db('didi_fashion');
     const products = db.collection('products');
 
     console.log('🔍 Starting product image migration...\n');
@@ -132,6 +186,11 @@ async function migrateProductImages() {
   } catch (error) {
     console.error('❌ Migration failed:', error);
     process.exit(1);
+  } finally {
+    if (client) {
+      await client.close();
+      console.log('🔌 MongoDB connection closed');
+    }
   }
 }
 
