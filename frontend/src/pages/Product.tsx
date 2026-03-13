@@ -110,10 +110,12 @@ const Product = () => {
     }
     
     try {
-      // Find the selected variant to get its ID
-      const selectedVariant = product.variants?.find(v => v.color === selectedColor);
+      // Find the selected variant to get its ID (only if variants exist)
+      const selectedVariant = product.variants && product.variants.length > 0 
+        ? product.variants.find(v => v.color === selectedColor)
+        : null;
       
-      const cartItem = {
+      const cartItem: CartItem = {
         id: product.id.toString(),
         productId: product.id.toString(),
         name: product.name,
@@ -121,10 +123,18 @@ const Product = () => {
         quantity,
         image: product.image,
         category: product.category,
-        color: selectedColor || undefined,
-        size: selectedSize || undefined,
-        variantId: selectedVariant?.id || undefined,
       };
+
+      // Only add variant info if product has variants
+      if (selectedColor) {
+        cartItem.color = selectedColor;
+      }
+      if (selectedSize) {
+        cartItem.size = selectedSize;
+      }
+      if (selectedVariant?.id) {
+        cartItem.variantId = selectedVariant.id;
+      }
       
       console.log('🛒 Adding to cart:', cartItem);
       await addToCart(cartItem);
