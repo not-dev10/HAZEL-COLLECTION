@@ -45,7 +45,7 @@ export class Product {
       color: Array.isArray(color) ? color : (color ? [color] : []),
       size: Array.isArray(size) ? size : (size ? [size] : []),
       
-      // Variants with color/size/stock tracking
+      // Variants with parameters/size/stock tracking
       variants: Array.isArray(variants) ? variants : [],
       
       isNew: isNew || false,

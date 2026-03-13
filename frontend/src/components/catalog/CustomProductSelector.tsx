@@ -3,8 +3,10 @@ import { Badge } from '@/components/ui/badge';
 
 interface CustomProductVariant {
   id: string;
-  color: string;
-  colorCode: string;
+  parameters: {
+    name: string;
+    value: string;
+  }[];
   sizes: {
     size: string;
     stock: number;
@@ -35,21 +37,20 @@ export const CustomProductSelector: React.FC<CustomProductSelectorProps> = ({
 
   return (
     <div className="space-y-6 mb-8">
-      {/* Color Display */}
-      <div>
-        <h3 className="text-sm font-semibold mb-3">Color</h3>
-        <div className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg bg-gray-50">
-          <div
-            className="w-8 h-8 rounded-full border-2 border-gray-300"
-            style={{ backgroundColor: variant.colorCode }}
-            title={variant.color}
-          />
-          <span className="text-sm font-medium">{variant.color}</span>
-          <Badge variant="secondary" className="text-xs ml-auto">
-            {getTotalStock()} in stock
-          </Badge>
+      {/* Parameters Display */}
+      {variant.parameters && variant.parameters.length > 0 && (
+        <div>
+          <h3 className="text-sm font-semibold mb-3">Product Details</h3>
+          <div className="space-y-2 p-4 border border-gray-200 rounded-lg bg-gray-50">
+            {variant.parameters.map((param, idx) => (
+              <div key={idx} className="flex justify-between">
+                <span className="text-sm text-gray-600">{param.name}:</span>
+                <span className="text-sm font-medium text-gray-900">{param.value}</span>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Size Selection */}
       <div>

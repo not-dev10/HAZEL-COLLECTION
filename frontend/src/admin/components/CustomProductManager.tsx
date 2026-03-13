@@ -6,8 +6,10 @@ import { Badge } from '@/components/ui/badge';
 
 interface CustomProductVariant {
   id: string;
-  color: string;
-  colorCode: string;
+  parameters: {
+    name: string;
+    value: string;
+  }[];
   sizes: {
     size: string;
     stock: number;
@@ -25,37 +27,55 @@ export const CustomProductManager: React.FC<CustomProductManagerProps> = ({
   variant, 
   onVariantChange 
 }) => {
-  const [showColorPicker, setShowColorPicker] = useState(false);
-  const [customColor, setCustomColor] = useState('');
-  const [customColorName, setCustomColorName] = useState('');
-  const [editingColor, setEditingColor] = useState('');
-  const [editingColorCode, setEditingColorCode] = useState('');
-  const [isEditing, setIsEditing] = useState(false);
+  const [showParameterForm, setShowParameterForm] = useState(false);
+  const [paramName, setParamName] = useState('');
+  const [paramValue, setParamValue] = useState('');
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [editingParamName, setEditingParamName] = useState('');
+  const [editingParamValue, setEditingParamValue] = useState('');
 
-  const PREDEFINED_COLORS = [
-    { name: 'Red', code: '#EF4444' },
-    { name: 'Blue', code: '#3B82F6' },
-    { name: 'Green', code: '#10B981' },
-    { name: 'Yellow', code: '#FBBF24' },
-    { name: 'Purple', code: '#A855F7' },
-    { name: 'Pink', code: '#EC4899' },
-    { name: 'Black', code: '#1F2937' },
-    { name: 'White', code: '#F3F4F6' },
-    { name: 'Gray', code: '#9CA3AF' },
-    { name: 'Brown', code: '#92400E' },
-  ];
-
-  const createVariant = (colorName: string, colorCode: string) => {
+  const createVariant = () => {
     const newVariant: CustomProductVariant = {
       id: `${Date.now()}-${Math.random()}`,
-      color: colorName,
-      colorCode,
+      parameters: [],
       sizes: PREDEFINED_SIZES.map(size => ({ size, stock: 0 }))
     };
     onVariantChange(newVariant);
-    setShowColorPicker(false);
-    setCustomColor('');
-    setCustomColorName('');
+  };
+
+  const addParameter = () => {
+    if (!variant || !paramName.trim() || !paramValue.trim()) return;
+    
+    onVariantChange({
+      ...variant,
+      parameters: [...variant.parameters, { name: paramName, value: paramValue }]
+    });
+    setParamName('');
+    setParamValue('');
+    setShowParameterForm(false);
+  };
+
+  const updateParameter = (index: number) => {
+    if (!variant || !editingParamName.trim() || !editingParamValue.trim()) return;
+    
+    const updatedParams = [...variant.parameters];
+    updatedParams[index] = { name: editingParamName, value: editingParamValue };
+    
+    onVariantChange({
+      ...variant,
+      parameters: updatedParams
+    });
+    setEditingIndex(null);
+    setEditingParamName('');
+    setEditingParamValue('');
+  };
+
+  const removeParameter = (index: number) => {
+    if (!variant) return;
+    onVariantChange({
+      ...variant,
+      parameters: variant.parameters.filter((_, i) => i !== index)
+    });
   };
 
   const updateStock = (size: string, stock: number) => {
@@ -66,29 +86,6 @@ export const CustomProductManager: React.FC<CustomProductManagerProps> = ({
         s.size === size ? { ...s, stock: Math.max(0, stock) } : s
       )
     });
-  };
-
-  const startEditColor = () => {
-    if (!variant) return;
-    setEditingColor(variant.color);
-    setEditingColorCode(variant.colorCode);
-    setIsEditing(true);
-  };
-
-  const saveEditColor = () => {
-    if (!variant) return;
-    onVariantChange({
-      ...variant,
-      color: editingColor,
-      colorCode: editingColorCode
-    });
-    setIsEditing(false);
-  };
-
-  const cancelEditColor = () => {
-    setIsEditing(false);
-    setEditingColor('');
-    setEditingColorCode('');
   };
 
   const getTotalStock = () => {
@@ -103,182 +100,189 @@ export const CustomProductManager: React.FC<CustomProductManagerProps> = ({
   return (
     <div className="space-y-4 border-t pt-4">
       <div>
-        <h3 className="text-sm font-semibold text-gray-900 mb-3">Default Variant (Custom Product)</h3>
-        <p className="text-xs text-gray-600 mb-4">Add a single color with multiple sizes and stock levels</p>
+        <h3 className="text-sm font-semibold text-gray-900 mb-3">Custom Product Variant</h3>
+        <p className="text-xs text-gray-600 mb-4">Add parameters and sizes with stock levels</p>
       </div>
 
-      {/* Color Picker */}
-      {!variant && !showColorPicker ? (
+      {/* Create Variant Button */}
+      {!variant ? (
         <Button
           type="button"
           variant="outline"
-          onClick={() => setShowColorPicker(true)}
+          onClick={createVariant}
           className="w-full"
         >
           <Plus size={16} className="mr-2" />
-          Add Default Color
+          Create Variant
         </Button>
-      ) : !variant && showColorPicker ? (
-        <div className="space-y-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
-          <p className="text-xs font-medium text-gray-700">Select a color or add custom</p>
-
-          {/* Predefined Colors */}
-          <div className="grid grid-cols-5 gap-2">
-            {PREDEFINED_COLORS.map(color => (
-              <button
-                key={color.code}
-                type="button"
-                onClick={() => createVariant(color.name, color.code)}
-                className="flex flex-col items-center gap-1 p-2 rounded hover:bg-white transition"
-                title={color.name}
-              >
-                <div
-                  className="w-8 h-8 rounded border-2 border-gray-300 hover:border-gray-400"
-                  style={{ backgroundColor: color.code }}
-                />
-                <span className="text-xs text-gray-600">{color.name}</span>
-              </button>
-            ))}
-          </div>
-
-          {/* Custom Color */}
-          <div className="space-y-2 pt-2 border-t">
-            <p className="text-xs font-medium text-gray-700">Custom Color</p>
-            <div className="flex gap-2">
-              <input
-                type="color"
-                value={customColor}
-                onChange={(e) => setCustomColor(e.target.value)}
-                className="w-12 h-10 rounded cursor-pointer"
-              />
-              <Input
-                placeholder="Color name (e.g., Navy Blue)"
-                value={customColorName}
-                onChange={(e) => setCustomColorName(e.target.value)}
-                className="flex-1 text-sm"
-              />
-              <Button
-                type="button"
-                size="sm"
-                onClick={() => {
-                  if (customColor && customColorName) {
-                    createVariant(customColorName, customColor);
-                  }
-                }}
-                disabled={!customColor || !customColorName}
-              >
-                Add
-              </Button>
-            </div>
-          </div>
-
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowColorPicker(false)}
-            className="w-full"
-          >
-            Cancel
-          </Button>
-        </div>
       ) : null}
 
       {/* Variant Display */}
       {variant && (
-        <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-          {/* Color Header - Edit Mode */}
-          {isEditing ? (
-            <div className="space-y-3 mb-3">
-              <div className="flex items-center gap-2">
-                <input
-                  type="color"
-                  value={editingColorCode}
-                  onChange={(e) => setEditingColorCode(e.target.value)}
-                  className="w-12 h-10 rounded cursor-pointer"
-                />
-                <Input
-                  placeholder="Color name"
-                  value={editingColor}
-                  onChange={(e) => setEditingColor(e.target.value)}
-                  className="flex-1 text-sm"
-                />
-                <Button
-                  type="button"
-                  size="sm"
-                  onClick={saveEditColor}
-                  className="bg-green-600 hover:bg-green-700"
-                >
-                  <Save size={14} className="mr-1" />
-                  Save
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={cancelEditColor}
-                >
-                  Cancel
-                </Button>
-              </div>
-            </div>
-          ) : (
-            /* Color Header - View Mode */
+        <div className="p-3 bg-gray-50 rounded-lg border border-gray-200 space-y-4">
+          {/* Parameters Section */}
+          <div>
             <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <div
-                  className="w-6 h-6 rounded border border-gray-300"
-                  style={{ backgroundColor: variant.colorCode }}
-                />
-                <span className="font-medium text-sm text-gray-900">{variant.color}</span>
-                <Badge variant="secondary" className="text-xs">
-                  Total Stock: {getTotalStock()}
-                </Badge>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={startEditColor}
-                  className="text-blue-600 hover:text-blue-700 p-1"
-                  title="Edit color"
-                >
-                  Edit
-                </button>
-                <button
-                  type="button"
-                  onClick={removeVariant}
-                  className="text-red-600 hover:text-red-700 p-1"
-                  title="Delete color"
-                >
-                  <X size={16} />
-                </button>
-              </div>
+              <h4 className="text-sm font-medium text-gray-900">Parameters</h4>
+              <button
+                type="button"
+                onClick={() => removeVariant()}
+                className="text-red-600 hover:text-red-700 p-1"
+                title="Delete variant"
+              >
+                <X size={16} />
+              </button>
             </div>
-          )}
 
-          {/* Size Stock Grid */}
-          <div className="grid grid-cols-2 gap-2">
-            {variant.sizes.map(sizeItem => (
-              <div key={sizeItem.size} className="flex items-center gap-2">
-                <label className="text-xs font-medium text-gray-700 w-8">{sizeItem.size}</label>
-                <Input
-                  type="number"
-                  min="0"
-                  value={sizeItem.stock}
-                  onChange={(e) =>
-                    updateStock(sizeItem.size, parseInt(e.target.value) || 0)
-                  }
-                  className="h-8 text-sm"
-                  placeholder="0"
-                />
+            {/* Parameters List */}
+            {variant.parameters.length > 0 && (
+              <div className="space-y-2 mb-3">
+                {variant.parameters.map((param, idx) => (
+                  <div key={idx} className="flex items-center justify-between bg-white p-2 rounded border border-gray-200">
+                    {editingIndex === idx ? (
+                      <div className="flex gap-2 flex-1">
+                        <Input
+                          placeholder="Parameter name"
+                          value={editingParamName}
+                          onChange={(e) => setEditingParamName(e.target.value)}
+                          className="h-8 text-sm flex-1"
+                        />
+                        <Input
+                          placeholder="Value"
+                          value={editingParamValue}
+                          onChange={(e) => setEditingParamValue(e.target.value)}
+                          className="h-8 text-sm flex-1"
+                        />
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={() => updateParameter(idx)}
+                          className="bg-green-600 hover:bg-green-700"
+                        >
+                          <Save size={14} />
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setEditingIndex(null)}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-gray-900">{param.name}</p>
+                          <p className="text-xs text-gray-600">{param.value}</p>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingIndex(idx);
+                              setEditingParamName(param.name);
+                              setEditingParamValue(param.value);
+                            }}
+                            className="text-blue-600 hover:text-blue-700 p-1"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => removeParameter(idx)}
+                            className="text-red-600 hover:text-red-700 p-1"
+                          >
+                            <X size={14} />
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                ))}
               </div>
-            ))}
+            )}
+
+            {/* Add Parameter Form */}
+            {!showParameterForm ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowParameterForm(true)}
+                className="w-full"
+              >
+                <Plus size={14} className="mr-2" />
+                Add Parameter
+              </Button>
+            ) : (
+              <div className="space-y-2 p-2 bg-white rounded border border-gray-200">
+                <Input
+                  placeholder="Parameter name (e.g., Material, Pattern)"
+                  value={paramName}
+                  onChange={(e) => setParamName(e.target.value)}
+                  className="h-8 text-sm"
+                />
+                <Input
+                  placeholder="Value (e.g., Cotton, Striped)"
+                  value={paramValue}
+                  onChange={(e) => setParamValue(e.target.value)}
+                  className="h-8 text-sm"
+                />
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={addParameter}
+                    className="flex-1 bg-green-600 hover:bg-green-700"
+                  >
+                    Add
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setShowParameterForm(false)}
+                    className="flex-1"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Sizes Section */}
+          <div className="border-t pt-3">
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="text-sm font-medium text-gray-900">Sizes & Stock</h4>
+              <Badge variant="secondary" className="text-xs">
+                Total: {getTotalStock()}
+              </Badge>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {variant.sizes.map(sizeItem => (
+                <div key={sizeItem.size} className="flex items-center gap-2">
+                  <label className="text-xs font-medium text-gray-700 w-8">{sizeItem.size}</label>
+                  <Input
+                    type="number"
+                    min="0"
+                    value={sizeItem.stock}
+                    onChange={(e) =>
+                      updateStock(sizeItem.size, parseInt(e.target.value) || 0)
+                    }
+                    className="h-8 text-sm"
+                    placeholder="0"
+                  />
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Info Box */}
-          <div className="mt-3 p-2 bg-blue-50 rounded border border-blue-200">
+          <div className="p-2 bg-blue-50 rounded border border-blue-200">
             <p className="text-xs text-blue-900">
-              <strong>Custom Product:</strong> This product has a single default color with multiple size options
+              <strong>Custom Product:</strong> Add parameters like material, pattern, etc. Stock is managed per size.
             </p>
           </div>
         </div>

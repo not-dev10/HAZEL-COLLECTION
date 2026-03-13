@@ -133,7 +133,6 @@ const Product = () => {
         quantity,
         image: product.image,
         category: product.category,
-        color: isCustomProduct ? selectedVariant?.color : selectedColor || undefined,
         size: selectedSize || undefined,
         variantId: selectedVariant?.id || undefined,
       };
