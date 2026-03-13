@@ -714,8 +714,45 @@ const Products: React.FC = () => {
                     onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
                   />
                   
+                  {/* Custom Product Toggle - Separate Section */}
+                  <div className="space-y-3 p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border-2 border-purple-200">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-sm font-semibold text-gray-900">Custom Product</h3>
+                        <p className="text-xs text-gray-600 mt-1">Single color with multiple sizes (no color selection needed)</p>
+                      </div>
+                      <label className="flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={newProduct.isCustomizable}
+                          onChange={(e) => {
+                            setNewProduct({ 
+                              ...newProduct, 
+                              isCustomizable: e.target.checked,
+                              category: e.target.checked ? 'Custom Product' : '',
+                              customVariant: e.target.checked ? newProduct.customVariant : null,
+                              variants: e.target.checked ? [] : newProduct.variants
+                            });
+                          }}
+                          className="w-5 h-5 rounded border-gray-300 text-purple-600 focus:ring-purple-500 cursor-pointer"
+                        />
+                      </label>
+                    </div>
+                  </div>
+                  
+                  {/* Category Input - For all products */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">Category</label>
+                    <Input
+                      placeholder="e.g., Dresses, Tops, Bottoms, Accessories, Custom Product"
+                      value={newProduct.category}
+                      onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    />
+                  </div>
+                  
                   {/* Stock Quantity - Only for products without variants */}
-                  {newProduct.category !== 'Custom Product' && newProduct.variants.length === 0 && (
+                  {!newProduct.isCustomizable && newProduct.variants.length === 0 && (
                     <Input
                       placeholder="Stock Quantity"
                       type="number"
@@ -724,25 +761,8 @@ const Products: React.FC = () => {
                     />
                   )}
                   
-                  {/* Category Selector */}
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700">Category</label>
-                    <select
-                      value={newProduct.category}
-                      onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value, isCustomizable: e.target.value === 'Custom Product' })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
-                    >
-                      <option value="">Select a category</option>
-                      <option value="Dresses">Dresses</option>
-                      <option value="Tops">Tops</option>
-                      <option value="Bottoms">Bottoms</option>
-                      <option value="Accessories">Accessories</option>
-                      <option value="Custom Product">Custom Product</option>
-                    </select>
-                  </div>
-                  
                   {/* Info Box */}
-                  {(newProduct.category === 'Custom Product' || newProduct.variants.length > 0) && (
+                  {(newProduct.isCustomizable || newProduct.variants.length > 0) && (
                     <div className="p-3 bg-blue-50 rounded border border-blue-200">
                       <p className="text-xs text-blue-900">
                         <strong>ℹ️ Stock Management:</strong> Stock is managed through the variant manager below. Overall stock is calculated as the sum of all variant sizes.
@@ -761,7 +781,7 @@ const Products: React.FC = () => {
                       variants={newProduct.variants}
                       onVariantsChange={(variants) => setNewProduct({ ...newProduct, variants })}
                     />
-                  )}}
+                  )}
                   
                   {/* Image Upload */}
                   <div className="space-y-2">
@@ -1110,25 +1130,45 @@ Summer Dress,SD-001,49.99,45,Dresses
                                 />
                               )}
                               
-                              {/* Category Selector */}
+                              {/* Custom Product Toggle - Separate Section */}
+                              <div className="space-y-3 p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border-2 border-purple-200">
+                                <div className="flex items-center justify-between">
+                                  <div>
+                                    <h3 className="text-sm font-semibold text-gray-900">Custom Product</h3>
+                                    <p className="text-xs text-gray-600 mt-1">Single color with multiple sizes</p>
+                                  </div>
+                                  <label className="flex items-center cursor-pointer">
+                                    <input
+                                      type="checkbox"
+                                      checked={editProduct.isCustomizable}
+                                      onChange={(e) => {
+                                        setEditProduct({ 
+                                          ...editProduct, 
+                                          isCustomizable: e.target.checked,
+                                          category: e.target.checked ? 'Custom Product' : '',
+                                          customVariant: e.target.checked ? editProduct.customVariant : null,
+                                          variants: e.target.checked ? [] : editProduct.variants
+                                        });
+                                      }}
+                                      className="w-5 h-5 rounded border-gray-300 text-purple-600 focus:ring-purple-500 cursor-pointer"
+                                    />
+                                  </label>
+                                </div>
+                              </div>
+                              
+                              {/* Category Input - For all products */}
                               <div className="space-y-2">
                                 <label className="block text-sm font-medium text-gray-700">Category</label>
-                                <select
+                                <Input
+                                  placeholder="e.g., Dresses, Tops, Bottoms, Accessories, Custom Product"
                                   value={editProduct.category}
-                                  onChange={(e) => setEditProduct({ ...editProduct, category: e.target.value, isCustomizable: e.target.value === 'Custom Product' })}
+                                  onChange={(e) => setEditProduct({ ...editProduct, category: e.target.value })}
                                   className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
-                                >
-                                  <option value="">Select a category</option>
-                                  <option value="Dresses">Dresses</option>
-                                  <option value="Tops">Tops</option>
-                                  <option value="Bottoms">Bottoms</option>
-                                  <option value="Accessories">Accessories</option>
-                                  <option value="Custom Product">Custom Product</option>
-                                </select>
+                                />
                               </div>
 
                               {/* Info Box */}
-                              {(editProduct.category === 'Custom Product' || editProduct.variants.length > 0) && (
+                              {(editProduct.isCustomizable || editProduct.variants.length > 0) && (
                                 <div className="p-3 bg-blue-50 rounded border border-blue-200">
                                   <p className="text-xs text-blue-900">
                                     <strong>ℹ️ Stock Management:</strong> Stock is managed through the variant manager below. Overall stock is calculated as the sum of all variant sizes.

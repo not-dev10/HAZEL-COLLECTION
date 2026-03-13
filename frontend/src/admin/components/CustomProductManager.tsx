@@ -19,7 +19,7 @@ interface CustomProductManagerProps {
   onVariantChange: (variant: CustomProductVariant | null) => void;
 }
 
-const PREDEFINED_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
+const PREDEFINED_SIZES = ['S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
 
 export const CustomProductManager: React.FC<CustomProductManagerProps> = ({ 
   variant, 

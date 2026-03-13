@@ -18,14 +18,14 @@ const sizeGuides: SizeData[] = [
     category: 'Kurta/Tunic',
     sizes: [
       {
-        size: 'XS',
+        size: 'S',
         bust: '31"',
         waist: '26"',
         hip: '33"',
         length: '28"',
       },
       {
-        size: 'S',
+        size: 'M',
         bust: '33"',
         waist: '28"',
         hip: '35"',
@@ -65,14 +65,14 @@ const sizeGuides: SizeData[] = [
     category: 'Dresses',
     sizes: [
       {
-        size: 'XS',
+        size: 'S',
         bust: '32"',
         waist: '25"',
         hip: '34"',
         length: '56"',
       },
       {
-        size: 'S',
+        size: 'M',
         bust: '34"',
         waist: '27"',
         hip: '36"',
@@ -105,14 +105,14 @@ const sizeGuides: SizeData[] = [
     category: 'Trousers/Bottoms',
     sizes: [
       {
-        size: 'XS',
+        size: 'S',
         bust: '26"',
         waist: '24"',
         hip: '32"',
         length: '38"',
       },
       {
-        size: 'S',
+        size: 'M',
         bust: '28"',
         waist: '26"',
         hip: '34"',
