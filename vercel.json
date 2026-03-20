@@ -1,5 +1,5 @@
 {
-  "buildCommand": "npm install && npm run build",
+  "buildCommand": "yarn install && yarn build",
   "outputDirectory": "frontend/dist",
   "framework": "vite",
   "env": {
