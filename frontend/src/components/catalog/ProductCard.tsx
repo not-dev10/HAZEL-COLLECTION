@@ -50,6 +50,7 @@ const ProductCard = ({
   const [selectedVariant, setSelectedVariant] = useState<any | null>(null);
   const [touchStart, setTouchStart] = useState(0);
   const [touchEnd, setTouchEnd] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   
   const allImages = images && images.length > 0 ? images : [image];
   const displayImage = allImages[currentImageIndex] || image;
@@ -128,13 +129,17 @@ const ProductCard = ({
     if (!touchStart || !touchEnd || allImages.length <= 1) return;
     
     const distance = touchStart - touchEnd;
-    const isLeftSwipe = distance > 50;
-    const isRightSwipe = distance < -50;
+    const isLeftSwipe = distance > 80;
+    const isRightSwipe = distance < -80;
     
     if (isLeftSwipe) {
+      setIsTransitioning(true);
       setCurrentImageIndex((prev) => (prev === allImages.length - 1 ? 0 : prev + 1));
+      setTimeout(() => setIsTransitioning(false), 300);
     } else if (isRightSwipe) {
+      setIsTransitioning(true);
       setCurrentImageIndex((prev) => (prev === 0 ? allImages.length - 1 : prev - 1));
+      setTimeout(() => setIsTransitioning(false), 300);
     }
   };
 
@@ -159,7 +164,9 @@ const ProductCard = ({
           src={displayImage}
           alt={name}
           onError={handleImageError}
-          className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+          className={`w-full h-full object-cover transition-all duration-300 ease-out group-hover:scale-105 ${
+            isTransitioning ? 'opacity-75' : 'opacity-100'
+          }`}
           loading="lazy"
         />
         

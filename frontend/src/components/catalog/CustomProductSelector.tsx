@@ -72,7 +72,7 @@ export const CustomProductSelector: React.FC<CustomProductSelectorProps> = ({
                     ? 'border-gray-200 hover:border-gray-300'
                     : 'border-gray-100 bg-gray-50 text-gray-400 cursor-not-allowed'
                 }`}
-                title={isAvailable ? `${sizeItem.stock} in stock` : 'Out of stock'}
+                title={isAvailable ? 'In Stock' : 'Out of Stock'}
               >
                 {sizeItem.size}
                 {!isAvailable && <span className="text-xs ml-1">✕</span>}
@@ -85,10 +85,10 @@ export const CustomProductSelector: React.FC<CustomProductSelectorProps> = ({
         {selectedSize && (
           <div className="mt-3 text-sm">
             {variant.sizes.find(s => s.size === selectedSize)?.stock === 0 ? (
-              <p className="text-red-600">Out of stock in this size</p>
+              <p className="text-red-600">Out of Stock</p>
             ) : (
               <p className="text-green-600">
-                ✓ {variant.sizes.find(s => s.size === selectedSize)?.stock} in stock
+                ✓ In Stock
               </p>
             )}
           </div>

@@ -337,7 +337,7 @@ const Product = () => {
               {/* Stock Status */}
               <div className="text-sm">
                 {product.inStock ? (
-                  <p className="text-green-600">✓ In Stock ({product.stock} available)</p>
+                  <p className="text-green-600">✓ In Stock</p>
                 ) : (
                   <p className="text-red-600">Out of Stock</p>
                 )}

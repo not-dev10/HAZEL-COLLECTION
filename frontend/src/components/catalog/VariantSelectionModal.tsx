@@ -81,7 +81,7 @@ export const VariantSelectionModal: React.FC<VariantSelectionModalProps> = ({
                       ? 'border-primary bg-primary/10'
                       : 'border-gray-200 hover:border-gray-300'
                   } ${sizeItem.stock === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  title={sizeItem.stock === 0 ? 'Out of stock' : `${sizeItem.stock} in stock`}
+                  title={sizeItem.stock === 0 ? 'Out of Stock' : 'In Stock'}
                 >
                   {sizeItem.size}
                 </button>

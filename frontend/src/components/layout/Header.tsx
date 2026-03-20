@@ -86,6 +86,7 @@ const Header = () => {
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [dynamicCategories, setDynamicCategories] = useState<MainCategory[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
+  const [blurTimeoutId, setBlurTimeoutId] = useState<NodeJS.Timeout | null>(null);
   const { wishlistCount } = useWishlist();
   const { isLoggedIn, logout } = useUser();
   const navigate = useNavigate();
@@ -321,7 +322,8 @@ const Header = () => {
                   }
                 }}
                 onBlur={() => {
-                  setTimeout(() => setShowSuggestions(false), 200);
+                  const timeoutId = setTimeout(() => setShowSuggestions(false), 200);
+                  setBlurTimeoutId(timeoutId);
                 }}
                 className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-2 sm:py-3 text-xs sm:text-sm border-2 border-black rounded-none bg-white text-black placeholder-[#9a9a9a] focus:outline-none"
               />
@@ -336,6 +338,10 @@ const Header = () => {
                         type="button"
                         onMouseDown={(e) => {
                           e.preventDefault();
+                          if (blurTimeoutId) {
+                            clearTimeout(blurTimeoutId);
+                            setBlurTimeoutId(null);
+                          }
                           handleSuggestionClick(product);
                         }}
                         className="w-full flex items-center gap-3 p-2 hover:bg-muted rounded transition-colors text-left"
@@ -440,6 +446,15 @@ const Header = () => {
               >
                 <X size={24} />
               </button>
+
+              {/* Home Button */}
+              <a 
+                href="/"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block w-full text-center text-sm tracking-wider uppercase font-semibold mb-6 pb-6 border-b border-border hover:opacity-70 transition-opacity"
+              >
+                Home
+              </a>
 
               {/* Collections Section */}
               <div className="border-b border-border pb-6">
