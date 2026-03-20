@@ -242,11 +242,11 @@ const ProductCard = ({
         <div className="flex items-center justify-center gap-2 text-xs md:text-sm">
           {isSale && originalPrice && (
             <span className="text-muted-foreground line-through">
-              ┬ú{originalPrice.toLocaleString()}
+              £{originalPrice.toLocaleString()}
             </span>
           )}
           <span className={`font-medium ${isSale ? 'text-sale' : ''}`}>
-            ┬ú{price.toLocaleString()}
+            £{price.toLocaleString()}
           </span>
         </div>
         {/* Action Buttons - Mobile */}
