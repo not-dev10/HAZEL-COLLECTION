@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { AddToCartButton } from '@/components/ui/add-to-cart-button';
 import { AddToWishlistButton } from '@/components/ui/add-to-wishlist-button';
 import { VariantSelectionModal } from '@/components/catalog/VariantSelectionModal';
@@ -242,11 +242,11 @@ const ProductCard = ({
         <div className="flex items-center justify-center gap-2 text-xs md:text-sm">
           {isSale && originalPrice && (
             <span className="text-muted-foreground line-through">
-              £{originalPrice.toLocaleString()}
+              ┬ú{originalPrice.toLocaleString()}
             </span>
           )}
           <span className={`font-medium ${isSale ? 'text-sale' : ''}`}>
-            £{price.toLocaleString()}
+            ┬ú{price.toLocaleString()}
           </span>
         </div>
         {/* Action Buttons - Mobile */}
