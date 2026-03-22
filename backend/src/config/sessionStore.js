@@ -62,7 +62,7 @@ export async function cleanupExpiredSessions() {
   }
 }
 
-// Run cleanup every hour
-if (process.env.NODE_ENV === 'production') {
-  setInterval(cleanupExpiredSessions, 60 * 60 * 1000);
-}
+
+// Session cleanup is handled by guestCleanup.service.js
+// This prevents duplicate cleanup operations and reduces database cost
+// If you need to manually trigger cleanup, use the function above

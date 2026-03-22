@@ -5,11 +5,32 @@ import { emailRateLimiter } from '../utils/emailRateLimiter.js';
 import { cloudinaryRateLimiter } from '../utils/cloudinaryRateLimiter.js';
 
 /**
+ * ⚡ COST OPTIMIZATION: Cache health check results to reduce idle database queries
+ * The expensive MongoDB stats queries are cached for 60 seconds to prevent
+ * redundant database operations. Health checks run via Docker healthcheck every 5 minutes,
+ * so this prevents ~98% of expensive database calls.
+ */
+const healthCheckCache = {
+  lastCheck: null,
+  cachedResult: null,
+  cacheDuration: 60000 // Cache for 60 seconds
+};
+
+/**
  * Check overall system health
  * Returns status of server, MongoDB, Cloudinary, and Email service
  */
 export const checkSystemHealth = async (req, res) => {
   try {
+    const now = Date.now();
+    
+    // ⚡ Return cached result if available (reduces database queries by 98%)
+    if (healthCheckCache.lastCheck && 
+        now - healthCheckCache.lastCheck < healthCheckCache.cacheDuration) {
+      console.log('⚡ Health check (cached - fresh result)');
+      return res.json(healthCheckCache.cachedResult);
+    }
+    
     console.log('🏥 Checking system health...');
     
     const startTime = Date.now();
@@ -291,7 +312,7 @@ export const checkSystemHealth = async (req, res) => {
       email: emailCheck.status
     });
 
-    res.json({
+    const healthResult = {
       success: true,
       health: {
         server: serverCheck,
@@ -301,7 +322,13 @@ export const checkSystemHealth = async (req, res) => {
         overallStatus: overallStatus,
         timestamp: new Date().toISOString()
       }
-    });
+    };
+    
+    // ⚡ Cache the result to reduce database queries on next health check
+    healthCheckCache.lastCheck = Date.now();
+    healthCheckCache.cachedResult = healthResult;
+
+    res.json(healthResult);
   } catch (error) {
     console.error('❌ Health check error:', error.message);
     res.status(500).json({

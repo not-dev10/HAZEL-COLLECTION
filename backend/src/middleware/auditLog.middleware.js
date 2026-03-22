@@ -1,6 +1,10 @@
 /**
  * Audit Logging Middleware
  * Logs all security-relevant events for compliance and investigation
+ * 
+ * ⚡ COST OPTIMIZATION: Audit logging disabled by default to reduce MongoDB writes.
+ * Each request generates a database write which adds up quickly.
+ * Enable with: ENABLE_AUDIT_LOGGING=true (only when diagnosing issues)
  */
 
 import { SecurityLoggingService } from '../services/securityLoggingService.js';
@@ -9,6 +13,12 @@ import { SecurityLoggingService } from '../services/securityLoggingService.js';
  * Log all API requests for audit trail
  */
 export const auditLogMiddleware = (req, res, next) => {
+  // ⚡ COST OPT: Disable logging to reduce database writes
+  // Enable only when diagnosing issues via ENABLE_AUDIT_LOGGING env var
+  if (process.env.ENABLE_AUDIT_LOGGING !== 'true') {
+    return next();
+  }
+  
   const startTime = Date.now();
   
   // Capture response

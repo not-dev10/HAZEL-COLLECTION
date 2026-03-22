@@ -33,9 +33,9 @@ USER nodejs
 # Expose port (will be overridden by env var if needed)
 EXPOSE 5000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD node -e "require('http').get('http://localhost:5000/api/health', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})"
+# Health check - Reduced frequency to 5 minutes to minimize idle database queries
+HEALTHCHECK --interval=5m --timeout=10s --start-period=5s --retries=3 \
+    CMD node -e "require('http').get('http://localhost:5000/api/health/ping', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})"
 
 # Use dumb-init to handle signals
 ENTRYPOINT ["dumb-init", "--"]

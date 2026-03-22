@@ -1,8 +1,10 @@
 import { Cart } from '../models/Cart.js';
 import { Wishlist } from '../models/Wishlist.js';
 
-// Run cleanup every hour (3600000 ms)
-const CLEANUP_INTERVAL = 60 * 60 * 1000; // 1 hour
+// ⚡ COST OPTIMIZATION: Extended cleanup interval from 1 hour to 6 hours
+// This reduces unnecessary database write operations. TTL indexes in MongoDB
+// will automatically expire data, so cleanup is just a safety measure.
+const CLEANUP_INTERVAL = 6 * 60 * 60 * 1000; // 6 hours
 
 let cleanupInterval = null;
 

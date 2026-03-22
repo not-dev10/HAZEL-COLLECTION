@@ -193,10 +193,10 @@ export class SecurityLog {
       await securityCollection.createIndex({ severity: 1 });
       await securityCollection.createIndex({ eventType: 1 });
       
-      // TTL index - auto-delete logs after 90 days
-      await auditCollection.createIndex({ createdAt: 1 }, { expireAfterSeconds: 7776000 });
-      await authCollection.createIndex({ createdAt: 1 }, { expireAfterSeconds: 7776000 });
-      await securityCollection.createIndex({ createdAt: 1 }, { expireAfterSeconds: 7776000 });
+      // TTL index - auto-delete logs after 30 days (instead of 90 to save storage)
+      await auditCollection.createIndex({ createdAt: 1 }, { expireAfterSeconds: 2592000 });
+      await authCollection.createIndex({ createdAt: 1 }, { expireAfterSeconds: 2592000 });
+      await securityCollection.createIndex({ createdAt: 1 }, { expireAfterSeconds: 2592000 });
       
       console.log('✅ Security log indexes created');
     } catch (error) {
