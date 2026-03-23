@@ -12,8 +12,8 @@ export const options = {
     { duration: '30s', target: 0, name: 'Ramp down to 0' },
   ],
   thresholds: {
-    'http_req_duration': ['p(95)<500', 'p(99)<1000'],
-    'http_req_failed': ['<0.05'],
+    http_req_duration: ['p(95)<400', 'p(99)<1000'],
+    http_req_failed: ['rate<0.05'],
   },
 };
 
