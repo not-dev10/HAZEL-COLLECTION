@@ -3,7 +3,6 @@ import { AdminLayout } from '../components/AdminLayout';
 import { useAdmin } from '../context/AdminContext';
 import Products from './Products';
 import Orders from './Orders';
-import Inventory from './Inventory';
 import Customers from './Customers';
 import SupportReviews from './SupportReviews';
 import Settings from './Settings';
@@ -21,8 +20,6 @@ const Admin: React.FC = () => {
         return <Products />;
       case 'orders':
         return <Orders />;
-      case 'inventory':
-        return <Inventory />;
       case 'customers':
         return <Customers />;
       case 'supportreviews':

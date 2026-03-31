@@ -4,9 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Edit2, Trash2, Upload, Search, Download, X, Check, AlertCircle, Loader } from 'lucide-react';
+import { Plus, Edit2, Trash2, Upload, Search, Download, X, Check, AlertCircle, Loader, TrendingDown, Package } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import TokenManager from '@/utils/tokenManager';
 import { ColorSizeManager } from '../components/ColorSizeManager';
@@ -39,11 +40,38 @@ interface Product {
   }>;
 }
 
+interface InventoryItem {
+  id: string;
+  _id?: string;
+  productName: string;
+  name?: string;
+  category: string;
+  currentStock: number;
+  stock?: number;
+  reorderLevel?: number;
+  maxStock?: number;
+  warehouseLocation?: string;
+  lastRestocked?: string;
+  status: 'in-stock' | 'low-stock' | 'out-of-stock';
+  price?: number;
+  description?: string;
+  image?: string;
+  images?: string[];
+}
+
 const Products: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('all-products'); // Tab state
+
+  // Inventory-specific state
+  const [inventorySearchTerm, setInventorySearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState<string | null>(null);
+  const [inventoryEditingId, setInventoryEditingId] = useState<string | null>(null);
+  const [inventoryEditDialog, setInventoryEditDialog] = useState(false);
+  const [inventoryEditItem, setInventoryEditItem] = useState({ currentStock: 0, reorderLevel: 20, maxStock: 100, editImages: [] as File[], currentImages: [] as string[], originalImageOrder: [] as string[], uploadingImages: false });
 
   // Fetch products from API
   useEffect(() => {
@@ -109,6 +137,50 @@ const Products: React.FC = () => {
     p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (p.category && p.category.toLowerCase().includes(searchTerm.toLowerCase()))
   );
+
+  // Convert products to inventory items for stock management tab
+  const inventoryItems: InventoryItem[] = products.map((p: any) => {
+    const stock = p.stock || 0;
+    let status: 'in-stock' | 'low-stock' | 'out-of-stock' = 'in-stock';
+    const reorderLevel = 20; // Default reorder level
+    const maxStock = stock * 2; // Default max stock
+
+    if (stock === 0) status = 'out-of-stock';
+    else if (stock < reorderLevel) status = 'low-stock';
+
+    return {
+      id: p.productId || p._id || p.id,
+      _id: p._id,
+      productId: p.productId,
+      productName: p.name,
+      name: p.name,
+      category: p.category || 'General',
+      currentStock: stock,
+      stock: stock,
+      reorderLevel,
+      maxStock,
+      warehouseLocation: 'TBD',
+      lastRestocked: p.updatedAt ? new Date(p.updatedAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+      status,
+      price: p.price,
+      description: p.description,
+      image: p.image,
+      images: p.images,
+    };
+  });
+
+  const filteredInventory = inventoryItems.filter(item =>
+    (item.productName.toLowerCase().includes(inventorySearchTerm.toLowerCase()) ||
+      (item.category && item.category.toLowerCase().includes(inventorySearchTerm.toLowerCase()))) &&
+    (!filterStatus || item.status === filterStatus)
+  );
+
+  const inventoryStats = {
+    totalItems: inventoryItems.reduce((sum, item) => sum + item.currentStock, 0),
+    lowStock: inventoryItems.filter(item => item.status === 'low-stock').length,
+    outOfStock: inventoryItems.filter(item => item.status === 'out-of-stock').length,
+    totalProducts: inventoryItems.length,
+  };
 
   const handleAddProduct = async () => {
     if (!newProduct.name || !newProduct.price || !newProduct.category || !newProduct.stock) {
@@ -665,6 +737,241 @@ const Products: React.FC = () => {
     }
   };
 
+  // Inventory-specific handlers
+  const handleInventoryUpdateStock = async (id: string, newStock: number) => {
+    try {
+      setSavingProductId(id);
+      const item = inventoryItems.find(i => i.id === id);
+      if (!item) return;
+
+      console.log('🔄 Updating stock for product:', item.productId || id);
+      console.log('📊 New stock value:', newStock);
+
+      const productIdToUse = item.productId || id;
+      
+      const response = await fetch(`${API_BASE_URL}/api/products-attributes/${productIdToUse}/stock`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${TokenManager.getAccessToken()}`,
+        },
+        body: JSON.stringify({
+          quantity: newStock,
+        }),
+      });
+
+      console.log('📨 Stock update response status:', response.status);
+      const data = await response.json();
+      console.log('📦 Stock update response data:', data);
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to update stock');
+      }
+
+      // Update products state with new stock
+      setProducts(products.map(p =>
+        (p.id === id || p.productId === id) ? { ...p, stock: newStock } : p
+      ));
+      console.log('✅ Stock updated successfully');
+    } catch (err) {
+      console.error('❌ Error updating stock:', err);
+      alert('Failed to update stock: ' + (err instanceof Error ? err.message : 'Unknown error'));
+    } finally {
+      setSavingProductId(null);
+    }
+  };
+
+  const handleInventoryEditItem = (item: InventoryItem) => {
+    const currentImages = item.images || (item.image ? [item.image] : []);
+    setInventoryEditItem({
+      currentStock: item.currentStock,
+      reorderLevel: item.reorderLevel || 20,
+      maxStock: item.maxStock || 100,
+      editImages: [],
+      currentImages: currentImages,
+      originalImageOrder: [...currentImages],
+      uploadingImages: false,
+    });
+    setInventoryEditingId(item.id);
+    setInventoryEditDialog(true);
+  };
+
+  const handleInventorySaveEdit = async () => {
+    if (!inventoryEditingId) return;
+
+    try {
+      setSavingProductId(inventoryEditingId);
+      const token = TokenManager.getAccessToken();
+      if (!token) {
+        alert('Admin authentication required. Please log in again.');
+        setSavingProductId(null);
+        return;
+      }
+
+      const item = inventoryItems.find(i => i.id === inventoryEditingId);
+      if (!item) return;
+
+      // Update stock via API
+      await fetch(`${API_BASE_URL}/api/products-attributes/${inventoryEditingId}/stock`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          quantity: inventoryEditItem.currentStock,
+        }),
+      });
+
+      // Upload images if any new ones were selected
+      if (inventoryEditItem.editImages && inventoryEditItem.editImages.length > 0) {
+        setInventoryEditItem(prev => ({ ...prev, uploadingImages: true }));
+        try {
+          const imageDataPromises = inventoryEditItem.editImages.map((file) => {
+            return new Promise<{ url: string }>((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onload = () => {
+                const img = new Image();
+                img.onload = () => {
+                  const canvas = document.createElement('canvas');
+                  const ctx = canvas.getContext('2d');
+                  if (!ctx) {
+                    reject(new Error('Failed to get canvas context'));
+                    return;
+                  }
+
+                  let width = img.width;
+                  let height = img.height;
+                  const maxDim = 1200;
+
+                  if (width > height) {
+                    if (width > maxDim) {
+                      height = Math.round((height * maxDim) / width);
+                      width = maxDim;
+                    }
+                  } else {
+                    if (height > maxDim) {
+                      width = Math.round((width * maxDim) / height);
+                      height = maxDim;
+                    }
+                  }
+
+                  canvas.width = width;
+                  canvas.height = height;
+                  ctx.drawImage(img, 0, 0, width, height);
+
+                  const compressedUrl = canvas.toDataURL('image/jpeg', 0.75);
+                  resolve({ url: compressedUrl });
+                };
+                img.onerror = () => reject(new Error('Failed to load image'));
+                img.src = reader.result as string;
+              };
+              reader.onerror = reject;
+              reader.readAsDataURL(file);
+            });
+          });
+
+          const imageData = await Promise.all(imageDataPromises);
+
+          const uploadResponse = await fetch(`${API_BASE_URL}/api/upload/product-images`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              productId: inventoryEditingId,
+              images: imageData,
+            }),
+          });
+
+          if (!uploadResponse.ok) {
+            console.warn('Image upload failed but inventory updated');
+          } else {
+            const uploadResult = await uploadResponse.json();
+            if (uploadResult.data && uploadResult.data.product) {
+              const updatedProductData = uploadResult.data.product;
+              
+              setProducts(products.map(p =>
+                (p.id === inventoryEditingId || p.productId === inventoryEditingId)
+                  ? {
+                      ...p,
+                      image: updatedProductData.image,
+                      images: updatedProductData.images,
+                      stock: inventoryEditItem.currentStock,
+                    }
+                  : p
+              ));
+            }
+          }
+        } catch (error) {
+          console.error('Image upload error:', error);
+        } finally {
+          setInventoryEditItem(prev => ({ ...prev, uploadingImages: false }));
+        }
+      }
+
+      // Check if images have been reordered
+      if (inventoryEditItem.currentImages.length > 0 && 
+          inventoryEditItem.originalImageOrder.length > 0 &&
+          JSON.stringify(inventoryEditItem.currentImages) !== JSON.stringify(inventoryEditItem.originalImageOrder)) {
+        console.log('🔄 Image order has changed, sending reorder request...');
+        try {
+          const imageOrder = inventoryEditItem.currentImages.map(imgUrl => 
+            inventoryEditItem.originalImageOrder.indexOf(imgUrl)
+          ).filter(idx => idx !== -1);
+
+          const reorderResponse = await fetch(`${API_BASE_URL}/api/upload/product-images/reorder/${inventoryEditingId}`, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`,
+            },
+            body: JSON.stringify({ imageOrder }),
+          });
+
+          if (!reorderResponse.ok) {
+            console.error('❌ Reorder failed');
+          } else {
+            const reorderData = await reorderResponse.json();
+            console.log('✅ Images reordered successfully');
+            
+            if (reorderData.product) {
+              setProducts(products.map(p =>
+                (p.id === inventoryEditingId || p.productId === inventoryEditingId)
+                  ? {
+                      ...p,
+                      images: reorderData.product.images,
+                      image: reorderData.product.image,
+                    }
+                  : p
+              ));
+            }
+          }
+        } catch (error) {
+          console.error('Reorder request failed:', error);
+        }
+      } else {
+        setProducts(products.map(p =>
+          (p.id === inventoryEditingId || p.productId === inventoryEditingId)
+            ? {
+                ...p,
+                stock: inventoryEditItem.currentStock,
+              }
+            : p
+        ));
+      }
+
+      setInventoryEditingId(null);
+      setInventoryEditDialog(false);
+    } catch (err) {
+      console.error('Error updating inventory:', err);
+      alert('Failed to update inventory');
+    } finally {
+      setSavingProductId(null);
+    }
+  };
+
   const handleImportCSV = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -711,8 +1018,8 @@ const Products: React.FC = () => {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h2 className="text-3xl font-bold text-gray-900">Products Management</h2>
-        <p className="text-gray-600 mt-1">Manage your product catalog with bulk operations.</p>
+        <h2 className="text-3xl font-bold text-gray-900">Products & Inventory</h2>
+        <p className="text-gray-600 mt-1">Manage your product catalog and stock levels.</p>
       </div>
 
       {/* Success Message */}
@@ -722,6 +1029,16 @@ const Products: React.FC = () => {
           <p className="text-green-800 font-medium">Operation completed successfully!</p>
         </div>
       )}
+
+      {/* Main Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="all-products">All Products</TabsTrigger>
+          <TabsTrigger value="stock-management">Stock Management</TabsTrigger>
+        </TabsList>
+
+        {/* TAB 1: ALL PRODUCTS */}
+        <TabsContent value="all-products" className="space-y-6 mt-6">
 
       {/* Sync Info */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start gap-3">
@@ -1463,6 +1780,401 @@ Summer Dress,SD-001,49.99,45,Dresses
           )}
         </CardContent>
       </Card>
+        </TabsContent>
+
+        {/* TAB 2: STOCK MANAGEMENT */}
+        <TabsContent value="stock-management" className="space-y-6 mt-6">
+          {/* Inventory Header */}
+          <div>
+            <h3 className="text-2xl font-bold text-gray-900">Inventory Management</h3>
+            <p className="text-gray-600 mt-1">Track and manage stock levels across all products.</p>
+          </div>
+
+          {/* Inventory Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <Card>
+              <CardContent className="pt-6">
+                <div>
+                  <p className="text-sm text-gray-600">Total Units</p>
+                  <div className="text-3xl font-bold mt-2">{inventoryStats.totalItems}</div>
+                  <p className="text-xs text-gray-500 mt-1">Across all products</p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div>
+                  <p className="text-sm text-gray-600">Total Products</p>
+                  <div className="text-3xl font-bold mt-2">{inventoryStats.totalProducts}</div>
+                  <p className="text-xs text-gray-500 mt-1">In inventory</p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="border-l-4 border-l-yellow-500">
+              <CardContent className="pt-6">
+                <div>
+                  <p className="text-sm text-gray-600">Low Stock</p>
+                  <div className="text-3xl font-bold text-yellow-600 mt-2">{inventoryStats.lowStock}</div>
+                  <p className="text-xs text-gray-500 mt-1">Requires attention</p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="border-l-4 border-l-red-500">
+              <CardContent className="pt-6">
+                <div>
+                  <p className="text-sm text-gray-600">Out of Stock</p>
+                  <div className="text-3xl font-bold text-red-600 mt-2">{inventoryStats.outOfStock}</div>
+                  <p className="text-xs text-gray-500 mt-1">Needs restocking</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Inventory Search & Filter */}
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="flex-1 relative">
+                  <Search className="absolute left-3 top-3 text-gray-400" size={20} />
+                  <Input
+                    placeholder="Search by product name or category..."
+                    value={inventorySearchTerm}
+                    onChange={(e) => setInventorySearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Inventory Table */}
+          <Tabs value={filterStatus || 'all'} onValueChange={(val) => setFilterStatus(val === 'all' ? null : val)} className="w-full">
+            <TabsList>
+              <TabsTrigger value="all">All Items</TabsTrigger>
+              <TabsTrigger value="in-stock">In Stock</TabsTrigger>
+              <TabsTrigger value="low-stock">Low Stock</TabsTrigger>
+              <TabsTrigger value="out-of-stock">Out of Stock</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value={filterStatus || 'all'}>
+              <Card className="mt-4">
+                <CardContent className="pt-6">
+                  {loading ? (
+                    <div className="flex items-center justify-center py-12">
+                      <Loader size={32} className="text-purple-600 animate-spin mr-3" />
+                      <p>Loading inventory...</p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Image</TableHead>
+                            <TableHead>Product Name</TableHead>
+                            <TableHead>Category</TableHead>
+                            <TableHead>Current Stock</TableHead>
+                            <TableHead>Reorder Level</TableHead>
+                            <TableHead>Max Stock</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Last Updated</TableHead>
+                            <TableHead>Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {filteredInventory.map(item => (
+                            <TableRow key={item.id}>
+                              <TableCell>
+                                {item.image || (item.images && item.images[0]) ? (
+                                  <img 
+                                    key={`${item.id}-${item.images?.join(',')}`}
+                                    src={`${item.image || item.images![0]}?t=${Date.now()}`}
+                                    alt={item.productName}
+                                    className="w-12 h-12 object-cover rounded border border-gray-200"
+                                    onError={(e) => {
+                                      console.warn(`Failed to load image for ${item.productName}`);
+                                      e.currentTarget.src = 'https://via.placeholder.com/50?text=No+Image';
+                                    }}
+                                  />
+                                ) : (
+                                  <div className="w-12 h-12 bg-gray-100 rounded flex items-center justify-center text-gray-400 text-xs">
+                                    No Image
+                                  </div>
+                                )}
+                              </TableCell>
+                              <TableCell className="font-medium">{item.productName}</TableCell>
+                              <TableCell className="text-gray-600">{item.category}</TableCell>
+                              <TableCell>
+                                <span className={`font-semibold ${
+                                  item.currentStock === 0 ? 'text-red-600' :
+                                  item.currentStock < (item.reorderLevel || 20) ? 'text-yellow-600' :
+                                'text-green-600'
+                              }`}>
+                                {item.currentStock}
+                              </span>
+                              </TableCell>
+                              <TableCell className="text-gray-600">{item.reorderLevel || 20}</TableCell>
+                              <TableCell className="text-gray-600">{item.maxStock}</TableCell>
+                              <TableCell>
+                                <Badge variant={
+                                  item.status === 'in-stock' ? 'default' :
+                                  item.status === 'low-stock' ? 'secondary' :
+                                  'destructive'
+                                }>
+                                  {item.status === 'low-stock' && <AlertCircle size={14} className="mr-1" />}
+                                  {item.status === 'out-of-stock' && <TrendingDown size={14} className="mr-1" />}
+                                  {item.status === 'in-stock' && <Package size={14} className="mr-1" />}
+                                  {item.status.replace('-', ' ')}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="text-sm">{item.lastRestocked}</TableCell>
+                              <TableCell>
+                                <Dialog open={inventoryEditDialog && inventoryEditingId === item.id} onOpenChange={setInventoryEditDialog}>
+                                  <DialogTrigger asChild>
+                                    <Button 
+                                      variant="ghost" 
+                                      size="sm"
+                                      onClick={() => handleInventoryEditItem(item)}
+                                      disabled={savingProductId === item.id}
+                                    >
+                                      <Edit2 size={16} />
+                                    </Button>
+                                  </DialogTrigger>
+                                  {inventoryEditingId === item.id && (
+                                    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                                      <DialogHeader>
+                                        <DialogTitle>Edit Inventory</DialogTitle>
+                                        <DialogDescription>
+                                          {item.productName} ({item.category})
+                                        </DialogDescription>
+                                      </DialogHeader>
+                                      <div className="space-y-4">
+                                        <div>
+                                          <label className="block text-sm font-medium mb-2">Current Stock</label>
+                                          <Input
+                                            type="number"
+                                            value={inventoryEditItem.currentStock}
+                                            onChange={(e) => setInventoryEditItem({ ...inventoryEditItem, currentStock: parseInt(e.target.value) || 0 })}
+                                            disabled={savingProductId === item.id || inventoryEditItem.uploadingImages}
+                                          />
+                                        </div>
+                                        <div>
+                                          <label className="block text-sm font-medium mb-2">Reorder Level</label>
+                                          <Input
+                                            type="number"
+                                            value={inventoryEditItem.reorderLevel}
+                                            onChange={(e) => setInventoryEditItem({ ...inventoryEditItem, reorderLevel: parseInt(e.target.value) || 0 })}
+                                            disabled={savingProductId === item.id || inventoryEditItem.uploadingImages}
+                                          />
+                                        </div>
+                                        <div>
+                                          <label className="block text-sm font-medium mb-2">Max Stock</label>
+                                          <Input
+                                            type="number"
+                                            value={inventoryEditItem.maxStock}
+                                            onChange={(e) => setInventoryEditItem({ ...inventoryEditItem, maxStock: parseInt(e.target.value) || 0 })}
+                                            disabled={savingProductId === item.id || inventoryEditItem.uploadingImages}
+                                          />
+                                        </div>
+
+                                        {/* Current Images Display */}
+                                        {inventoryEditItem.currentImages && inventoryEditItem.currentImages.length > 0 && (
+                                          <div className="mb-4 border-t pt-4">
+                                            <p className="text-xs text-gray-600 mb-2">Current Images ({inventoryEditItem.currentImages.length})</p>
+                                            <p className="text-xs text-gray-500 mb-2">💡 Drag to reorder existing images</p>
+                                            <div className="grid grid-cols-3 gap-2">
+                                              {inventoryEditItem.currentImages.map((imageUrl, idx) => (
+                                                <div 
+                                                  key={`current-${idx}`}
+                                                  draggable
+                                                  onDragStart={(e) => {
+                                                    e.dataTransfer!.effectAllowed = 'move';
+                                                    e.dataTransfer!.setData('text/plain', `current-${idx}`);
+                                                    (e.currentTarget as HTMLElement).style.opacity = '0.5';
+                                                  }}
+                                                  onDragEnd={(e) => {
+                                                    (e.currentTarget as HTMLElement).style.opacity = '1';
+                                                  }}
+                                                  onDragOver={(e) => {
+                                                    e.preventDefault();
+                                                    e.dataTransfer!.dropEffect = 'move';
+                                                    (e.currentTarget as HTMLElement).classList.add('border-2', 'border-blue-500');
+                                                  }}
+                                                  onDragLeave={(e) => {
+                                                    (e.currentTarget as HTMLElement).classList.remove('border-2', 'border-blue-500');
+                                                  }}
+                                                  onDrop={(e) => {
+                                                    e.preventDefault();
+                                                    const dragSource = e.dataTransfer!.getData('text/plain');
+                                                    if (dragSource.startsWith('current-')) {
+                                                      const dragIndex = parseInt(dragSource.split('-')[1]);
+                                                      if (dragIndex !== idx) {
+                                                        const newImages = [...inventoryEditItem.currentImages];
+                                                        [newImages[dragIndex], newImages[idx]] = [newImages[idx], newImages[dragIndex]];
+                                                        setInventoryEditItem({ ...inventoryEditItem, currentImages: newImages });
+                                                      }
+                                                    }
+                                                    (e.currentTarget as HTMLElement).classList.remove('border-2', 'border-blue-500');
+                                                  }}
+                                                  className="relative group cursor-move bg-gray-50 rounded border border-gray-200"
+                                                >
+                                                  <img 
+                                                    src={imageUrl}
+                                                    alt={`Current ${idx}`}
+                                                    className="w-full h-20 object-cover rounded pointer-events-none"
+                                                    onError={(e) => {
+                                                      console.warn(`Failed to load image ${idx}:`, imageUrl);
+                                                      e.currentTarget.src = 'https://via.placeholder.com/150?text=Image+Error';
+                                                    }}
+                                                  />
+                                                  <div className="absolute top-1 left-1 bg-blue-600 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition">
+                                                    #{idx + 1}
+                                                  </div>
+                                                </div>
+                                              ))}
+                                            </div>
+                                          </div>
+                                        )}
+
+                                        {/* Upload New Images */}
+                                        <div className="space-y-2 border-t pt-4">
+                                          <label className="block text-sm font-medium text-gray-700">Upload New Images (will replace existing)</label>
+                                          <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-purple-500 transition">
+                                            <input
+                                              type="file"
+                                              multiple
+                                              accept="image/*"
+                                              onChange={(e) => setInventoryEditItem({ ...inventoryEditItem, editImages: Array.from(e.target.files || []) })}
+                                              className="hidden"
+                                              id={`inventory-edit-images-${item.id}`}
+                                              disabled={inventoryEditItem.uploadingImages || savingProductId === item.id}
+                                            />
+                                            <label htmlFor={`inventory-edit-images-${item.id}`} className="cursor-pointer">
+                                              <Upload className="mx-auto mb-2 text-gray-400" size={24} />
+                                              <p className="text-sm text-gray-600">Click to upload new images</p>
+                                              <p className="text-xs text-gray-500">PNG, JPG up to 10MB each</p>
+                                            </label>
+                                          </div>
+                                          {inventoryEditItem.editImages.length > 0 && (
+                                            <div className="space-y-2">
+                                              <p className="text-sm font-medium text-green-700">{inventoryEditItem.editImages.length} new image(s) selected</p>
+                                              <p className="text-xs text-gray-500">💡 Drag to reorder new images</p>
+                                              <div className="grid grid-cols-3 gap-2">
+                                                {inventoryEditItem.editImages.map((file, idx) => (
+                                                  <div 
+                                                    key={idx}
+                                                    draggable
+                                                    onDragStart={(e) => {
+                                                      e.dataTransfer!.effectAllowed = 'move';
+                                                      e.dataTransfer!.setData('text/plain', idx.toString());
+                                                      (e.currentTarget as HTMLElement).style.opacity = '0.5';
+                                                    }}
+                                                    onDragEnd={(e) => {
+                                                      (e.currentTarget as HTMLElement).style.opacity = '1';
+                                                    }}
+                                                    onDragOver={(e) => {
+                                                      e.preventDefault();
+                                                      e.dataTransfer!.dropEffect = 'move';
+                                                      (e.currentTarget as HTMLElement).classList.add('border-2', 'border-green-500');
+                                                    }}
+                                                    onDragLeave={(e) => {
+                                                      (e.currentTarget as HTMLElement).classList.remove('border-2', 'border-green-500');
+                                                    }}
+                                                    onDrop={(e) => {
+                                                      e.preventDefault();
+                                                      const dragIndex = parseInt(e.dataTransfer!.getData('text/plain'));
+                                                      if (dragIndex !== idx) {
+                                                        const newImages = [...inventoryEditItem.editImages];
+                                                        [newImages[dragIndex], newImages[idx]] = [newImages[idx], newImages[dragIndex]];
+                                                        setInventoryEditItem({ ...inventoryEditItem, editImages: newImages });
+                                                      }
+                                                      (e.currentTarget as HTMLElement).classList.remove('border-2', 'border-green-500');
+                                                    }}
+                                                    className="relative group cursor-move bg-gray-50 rounded border-2 border-green-500"
+                                                  >
+                                                    <img 
+                                                      src={URL.createObjectURL(file)}
+                                                      alt={`New ${idx}`}
+                                                      className="w-full h-20 object-cover rounded pointer-events-none"
+                                                    />
+                                                    <div className="absolute top-1 left-1 bg-green-600 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition">
+                                                      New #{idx + 1}
+                                                    </div>
+                                                    <button
+                                                      type="button"
+                                                      onClick={() => setInventoryEditItem({ ...inventoryEditItem, editImages: inventoryEditItem.editImages.filter((_, i) => i !== idx) })}
+                                                      className="absolute top-1 right-1 bg-red-600 text-white p-1 rounded opacity-0 group-hover:opacity-100 transition hover:bg-red-700"
+                                                    >
+                                                      <X size={14} />
+                                                    </button>
+                                                  </div>
+                                                ))}
+                                              </div>
+                                            </div>
+                                          )}
+                                          {inventoryEditItem.editImages.length > 0 && (
+                                            <p className="text-xs text-amber-600">⚠️ Uploading new images will replace all existing images</p>
+                                          )}
+                                        </div>
+
+                                        {/* Button */}
+                                        <Button 
+                                          onClick={handleInventorySaveEdit}
+                                          className="w-full bg-gradient-to-r from-purple-600 to-pink-600"
+                                          disabled={savingProductId === item.id || inventoryEditItem.uploadingImages}
+                                        >
+                                          {inventoryEditItem.uploadingImages || savingProductId === item.id ? (
+                                            <>
+                                              <Loader size={16} className="mr-2 animate-spin" />
+                                              {inventoryEditItem.uploadingImages ? 'Uploading Images...' : 'Saving...'}
+                                            </>
+                                          ) : (
+                                            'Save Changes'
+                                          )}
+                                        </Button>
+                                      </div>
+                                    </DialogContent>
+                                  )}
+                                </Dialog>
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button 
+                                      variant="ghost" 
+                                      size="sm" 
+                                      className="text-red-600"
+                                      disabled={savingProductId === item.id}
+                                    >
+                                      <Trash2 size={16} />
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogTitle>Delete Item</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Are you sure you want to remove {item.productName} from inventory?
+                                    </AlertDialogDescription>
+                                    <div className="flex gap-2">
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction
+                                        className="bg-red-600"
+                                        onClick={() => handleDeleteProduct(item.id)}
+                                      >
+                                        Delete
+                                      </AlertDialogAction>
+                                    </div>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

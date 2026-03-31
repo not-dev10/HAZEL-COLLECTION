@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Menu, Bell, Settings, LogOut, User, Package, ShoppingCart, Warehouse, MessageSquare, Activity, Home } from 'lucide-react';
+import { Menu, Bell, Settings, LogOut, User, Package, ShoppingCart, MessageSquare, Activity, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useAdmin } from '../context/AdminContext';
@@ -44,9 +44,8 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
   const navItems = [
     { id: 'home-page', label: 'Home Page', icon: Home },
-    { id: 'products', label: 'Products', icon: Package },
+    { id: 'products', label: 'Products & Inventory', icon: Package },
     { id: 'orders', label: 'Orders', icon: ShoppingCart },
-    { id: 'inventory', label: 'Inventory', icon: Warehouse },
     { id: 'customers', label: 'Customers', icon: User },
     { id: 'supportreviews', label: 'Support & Reviews', icon: MessageSquare },
     { id: 'techstack', label: 'Tech Stack Health', icon: Activity },
