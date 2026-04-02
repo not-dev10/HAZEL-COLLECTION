@@ -5,6 +5,7 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import ScrollToTop from '@/components/common/ScrollToTop';
 import { AddToWishlistButton } from '@/components/ui/add-to-wishlist-button';
+import { ShareModal } from '@/components/ui/share-modal';
 import Reviews from '@/components/catalog/ProductReviews';
 import ProductVariants from '@/components/catalog/ProductVariants';
 import { useCart } from '@/context/CartContext';
@@ -43,6 +44,7 @@ const Product = () => {
   const [cartMessage, setCartMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   // Fetch product by ID from API
   useEffect(() => {
@@ -328,7 +330,10 @@ const Product = () => {
                     variant="outline"
                     size="md"
                   />
-                  <button className="p-3 border border-border rounded hover:bg-secondary">
+                  <button 
+                    onClick={() => setIsShareModalOpen(true)}
+                    className="p-3 border border-border rounded hover:bg-secondary transition-colors"
+                  >
                     <Share2 size={20} />
                   </button>
                 </div>
@@ -371,6 +376,14 @@ const Product = () => {
       </main>
       <Footer />
       <ScrollToTop />
+      
+      {/* Share Modal */}
+      <ShareModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        productName={product.name}
+        productUrl={window.location.href}
+      />
     </div>
   );
 };
