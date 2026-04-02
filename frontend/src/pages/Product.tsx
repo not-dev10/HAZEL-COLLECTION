@@ -78,6 +78,40 @@ const Product = () => {
             stock: foundProduct.stock || 0,
             variants: foundProduct.variants || [],
           });
+
+          // Update meta tags for social sharing
+          document.title = `${foundProduct.name} | Hezal Couture`;
+          
+          // Update or create OG meta tags
+          const updateMetaTag = (property: string, content: string) => {
+            let meta = document.querySelector(`meta[property="${property}"]`);
+            if (!meta) {
+              meta = document.createElement('meta');
+              meta.setAttribute('property', property);
+              document.head.appendChild(meta);
+            }
+            meta.setAttribute('content', content);
+          };
+
+          const updateTwitterMetaTag = (name: string, content: string) => {
+            let meta = document.querySelector(`meta[name="${name}"]`);
+            if (!meta) {
+              meta = document.createElement('meta');
+              meta.setAttribute('name', name);
+              document.head.appendChild(meta);
+            }
+            meta.setAttribute('content', content);
+          };
+
+          updateMetaTag('og:title', `${foundProduct.name} | Hezal Couture`);
+          updateMetaTag('og:description', foundProduct.description || 'Discover exquisite fashion at Hezal Couture');
+          updateMetaTag('og:image', foundProduct.image);
+          updateMetaTag('og:type', 'product');
+          updateMetaTag('og:url', window.location.href);
+          
+          updateTwitterMetaTag('twitter:title', `${foundProduct.name} | Hezal Couture`);
+          updateTwitterMetaTag('twitter:description', foundProduct.description || 'Discover exquisite fashion at Hezal Couture');
+          updateTwitterMetaTag('twitter:image', foundProduct.image);
         } else {
           setError('Product not found');
         }
