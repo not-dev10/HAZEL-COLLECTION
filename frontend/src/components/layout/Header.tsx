@@ -238,12 +238,12 @@ const Header = () => {
             </button>
 
             {/* Brand Logo */}
-            <a href="/" className="hidden lg:flex flex-col items-center gap-0 flex-shrink-0 relative -mt-1">
+            <a href="/" className="flex lg:flex flex-col items-center gap-0 flex-shrink-0 relative -mt-1">
               <div className="flex flex-col items-center overflow-hidden scale-95">
                 <img 
                   src={logo}
                   alt="Hezal the Label Logo"
-                  className="h-20 w-auto object-cover object-top"
+                  className="h-16 lg:h-20 w-auto object-cover object-top"
                 />
               </div>
             </a>
