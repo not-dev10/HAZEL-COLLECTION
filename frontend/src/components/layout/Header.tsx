@@ -297,7 +297,7 @@ const Header = () => {
           </div>
 
           {/* Center Search Bar - Mobile and Desktop */}
-          <div className="flex-1 mx-2">
+          <div className="flex-1 mx-1 sm:mx-3">
             <form className="relative w-full" onSubmit={handleSearchSubmit}>
               <Search className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-black" size={18} />
               <input
@@ -325,12 +325,12 @@ const Header = () => {
                   const timeoutId = setTimeout(() => setShowSuggestions(false), 200);
                   setBlurTimeoutId(timeoutId);
                 }}
-                className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-2 sm:py-3 text-xs sm:text-sm border-2 border-black rounded-none bg-white text-black placeholder-[#9a9a9a] focus:outline-none"
+                className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-3 sm:py-3 text-sm sm:text-sm border-2 border-black rounded-none bg-white text-black placeholder-[#9a9a9a] focus:outline-none"
               />
               
               {/* Search Suggestions Dropdown */}
               {showSuggestions && suggestions.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-border shadow-lg z-50 max-h-96 overflow-y-auto">
+                <div className="absolute top-full -left-1 -right-1 sm:left-0 sm:right-0 mt-1 bg-background border border-border shadow-lg z-50 max-h-96 overflow-y-auto">
                   <div className="p-2">
                     {suggestions.map((product) => (
                       <button
