@@ -225,31 +225,134 @@ const Header = () => {
       {/* Main Header */}
       <header className="sticky lg:top-0 -top-1 z-50 bg-[#e5d5be] border-b border-[#e8dfd5]">
       <div className="container mx-auto">
-        <div className="flex items-center justify-between gap-3 h-16 lg:h-20 px-3 lg:px-6">
-          {/* Left Section - Logo and Navigation */}
-          <div className="flex items-center gap-3 lg:gap-4 flex-shrink-0">
-            {/* Mobile Menu Button */}
-            <button
-              className="lg:hidden p-2 -ml-2 flex-shrink-0"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              aria-label="Toggle menu"
-            >
-              {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
-            </button>
+        {/* Mobile: Logo Centered Row */}
+        <div className="flex lg:hidden items-center justify-between gap-2 h-16 px-3">
+          {/* Mobile Menu Button */}
+          <button
+            className="p-2 -ml-2 flex-shrink-0"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Toggle menu"
+          >
+            {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+          </button>
 
+          {/* Brand Logo - Centered */}
+          <a href="/" className="flex flex-col items-center gap-0 flex-grow relative -mt-1">
+            <div className="flex flex-col items-center overflow-hidden scale-95">
+              <img 
+                src={logo}
+                alt="Hezal the Label Logo"
+                className="h-16 w-auto object-cover object-top"
+              />
+            </div>
+          </a>
+
+          {/* Right Icons - Mobile */}
+          <div className="flex items-center space-x-2 flex-shrink-0">
+            <a href="/wishlist" className="flex p-1 hover:opacity-70 transition-opacity relative" aria-label="Wishlist">
+              <Heart size={20} strokeWidth={1.3} className="text-black" />
+              {wishlistCount > 0 && (
+                <span className="absolute top-0 right-0 inline-flex items-center justify-center px-1 py-0.5 text-xs font-medium leading-none text-white bg-[#d47a52] transform translate-x-1/2 -translate-y-1/2 rounded-full">
+                  {wishlistCount}
+                </span>
+              )}
+            </a>
+            <MiniCart />
+          </div>
+        </div>
+
+        {/* Mobile: Search Bar Row */}
+        <div className="flex lg:hidden px-3 pb-3">
+          <form className="relative w-full" onSubmit={handleSearchSubmit}>
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-black" size={16} />
+            <input
+              type="text"
+              placeholder="Search..."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setShowSuggestions(true);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handleSearchSubmit(e);
+                }
+                if (e.key === 'Escape') {
+                  setShowSuggestions(false);
+                }
+              }}
+              onFocus={() => {
+                if (searchQuery.trim()) {
+                  setShowSuggestions(true);
+                }
+              }}
+              onBlur={() => {
+                const timeoutId = setTimeout(() => setShowSuggestions(false), 200);
+                setBlurTimeoutId(timeoutId);
+              }}
+              className="w-full pl-10 pr-3 py-3 text-sm border-2 border-black rounded-none bg-white text-black placeholder-[#9a9a9a] focus:outline-none"
+            />
+            
+            {/* Search Suggestions Dropdown */}
+            {showSuggestions && suggestions.length > 0 && (
+              <div className="absolute top-full -left-3 -right-3 mt-1 bg-background border border-border shadow-lg z-50 max-h-96 overflow-y-auto">
+                <div className="p-2">
+                  {suggestions.map((product) => (
+                    <button
+                      key={product.id || product._id}
+                      type="button"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        if (blurTimeoutId) {
+                          clearTimeout(blurTimeoutId);
+                          setBlurTimeoutId(null);
+                        }
+                        handleSuggestionClick(product);
+                      }}
+                      className="w-full flex items-center gap-3 p-2 hover:bg-muted rounded transition-colors text-left"
+                    >
+                      {(product.image || product.imageUrl || product.imageUrls?.[0]) && (
+                        <div className="flex-shrink-0 w-12 h-16 bg-muted rounded overflow-hidden">
+                          <img
+                            src={product.image || product.imageUrl || product.imageUrls?.[0]}
+                            alt={product.name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = '';
+                            }}
+                          />
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium truncate">{product.name}</p>
+                        <p className="text-xs text-muted-foreground mb-1">{product.category || 'Uncategorized'}</p>
+                        <p className="text-xs text-foreground font-semibold">£{(product.price || 0).toLocaleString()}</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </form>
+        </div>
+
+        {/* Desktop Layout */}
+        <div className="hidden lg:flex items-center justify-between gap-4 h-20 px-6">
+          {/* Left Section - Logo and Navigation */}
+          <div className="flex items-center gap-4 flex-shrink-0">
             {/* Brand Logo */}
-            <a href="/" className="flex lg:flex flex-col items-center gap-0 flex-shrink-0 relative -mt-1">
+            <a href="/" className="flex flex-col items-center gap-0 flex-shrink-0 relative -mt-1">
               <div className="flex flex-col items-center overflow-hidden scale-95">
                 <img 
                   src={logo}
                   alt="Hezal the Label Logo"
-                  className="h-16 lg:h-20 w-auto object-cover object-top"
+                  className="h-20 w-auto object-cover object-top"
                 />
               </div>
             </a>
 
             {/* Desktop Navigation - Wardrobe Icon */}
-            <nav className="hidden lg:flex items-center">
+            <nav className="flex items-center">
               <div 
                 className="relative group"
                 onMouseEnter={() => setWardrobeMenuOpen(true)}
@@ -296,10 +399,10 @@ const Header = () => {
             </nav>
           </div>
 
-          {/* Center Search Bar - Mobile and Desktop */}
-          <div className="flex-1 mx-1 sm:mx-3">
+          {/* Center Search Bar - Desktop */}
+          <div className="flex-1 mx-4">
             <form className="relative w-full" onSubmit={handleSearchSubmit}>
-              <Search className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-black" size={18} />
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-black" size={18} />
               <input
                 type="text"
                 placeholder="Search..."
@@ -325,12 +428,12 @@ const Header = () => {
                   const timeoutId = setTimeout(() => setShowSuggestions(false), 200);
                   setBlurTimeoutId(timeoutId);
                 }}
-                className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-3 sm:py-3 text-sm sm:text-sm border-2 border-black rounded-none bg-white text-black placeholder-[#9a9a9a] focus:outline-none"
+                className="w-full pl-12 pr-4 py-3 text-sm border-2 border-black rounded-none bg-white text-black placeholder-[#9a9a9a] focus:outline-none"
               />
               
               {/* Search Suggestions Dropdown */}
               {showSuggestions && suggestions.length > 0 && (
-                <div className="absolute top-full -left-1 -right-1 sm:left-0 sm:right-0 mt-1 bg-background border border-border shadow-lg z-50 max-h-96 overflow-y-auto">
+                <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-border shadow-lg z-50 max-h-96 overflow-y-auto">
                   <div className="p-2">
                     {suggestions.map((product) => (
                       <button
@@ -371,8 +474,8 @@ const Header = () => {
             </form>
           </div>
 
-          {/* Right Icons */}
-          <div className="flex items-center space-x-2 lg:space-x-4 flex-shrink-0">
+          {/* Right Icons - Desktop */}
+          <div className="flex items-center space-x-4 flex-shrink-0">
             <a href="/wishlist" className="flex p-1 hover:opacity-70 transition-opacity relative" aria-label="Wishlist">
               <Heart size={24} strokeWidth={1.3} className="text-black" />
               {wishlistCount > 0 && (
@@ -384,7 +487,7 @@ const Header = () => {
             
             {/* My Orders Icon - Desktop */}
             {isLoggedIn && (
-              <a href="/orders" className="hidden sm:flex p-1 hover:opacity-70 transition-opacity" aria-label="My Orders" title="My Orders">
+              <a href="/orders" className="flex p-1 hover:opacity-70 transition-opacity" aria-label="My Orders" title="My Orders">
                 <Package size={24} strokeWidth={1.3} className="text-black" />
               </a>
             )}
@@ -394,25 +497,25 @@ const Header = () => {
               <>
                 <button 
                   onClick={() => navigate('/login')}
-                  className="hidden sm:flex px-3 lg:px-4 py-2 text-xs font-medium tracking-wider uppercase text-black hover:opacity-70 transition-opacity"
+                  className="px-4 py-2 text-xs font-medium tracking-wider uppercase text-black hover:opacity-70 transition-opacity"
                 >
                   Sign In
                 </button>
                 <button 
                   onClick={() => navigate('/signup')}
-                  className="hidden sm:flex px-3 lg:px-4 py-2 text-xs font-medium tracking-wider uppercase border border-black text-black hover:bg-black hover:text-[#ead9c5] transition-all"
+                  className="px-4 py-2 text-xs font-medium tracking-wider uppercase border border-black text-black hover:bg-black hover:text-[#ead9c5] transition-all"
                 >
                   Sign Up
                 </button>
               </>
             ) : (
               <>
-                <a href="/account" className="hidden sm:flex p-1 hover:opacity-70 transition-opacity" aria-label="Account">
+                <a href="/account" className="flex p-1 hover:opacity-70 transition-opacity" aria-label="Account">
                   <User size={24} strokeWidth={1.3} className="text-black" />
                 </a>
                 <button 
                   onClick={handleLogout}
-                  className="hidden sm:flex p-1 hover:opacity-70 transition-opacity text-[#c85a54] hover:text-[#a84640]"
+                  className="flex p-1 hover:opacity-70 transition-opacity text-[#c85a54] hover:text-[#a84640]"
                   aria-label="Logout"
                   title="Logout"
                 >
