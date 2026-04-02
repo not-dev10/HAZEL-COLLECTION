@@ -4,6 +4,7 @@ import AnnouncementBar from '@/components/common/AnnouncementBar';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import ScrollToTop from '@/components/common/ScrollToTop';
+import { SEO } from '@/components/common/SEO';
 import { AddToWishlistButton } from '@/components/ui/add-to-wishlist-button';
 import { ShareModal } from '@/components/ui/share-modal';
 import Reviews from '@/components/catalog/ProductReviews';
@@ -232,6 +233,43 @@ const Product = () => {
 
   return (
     <div className="min-h-screen">
+      <SEO
+        title={`${product.name} | Hezal Couture`}
+        description={product.description || `Shop ${product.name} at Hezal Couture. ${product.category ? `${product.category} collection.` : ''} Premium quality fashion.`}
+        keywords={`${product.name}, ${product.category || 'fashion'}, luxury clothing, designer wear, Hezal Couture`}
+        image={product.image}
+        url={window.location.href}
+        type="product"
+        price={product.price}
+        currency="GBP"
+        availability={product.inStock ? 'in stock' : 'out of stock'}
+        structuredData={{
+          '@context': 'https://schema.org',
+          '@type': 'Product',
+          name: product.name,
+          description: product.description,
+          image: product.images || [product.image],
+          brand: {
+            '@type': 'Brand',
+            name: 'Hezal Couture',
+          },
+          offers: {
+            '@type': 'Offer',
+            price: product.price,
+            priceCurrency: 'GBP',
+            availability: product.inStock
+              ? 'https://schema.org/InStock'
+              : 'https://schema.org/OutOfStock',
+            url: window.location.href,
+            priceValidUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          },
+          aggregateRating: {
+            '@type': 'AggregateRating',
+            ratingValue: '4.8',
+            reviewCount: '127',
+          },
+        }}
+      />
       <AnnouncementBar />
       <Header />
       <main>

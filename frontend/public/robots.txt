@@ -12,3 +12,9 @@ Allow: /
 
 User-agent: *
 Allow: /
+
+# Sitemap
+Sitemap: https://hezalcouture.com/sitemap.xml
+
+# Crawl-delay for bots
+Crawl-delay: 1
