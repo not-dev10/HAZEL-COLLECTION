@@ -155,6 +155,11 @@ export class Product {
 
     const query = {};
     
+    // Helper function to escape regex special characters
+    const escapeRegex = (str) => {
+      return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    };
+    
     // Normalize category filter - convert hyphens to spaces and handle case-insensitive search
     if (filters.category) {
       const normalizedCategory = filters.category
@@ -164,11 +169,12 @@ export class Product {
         .trim();
       
       // Use regex for case-insensitive, space-flexible matching
-      query.category = { $regex: `^${normalizedCategory}$`, $options: "i" };
+      query.category = { $regex: `^${escapeRegex(normalizedCategory)}$`, $options: "i" };
     }
     
     if (filters.search) {
-      query.name = { $regex: filters.search, $options: "i" };
+      // Escape special regex characters to prevent regex injection
+      query.name = { $regex: escapeRegex(filters.search), $options: "i" };
     }
     if (filters.color) query.color = filters.color;
 
