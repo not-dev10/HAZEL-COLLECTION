@@ -1,5 +1,5 @@
 import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
+import { Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
@@ -8,6 +8,7 @@ import { WishlistProvider } from "@/context/WishlistContext";
 import { UserProvider } from "@/context/UserContext";
 import { AdminProvider } from "@/admin/context/AdminContext";
 import { ProtectedAdminRoute } from "@/components/ProtectedAdminRoute";
+import { CookieConsent } from "@/components/common/CookieConsent";
 import { Suspense, lazy } from "react";
 import LoadingAnimation from "@/components/common/LoadingAnimation";
 import Home from "./pages/Home";
@@ -30,6 +31,8 @@ const FAQ = lazy(() => import("./pages/FAQ"));
 const About = lazy(() => import("./pages/About"));
 const SizeGuide = lazy(() => import("./pages/SizeGuide"));
 const Blog = lazy(() => import("./pages/Blog"));
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const CookiePolicy = lazy(() => import("./pages/CookiePolicy"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Lazy load admin pages
@@ -47,6 +50,7 @@ const App = () => (
             <TooltipProvider>
               <Toaster />
               <Sonner />
+              <CookieConsent />
               <BrowserRouter>
                 <Suspense fallback={<LoadingAnimation />}>
                   <Routes>
@@ -68,6 +72,8 @@ const App = () => (
                     <Route path="/about" element={<About />} />
                     <Route path="/size-guide" element={<SizeGuide />} />
                     <Route path="/blog" element={<Blog />} />
+                    <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                    <Route path="/cookie-policy" element={<CookiePolicy />} />
                     
                     {/* Admin Panel Routes */}
                     <Route path="/admin-login" element={<AdminLogin />} />
